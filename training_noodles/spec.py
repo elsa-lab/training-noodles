@@ -5,14 +5,23 @@ import yaml
 
 
 def read_user_spec(args):
+    # Set the path to default spec
+    default_spec_path = 'training_noodles/specs/defaults.yml'
+
+    # Split the spec into spec path and experiments spec
+    user_spec_path, experiments = _split_path_and_experiments(args.spec)
+
     # Read the default spec
-    default_spec = _read_spec('training_noodles/specs/defaults.yml')
+    default_spec = _read_spec(default_spec_path)
 
     # Read the user spec
-    user_spec = _read_spec(args.spec_path)
+    user_spec = _read_spec(user_spec_path)
 
     # Fill missing values with default values
     _fill_missing_with_defaults(default_spec, user_spec)
+
+    # Filter the experiments
+    _filter_experiments(user_spec, experiments)
 
     # Log the user spec
     logging.debug('User spec->\n{}'.format(json.dumps(user_spec)))
@@ -33,6 +42,26 @@ def _read_spec(path):
         raise
     else:
         return spec_data
+
+
+def _split_path_and_experiments(spec_path):
+    # Split spec path by ':' (e.g., 'a/b:exp1' becomes ['a/b', 'exp1'])
+    path_and_exp = spec_path.split(':')
+
+    # Check whether there are experiments spec
+    if len(path_and_exp) <= 1:
+        path = path_and_exp[0]
+        experiments = None
+    elif len(path_and_exp) <= 2:
+        path = path_and_exp[0]
+        experiments = path_and_exp[1].split(',')
+    else:
+        error_message = 'There should be only one ":" in spec_path'
+        logging.error(error_message)
+        raise ValueError(error_message)
+
+    # Return spec path and experiments spec
+    return path, experiments
 
 
 def _fill_missing_with_defaults(default_spec, user_spec):
@@ -100,3 +129,16 @@ def _fill_missing_with_defaults(default_spec, user_spec):
 
             # Assign the default value if user value is not specified
             user_parent[part] = user_value or default_value
+
+
+def _filter_experiments(user_spec, experiments):
+    # Check whether there are no experiments specification
+    if experiments is None:
+        return
+
+    # Filter the experiments
+    user_spec['experiments'] = list(filter(
+        lambda x: x['name'] in experiments, user_spec['experiments']))
+
+    # Log the filtering
+    logging.info('Filtered experiments: {}'.format(experiments))

@@ -8,10 +8,12 @@ def parse_args():
 
     # Command
     parser.add_argument('command', type=str,
-                        help='Command ("run", "status", "stop", "download", "upload")')
+                        help='Command ("run", "status", "monitor", "stop",' +
+                        ' "download", "upload")')
     # Spec
-    parser.add_argument('spec_path', type=str,
-                        help='Path to the spec file')
+    parser.add_argument('spec', type=str,
+                        help='Path to the spec file and experiments' +
+                        ' (e.g., "spec.yml", "spec.yml:exp1,exp2")')
     # Logging
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='Print out verbose messages')
