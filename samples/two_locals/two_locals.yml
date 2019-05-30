@@ -1,0 +1,41 @@
+# Name of the spec
+name: Two locals
+
+# Description of the spec
+description: Run commands on two servers which are actually localhost
+
+################################################################################
+# Experiments
+################################################################################
+
+# Commands to run on server for the experiments (like test methods in Python unittest)
+experiments:
+- name: Experiment 1
+  description: Example experiment 1
+  command: echo Running experiment 1 && echo Hello > samples/two_local/hello.log
+- name: Experiment 2
+  description: Example experiment 2
+  commands:
+  - 'echo Running experiment 2'
+  - 'date > samples/two_local/date2.log'
+  - 'echo The time now is $(date)'
+- name: Experiment 3
+  description: Example experiment 3
+  commands:
+  - 'echo Running experiment 3'
+  - 'cd samples/two_local'
+  - 'date > date3.log'
+  - 'echo The time now is $(date)'
+  requirements:
+    cpu_usage: '>=0'
+
+################################################################################
+# Servers
+################################################################################
+
+# All servers
+servers:
+- name: Localhost 1
+  host: localhost
+- name: Localhost 2
+  host: localhost
