@@ -1,0 +1,59 @@
+# Name of the spec
+name: Default spec
+
+# Description of the spec
+description: >
+  All default settings are in this spec, which would override the settings in
+  user's spec if user doesn't specify them.
+
+################################################################################
+# Experiments
+################################################################################
+
+# Commands to run on server before executing all experiments (like "setUpClass" in Python unittest)
+before_all_experiments: []
+
+# Commands to run on server before executing each experiment (like "setUp" in Python unittest)
+before_each_experiment: []
+
+# Commands to run on server for the experiments (like test methods in Python unittest)
+experiments: []
+
+# Commands to run on server after executing each experiment (like "tearDown" in Python unittest)
+after_each_experiment: []
+
+# Commands to run on server after executing all experiments (like "tearDownClass" in Python unittest)
+after_all_experiments: []
+
+################################################################################
+# Servers
+################################################################################
+
+# Applies to the server spec if not specified
+each_server:
+  # Path to the private key on local
+  private_key_path: $HOME/.ssh/id_rsa
+  # Username on the server (e.g., 'user1')
+  username: $USER
+  # Host of the server (e.g., 'example.com', '123.123.123.123')
+  host: localhost
+
+# All servers
+servers: []
+
+################################################################################
+# Requirements
+################################################################################
+
+# Commands to run to check requirements on servers
+requirements:
+  # Get CPU usage (Reference: https://askubuntu.com/a/941997)
+  cpu_usage: (grep 'cpu ' /proc/stat;sleep 0.1;grep 'cpu ' /proc/stat) | awk -v RS="" '{print ($13-$2+$15-$4)*100/($13-$2+$15-$4+$16-$5)}'
+  # Get memory usage (Reference: https://askubuntu.com/a/941997)
+  memory_usage: awk '/MemTotal/{t=$2}/MemAvailable/{a=$2}END{print 100-100*a/t}' /proc/meminfo
+  # Get disk usage (Reference: https://askubuntu.com/a/941997)
+  disk_usage: df | awk '/ \/$/{print substr($5, 1, length($5)-1)}'
+  # Get CUDA GPU utilization (Reference: https://gist.github.com/jonatw/9322244)
+  cuda_gpu_utilization: nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits | awk '{s+=$1} END {print s}'
+  # Get CUDA memory utilization (Reference: https://gist.github.com/jonatw/9322244)
+  cuda_memory_utilization: nvidia-smi --query-gpu=utilization.memory --format=csv,noheader,nounits | awk '{s+=$1} END {print s}'
