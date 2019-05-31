@@ -62,14 +62,13 @@ class Runner:
         servers_spec = self.user_spec.get('servers', [])
 
         # Iterate each experiment spec
-        for exp_idx, exp_spec in enumerate(exps_spec):
+        for exp_spec in exps_spec:
             # Get the experiment name
             exp_name = exp_spec.get('name', '')
 
             # Log the experiment
             if self.verbose:
-                logging.info('Try to deploy experiment #{}: {}'.format(
-                    exp_idx + 1, exp_name))
+                logging.info('Try to deploy experiment "{}"'.format(exp_name))
 
             # Update metrics lazily
             self._update_metrics(exp_spec, metrics)
@@ -158,6 +157,9 @@ class Runner:
             # Calculate mean metric of results
             mean_metric = self._calc_mean(results)
 
+            # Log the mean
+            logging.debug('Mean metric: {}'.format(mean_metric))
+
             # Add the mean metric to the list
             metrics.append(mean_metric)
 
@@ -197,6 +199,11 @@ class Runner:
         for req_id in requirements.keys():
             # Check whether the requirement ID has been existed in metrics
             if req_id not in metrics:
+                # Log the check
+                if self.verbose:
+                    logging.info(('Requirement "{}" has not been checked, ' +
+                                  'check now').format(req_id))
+
                 # Check server metrics
                 server_metrics = self._check_server_metrics(req_id)
 
@@ -253,7 +260,7 @@ class Runner:
     def _log_deployment(self, deployment_idx, undeployed):
         if self.verbose:
             # Log the deployment number
-            logging.info('Deployment #: {}'.format(deployment_idx + 1))
+            logging.info('Deployment #{}'.format(deployment_idx + 1))
 
             # Log the undeployed experiments
             exps_spec = self.user_spec.get('experiments', [])
