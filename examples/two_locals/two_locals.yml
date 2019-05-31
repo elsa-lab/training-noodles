@@ -12,18 +12,18 @@ description: Run commands on two servers which are actually localhost
 experiments:
 - name: Experiment 1
   description: Example experiment 1
-  commands: "echo Running experiment 1 && echo Hello > samples/two_locals/exp1.log"
+  commands: "echo Running experiment 1 && echo Hello > examples/two_locals/exp1.log"
 - name: Experiment 2
   description: Example experiment 2
   commands:
   - "echo Running experiment 2"
-  - "date > samples/two_locals/exp2.log"
+  - "date > examples/two_locals/exp2.log"
   - "echo The time now is $(date)"
 - name: Experiment 3
   description: Example experiment 3
   commands:
   - "echo Running experiment 3"
-  - "cd samples/two_locals"
+  - "cd examples/two_locals"
   - "date > exp3.log"
   - "echo The time now is $(date)"
   requirements:

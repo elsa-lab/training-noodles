@@ -12,7 +12,7 @@
             "console": "integratedTerminal",
             "args": [
                 "run",
-                "samples/two_locals/two_locals.yml",
+                "examples/two_locals/two_locals.yml",
                 "--verbose",
                 "--debug"
             ]
