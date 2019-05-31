@@ -8,8 +8,8 @@ def parse_args():
 
     # Command
     parser.add_argument('command', type=str,
-                        help='Command ("run", "status", "monitor", "stop",' +
-                        ' "download", "upload")')
+                        help='Command type ("run", "status", "monitor",' +
+                        ' "stop", "download", "upload")')
     # Spec
     parser.add_argument('spec', type=str,
                         help='Path to the spec file and experiments' +

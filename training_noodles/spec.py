@@ -80,6 +80,7 @@ def _fill_missing_with_defaults(default_spec, user_spec):
         'each_server/*',
         'servers',
         'requirements/*',
+        'deployment_interval',
     ]
 
     # Iterate each key
