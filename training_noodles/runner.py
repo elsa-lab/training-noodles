@@ -8,16 +8,15 @@ from training_noodles.remote import run_commands_over_ssh
 
 
 class Runner:
-    def __init__(self, user_spec, debug=False, verbose=False):
+    def __init__(self, user_spec, verbose=False):
         # Save the user spec
         self.user_spec = user_spec
 
         # Save the logging variables
-        self.debug = debug
         self.verbose = verbose
 
     def run(self):
-        """ Run all the experiments until finish.
+        """ Deploy all the experiments until finish.
         """
         # Initialize a set of indexes of undeployed experiments
         undeployed = set(range(self._count_experiments()))
@@ -36,16 +35,8 @@ class Runner:
             # Filter the experiments to choose the undeployed experiments
             undeployed_exps = self._filter_undeployed_experiments(undeployed)
 
-            # Collect all experiment requirement IDs
-            req_ids = self._collect_experiment_requirements(undeployed_exps)
-            self._log_requirement_ids(req_ids)
-
-            # Check metrics on servers
-            metrics = self._check_metrics(req_ids)
-            self._log_metrics(metrics)
-
             # Try to deploy each experiment to one of the satisfied servers
-            deployed = self._deploy_experiments(undeployed_exps, metrics)
+            deployed = self._deploy_experiments(undeployed_exps)
 
             # Restore the original deployed indexes
             undeployed_list = list(undeployed)
@@ -60,9 +51,12 @@ class Runner:
         # Log the finish
         logging.info('Successfully deployed all experiments')
 
-    def _deploy_experiments(self, exps_spec, metrics):
+    def _deploy_experiments(self, exps_spec):
         # Initialize set of indexes of deployed servers
         deployed = set()
+
+        # Initialize the empty metrics
+        metrics = {}
 
         # Get servers spec
         servers_spec = self.user_spec.get('servers', [])
@@ -76,6 +70,9 @@ class Runner:
             if self.verbose:
                 logging.info('Try to deploy experiment #{}: {}'.format(
                     exp_idx + 1, exp_name))
+
+            # Update metrics lazily
+            self._update_metrics(exp_spec, metrics)
 
             # Find satisfied servers
             satisfied_servers = self._find_satisfied_servers(
@@ -112,33 +109,18 @@ class Runner:
                 # Add the index to the deployed servers
                 deployed.add(server_idx)
 
+            # Check whether there are no available servers in this deployment
+            if len(deployed) >= len(servers_spec):
+                # Log the break
+                if self.verbose:
+                    logging.info('No available servers, skip the deployment')
+
+                break
+
         # Return the deployed experiments
         return deployed
 
-    def _check_metrics(self, req_ids):
-        """ Check metrics on servers.
-
-        Arguments:
-            req_ids (list): List of requirement IDs.
-
-        Returns:
-            dict: Metrics which map requirement ID to a list of server metrics.
-        """
-        # Initialize the metrics output
-        metrics = {}
-
-        # Iterate each requirement ID
-        for req_id in req_ids:
-            # Check metric in each server
-            servers_metric = self._check_server_metric(req_id)
-
-            # Add the metric to the output
-            metrics[req_id] = servers_metric
-
-        # Return the metrics output
-        return metrics
-
-    def _check_server_metric(self, req_id):
+    def _check_server_metrics(self, req_id):
         # Initialize the metric outputs
         metrics = []
 
@@ -169,6 +151,9 @@ class Runner:
 
             # Decode the results
             results = decode_output(stdout)
+
+            # Log the results
+            logging.debug('Metric results:->\n{}'.format(results))
 
             # Calculate mean metric of results
             mean_metric = self._calc_mean(results)
@@ -204,23 +189,19 @@ class Runner:
         # Return the undeployed experiments
         return undeployed_exps
 
-    def _collect_experiment_requirements(self, exps_spec):
-        # Initialize all requirement IDs
-        all_ids = []
+    def _update_metrics(self, exp_spec, metrics):
+        # Get experiment requirements
+        requirements = exp_spec.get('requirements', {})
 
-        # Iterate each experiment spec
-        for exp_spec in exps_spec:
-            # Get experiment requirements
-            requirements = exp_spec.get('requirements', {})
+        # Iterate each requirement
+        for req_id in requirements.keys():
+            # Check whether the requirement ID has been existed in metrics
+            if req_id not in metrics:
+                # Check server metrics
+                server_metrics = self._check_server_metrics(req_id)
 
-            # Get all requirement IDs
-            ids = requirements.keys()
-
-            # Add these names to the list
-            all_ids.extend(ids)
-
-        # Return all requirement names
-        return all_ids
+                # Update the metrics
+                metrics[req_id] = server_metrics
 
     def _find_satisfied_servers(self, exp_spec, metrics, deployed):
         # Get servers spec
@@ -282,13 +263,11 @@ class Runner:
                 json.dumps(undeployed_names)))
 
     def _log_requirement_ids(self, req_ids):
-        if self.debug:
-            logging.debug('Collected requirement IDs: {}'.format(
-                json.dumps(req_ids)))
+        logging.debug('Collected requirement IDs: {}'.format(
+            json.dumps(req_ids)))
 
     def _log_metrics(self, metrics):
-        if self.debug:
-            logging.debug('Server metrics: {}'.format(json.dumps(metrics)))
+        logging.debug('Server metrics: {}'.format(json.dumps(metrics)))
 
     def _is_metric_satisfied(self, metric, operator, value):
         if operator == '==':

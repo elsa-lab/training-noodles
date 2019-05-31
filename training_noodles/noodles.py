@@ -18,7 +18,7 @@ def main():
 
     # Check the command type
     if args.command == 'run':
-        runner = Runner(user_spec, debug=args.debug, verbose=args.verbose)
+        runner = Runner(user_spec, verbose=args.verbose)
         runner.run()
     elif args.command == 'status':
         raise NotImplementedError()

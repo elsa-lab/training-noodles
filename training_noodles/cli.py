@@ -44,7 +44,7 @@ def run_command(command_or_parts, extra_env=None, wait=True):
         raise ValueError(message)
 
     # Print the command
-    logging.debug('Run command: {}'.format(command))
+    logging.debug('Run command->\n{}'.format(command))
 
     # Determine executable for the current platform
     if sys.platform == 'win32':
