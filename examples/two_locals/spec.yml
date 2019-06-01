@@ -12,7 +12,7 @@ description: Run commands on two servers which are actually localhost
 experiments:
 - name: Experiment 1
   description: Example experiment 1
-  commands: "echo Running experiment 1 && echo Hello > examples/two_locals/exp1.log"
+  commands: "echo Running experiment 1 && echo Hello Noodles > examples/two_locals/exp1.log"
 - name: Experiment 2
   description: Example experiment 2
   commands:

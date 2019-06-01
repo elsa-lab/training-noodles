@@ -1,7 +1,6 @@
 import logging
 import os
 import subprocess
-import sys
 
 
 def decode_output(output):
@@ -21,12 +20,13 @@ def decode_output(output):
         return output
 
 
-def run_command(command_or_parts, extra_env=None, wait=True):
+def run_command(command_or_parts, stdin=None, extra_env=None, wait=True):
     """ Run the command using bash.
 
     Arguments:
         command_or_parts (str or list): Single command as str or command parts
             in list.
+        stdin (file object): Input stream. Set to "None" to use default stdin.
         extra_env (dict): Extra environment variables.
         wait (bool): Whether to wait for the command to finish.
 
@@ -43,14 +43,11 @@ def run_command(command_or_parts, extra_env=None, wait=True):
         logging.error(message)
         raise ValueError(message)
 
+    # Wrap the command by bash
+    command = 'bash -c "{}"'.format(command)
+
     # Print the command
     logging.debug('Run command->\n{}'.format(command))
-
-    # Determine executable for the current platform
-    if sys.platform == 'win32':
-        executable = 'bash.exe'
-    else:
-        executable = 'bash'
 
     try:
         # Get default environment variables
@@ -61,9 +58,8 @@ def run_command(command_or_parts, extra_env=None, wait=True):
             env.update(extra_env)
 
         # Run the program
-        p_obj = subprocess.Popen([executable, '-c', command],
-                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                 env=env)
+        p_obj = subprocess.Popen(command, stdin=stdin, stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE, env=env)
 
         # Check whether to wait
         if wait:

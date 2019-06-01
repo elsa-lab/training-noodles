@@ -1,0 +1,50 @@
+# Name of the spec
+name: Two servers and same user
+
+# Description of the spec
+description: Run commands on two servers with same user
+
+################################################################################
+# Experiments
+################################################################################
+
+# Commands to run on server for the experiments (like test methods in Python unittest)
+experiments:
+- name: Experiment 1
+  description: Example experiment 1
+  commands: "echo Running experiment 1 && echo Hello Noodles > ~/exp1.log"
+- name: Experiment 2
+  description: Example experiment 2
+  commands:
+  - "echo Running experiment 2"
+  - "date > ~/exp2.log"
+  - "echo The time now is $(date)"
+- name: Experiment 3
+  description: Example experiment 3
+  commands:
+  - "echo Running experiment 3"
+  - "cd ~"
+  - "date > exp3.log"
+  - "echo The time now is $(date)"
+  requirements:
+    cpu_usage: ">=0"
+
+################################################################################
+# Servers
+################################################################################
+
+# Applies to the server spec if not specified
+each_server:
+  # Path to the private key on local
+  private_key_path: $HOME/.ssh/id_rsa
+  # Username on the server (e.g., 'user1')
+  username: $USER
+
+# All servers
+servers:
+- name: Server 1
+  # Hostname of the server (e.g., "server1.example.com", "123.123.123.123")
+  hostname: server1
+- name: Server 2
+  # Hostname of the server (e.g., "server1.example.com", "123.123.123.123")
+  hostname: server2

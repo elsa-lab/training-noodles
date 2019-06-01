@@ -1,3 +1,4 @@
+import copy
 import json
 import logging
 import re
@@ -77,13 +78,6 @@ class Runner:
             satisfied_servers = self._find_satisfied_servers(
                 exp_spec, metrics, deployed)
 
-            # Log the satisfied servers
-            if self.verbose:
-                server_names = [servers_spec[i].get('name', '')
-                                for i in satisfied_servers]
-                logging.info('Satisfied servers: {}'.format(
-                    json.dumps(server_names)))
-
             # Check whether there are any satisfied servers
             if len(satisfied_servers) > 0:
                 # Choose the first satisfied server
@@ -103,7 +97,10 @@ class Runner:
                     exp_name, server_name))
 
                 # Deploy the experiment to the server
-                run_commands_over_ssh(commands, server_spec)
+                results = self._run_commands(commands, server_spec)
+
+                # Log the experiment results
+                logging.info('Experiment results->\n{}'.format(results))
 
                 # Add the index to the deployed servers
                 deployed.add(server_idx)
@@ -126,8 +123,11 @@ class Runner:
         # Get requirements spec
         reqs_spec = self.user_spec.get('requirements', {})
 
+        # Get server specs
+        servers_spec = self.user_spec.get('servers', [])
+
         # Iterate each server spec
-        for server_spec in self.user_spec.get('servers', []):
+        for server_spec in servers_spec:
             # Get name of the server
             name = server_spec['name']
 
@@ -146,10 +146,7 @@ class Runner:
                 raise ValueError(message)
 
             # Run the remote command on server
-            stdout = run_commands_over_ssh(req_commands, server_spec)
-
-            # Decode the results
-            results = decode_output(stdout)
+            results = self._run_commands(req_commands, server_spec)
 
             # Log the results
             logging.debug('Metric results:->\n{}'.format(results))
@@ -165,6 +162,31 @@ class Runner:
 
         # Return list of metrics for all servers
         return metrics
+
+    def _run_commands(self, commands, server_spec):
+        # Get global server spec
+        global_server_spec = self.user_spec.get('each_server', {})
+
+        # Copy the server spec to avoid changing the original server spec
+        server_spec = copy.deepcopy(server_spec)
+
+        # Update missing properties in server spec by global server spec
+        server_spec.update({k: v for k, v in global_server_spec.items()
+                            if k not in server_spec})
+
+        # Run the commands on remote
+        stdout, stderr = run_commands_over_ssh(commands, server_spec)
+
+        # Decode the output
+        stdout_results = decode_output(stdout)
+        stderr_results = decode_output(stderr)
+
+        # Log the errors if there are any
+        if self.verbose and len(stderr_results) > 0:
+            logging.error('STDERR->\n{}'.format(stderr_results))
+
+        # Return the results
+        return stdout_results
 
     def _count_experiments(self):
         # Get experiment specs as remaining experiments
@@ -195,6 +217,10 @@ class Runner:
         # Get experiment requirements
         requirements = exp_spec.get('requirements', {})
 
+        # Log the update
+        if self.verbose:
+            logging.info('Update metrics')
+
         # Iterate each requirement
         for req_id in requirements.keys():
             # Check whether the requirement ID has been existed in metrics
@@ -220,10 +246,18 @@ class Runner:
         # Get experiment requirements
         requirements = exp_spec.get('requirements', {})
 
+        # Log the find
+        if self.verbose:
+            logging.info('Find satisfied servers')
+
         # Iterate each requirement
         for req_id, req_expr in requirements.items():
             # Parse the requirement expression
             operator, value = self._parse_requirement_expression(req_expr)
+
+            # Log the requirement
+            logging.debug('Requirement ID: {}, Operator: {}, Value: {}'.format(
+                req_id, operator, value))
 
             # Get the list of server metrics of the requirement
             servers_metrics = metrics.get(req_id, None)
@@ -241,6 +275,13 @@ class Runner:
 
         # Remove indexes of deployed servers
         satisfied = set(satisfied) - deployed
+
+        # Log the satisfied servers
+        if self.verbose:
+            server_names = [servers_spec[i].get('name', '')
+                            for i in satisfied]
+            logging.info('Satisfied servers: {}'.format(
+                json.dumps(server_names)))
 
         # Return indexes of satisfied servers
         return satisfied
@@ -337,7 +378,7 @@ class Runner:
             mean = sum(floats) / len(floats)
         except:
             message = 'Could not calculate mean from the results: {}'.format(
-                results)
+                json.dumps(list(results)))
             logging.error(message)
             raise ValueError(message)
         else:

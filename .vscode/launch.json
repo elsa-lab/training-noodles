@@ -12,7 +12,20 @@
             "console": "integratedTerminal",
             "args": [
                 "run",
-                "examples/two_locals/two_locals.yml",
+                "examples/two_locals/spec.yml",
+                "--verbose",
+                "--debug"
+            ]
+        },
+        {
+            "name": "two servers same user",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/training_noodles/noodles.py",
+            "console": "integratedTerminal",
+            "args": [
+                "run",
+                "examples/two_servers_same_user/spec.yml",
                 "--verbose",
                 "--debug"
             ]
