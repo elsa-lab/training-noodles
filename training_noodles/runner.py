@@ -19,11 +19,15 @@ class Runner:
     def run(self):
         """ Deploy all the experiments until finish.
         """
+        # Save the first timestamp
+        start_time = time.time()
+
         # Initialize a set of indexes of undeployed experiments
         undeployed = set(range(self._count_experiments()))
 
         # Deploy all remaining experiments until there are none
         round_idx = 0
+        prev_round_time = time.time()
 
         while len(undeployed) > 0:
             # Log the deployment round
@@ -46,10 +50,20 @@ class Runner:
             # Remove deployed indexes
             undeployed -= deployed
 
+            # Log the round time
+            self._log_round_time(prev_round_time)
+
+            # Update previous round time
+            prev_round_time = time.time()
+
             # Increment round index
             round_idx += 1
 
+        # Calculate total elapsed time
+        elapsed = time.time() - start_time
+
         # Log the finish
+        logging.info('Total elapsed time: {:.3f}s'.format(elapsed))
         logging.info('Successfully deployed all experiments')
 
     def _deploy_experiments(self, exps_spec):
@@ -325,6 +339,14 @@ class Runner:
                                 for i in undeployed]
             logging.info('Undeployed experiments: {}'.format(
                 json.dumps(undeployed_names)))
+
+    def _log_round_time(self, prev_round_time):
+        if self.verbose:
+            # Calculate round time
+            elapsed_time = time.time() - prev_round_time
+
+            # Log the elapsed time
+            logging.info('Elapsed round time: {:.3f}s'.format(elapsed_time))
 
     def _log_requirement_ids(self, req_ids):
         logging.debug('Collected requirement IDs: {}'.format(
