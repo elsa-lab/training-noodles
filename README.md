@@ -31,6 +31,7 @@ noodles monitor my_training.yml
 noodles stop my_training.yml
 noodles download my_training.yml
 noodles upload my_training.yml
+...
 ```
 
 You can also choose only some experiments:

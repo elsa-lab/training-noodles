@@ -7,23 +7,24 @@ description: >
   user's spec if user doesn't specify them.
 
 ################################################################################
-# Experiments
+# Command Packets
 ################################################################################
 
-# Commands to run on server before executing all experiments (like "setUpClass" in Python unittest)
-before_all_experiments: []
+# Specify any command types like "monitor", "stop", "download", "upload", ...
+# here for Noodles to use (e.g., use "noodles pause <spec_path>" if you specify
+# "pause: ..." here)
 
-# Commands to run on server before executing each experiment (like "setUp" in Python unittest)
-before_each_experiment: []
-
-# Commands to run on server for the experiments (like test methods in Python unittest)
-experiments: []
-
-# Commands to run on server after executing each experiment (like "tearDown" in Python unittest)
-after_each_experiment: []
-
-# Commands to run on server after executing all experiments (like "tearDownClass" in Python unittest)
-after_all_experiments: []
+# For example:
+# run:
+#   all:
+#   - name: Experiment 1
+#     description: Example experiment 1
+#     commands: "echo Running experiment 1"
+#   - name: Experiment 2
+#     description: Example experiment 2
+#     commands:
+#     - "echo Running experiment 2"
+#     - "date > ~/exp2.log"
 
 ################################################################################
 # Servers

@@ -5,31 +5,33 @@ name: Two servers and same user
 description: Run commands on two servers with same user
 
 ################################################################################
-# Experiments
+# Command Packets
 ################################################################################
 
-# Commands to run on server for the experiments (like test methods in Python unittest)
-experiments:
-- name: Experiment 1
-  description: Example experiment 1
-  commands: "echo Running experiment 1 && echo Hello $(hostname) > ~/exp1.log"
-- name: Experiment 2
-  description: Example experiment 2
-  commands:
-  - "echo Running experiment 2"
-  - "date > ~/exp2.log"
-  - "echo The hostname is $(hostname)"
-  - "echo The time now is $(date)"
-- name: Experiment 3
-  description: Example experiment 3
-  commands:
-  - "echo Running experiment 3"
-  - "cd ~"
-  - "date > exp3.log"
-  - "echo The hostname is $(hostname)"
-  - "echo The time now is $(date)"
-  requirements:
-    cpu_usage: ">=0"
+# Commands to run on servers, use "noodles run <spec_path>" to run all the
+# commands
+run:
+  all:
+  - name: Experiment 1
+    description: Example experiment 1
+    commands: "echo Running experiment 1 && echo Hello $(hostname) > ~/exp1.log"
+  - name: Experiment 2
+    description: Example experiment 2
+    commands:
+    - "echo Running experiment 2"
+    - "date > ~/exp2.log"
+    - "echo The hostname is $(hostname)"
+    - "echo The time now is $(date)"
+  - name: Experiment 3
+    description: Example experiment 3
+    commands:
+    - "echo Running experiment 3"
+    - "cd ~"
+    - "date > exp3.log"
+    - "echo The hostname is $(hostname)"
+    - "echo The time now is $(date)"
+    requirements:
+      cpu_usage: ">=0"
 
 ################################################################################
 # Servers

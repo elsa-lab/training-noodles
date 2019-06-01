@@ -6,13 +6,12 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description='Training with instant noodles')
 
-    # Command
-    parser.add_argument('command', type=str,
-                        help='Command type ("run", "status", "monitor",' +
-                        ' "stop", "download", "upload")')
+    # Command packet type
+    parser.add_argument('type', type=str,
+                        help='Command packet type (e.g., "run", "stop")')
     # Spec
     parser.add_argument('spec', type=str,
-                        help='Path to the spec file and experiments' +
+                        help='Path to the spec file' +
                         ' (e.g., "spec.yml", "spec.yml:exp1,exp2")')
     # Logging
     parser.add_argument('-v', '--verbose', action='store_true',

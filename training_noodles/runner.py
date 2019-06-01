@@ -9,7 +9,10 @@ from training_noodles.remote import run_commands_over_ssh
 
 
 class Runner:
-    def __init__(self, user_spec, verbose=False):
+    def __init__(self, packet_type, user_spec, verbose=False):
+        # Save the packet type
+        self.packet_type = packet_type
+
         # Save the user spec
         self.user_spec = user_spec
 
@@ -17,15 +20,15 @@ class Runner:
         self.verbose = verbose
 
     def run(self):
-        """ Deploy all the experiments until finish.
+        """ Deploy all the command packets until finish.
         """
         # Save the first timestamp
         start_time = time.time()
 
-        # Initialize a set of indexes of undeployed experiments
-        undeployed = set(range(self._count_experiments()))
+        # Initialize a set of indexes of undeployed packets
+        undeployed = set(range(self._count_packets()))
 
-        # Deploy all remaining experiments until there are none
+        # Deploy all remaining packets until there are none
         round_idx = 0
         prev_round_time = time.time()
 
@@ -37,11 +40,11 @@ class Runner:
             if round_idx > 0:
                 self._wait_for_next_round()
 
-            # Filter the experiments to choose the undeployed experiments
-            undeployed_exps = self._filter_undeployed_experiments(undeployed)
+            # Create undeployed packets
+            undeployed_packets = self._filter_undeployed_packets(undeployed)
 
-            # Try to deploy each experiment to one of the satisfied servers
-            deployed = self._deploy_experiments(undeployed_exps)
+            # Try to deploy each packet to one of the satisfied servers
+            deployed = self._deploy_packets(undeployed_packets)
 
             # Restore the original deployed indexes
             undeployed_list = list(undeployed)
@@ -64,9 +67,9 @@ class Runner:
 
         # Log the finish
         logging.info('Total elapsed time: {:.3f}s'.format(elapsed))
-        logging.info('Successfully deployed all experiments')
+        logging.info('Successfully deployed all commands')
 
-    def _deploy_experiments(self, exps_spec):
+    def _deploy_packets(self, packets_spec):
         # Initialize set of indexes of deployed servers
         deployed = set()
 
@@ -76,21 +79,21 @@ class Runner:
         # Get servers spec
         servers_spec = self.user_spec.get('servers', [])
 
-        # Iterate each experiment spec
-        for exp_idx, exp_spec in enumerate(exps_spec):
-            # Get the experiment name
-            exp_name = exp_spec.get('name', '')
+        # Iterate each packet spec
+        for packet_idx, packet_spec in enumerate(packets_spec):
+            # Get the packet name
+            packet_name = packet_spec.get('name', '')
 
-            # Log the experiment
+            # Log the packet
             if self.verbose:
-                logging.info('Try to deploy experiment "{}"'.format(exp_name))
+                logging.info('Try to deploy packet "{}"'.format(packet_name))
 
             # Update metrics lazily
-            self._update_metrics(exp_spec, metrics)
+            self._update_metrics(packet_spec, metrics)
 
             # Find satisfied servers
             satisfied_servers = self._find_satisfied_servers(
-                exp_spec, metrics, deployed)
+                packet_spec, metrics, deployed)
 
             # Check whether there are any satisfied servers
             if len(satisfied_servers) > 0:
@@ -108,17 +111,17 @@ class Runner:
                 server_name = server_spec.get('name', '')
 
                 # Log the deployment
-                logging.info('Deploy experiment "{}" to server "{}"'.format(
-                    exp_name, server_name))
+                logging.info('Deploy packet "{}" to server "{}"'.format(
+                    packet_name, server_name))
 
-                # Get experiment commands
-                commands = exp_spec.get('commands', [])
+                # Get packet commands
+                commands = packet_spec.get('commands', [])
 
-                # Deploy the experiment to the server
+                # Deploy the packet to the server
                 results = self._run_commands(commands, server_spec)
 
-                # Log the experimental results
-                logging.info('Experimental results->\n{}'.format(results))
+                # Log the results
+                logging.info('Commands results->\n{}'.format(results))
 
                 # Add the index to the deployed servers
                 deployed.add(server_idx)
@@ -131,7 +134,7 @@ class Runner:
 
                 break
 
-        # Return the deployed experiments
+        # Return the deployed packet indexes
         return deployed
 
     def _check_server_metrics(self, req_id):
@@ -206,34 +209,34 @@ class Runner:
         # Return the results
         return stdout_results
 
-    def _count_experiments(self):
-        # Get experiment specs as remaining experiments
-        exps_spec = self.user_spec.get('experiments', [])
+    def _count_packets(self):
+        # Get command packets
+        packets_spec = self._get_command_packets()
 
         # Return the count
-        return len(exps_spec)
+        return len(packets_spec)
 
-    def _filter_undeployed_experiments(self, undeployed):
-        # Initialize the list of undeployed experiments
-        undeployed_exps = []
+    def _filter_undeployed_packets(self, undeployed):
+        # Initialize the list of undeployed packets
+        undeployed_packets = []
 
-        # Get experiment specs as remaining experiments
-        exps_spec = self.user_spec.get('experiments', [])
+        # Get command packets
+        packets_spec = self._get_command_packets()
 
-        # Add each undeployed experiments to the list
-        for exp_idx in undeployed:
-            # Get the experiment spec
-            exp_spec = exps_spec[exp_idx]
+        # Add each undeployed packet to the list
+        for packet_idx in undeployed:
+            # Get the packet spec
+            packet_spec = packets_spec[packet_idx]
 
-            # Add to the undeployed experiments
-            undeployed_exps.append(exp_spec)
+            # Add to the undeployed packets
+            undeployed_packets.append(packet_spec)
 
-        # Return the undeployed experiments
-        return undeployed_exps
+        # Return the undeployed packets
+        return undeployed_packets
 
-    def _update_metrics(self, exp_spec, metrics):
-        # Get experiment requirements
-        requirements = exp_spec.get('requirements', {})
+    def _update_metrics(self, packet_spec, metrics):
+        # Get packet requirements
+        requirements = packet_spec.get('requirements', {})
 
         # Log the update
         if self.verbose:
@@ -254,15 +257,15 @@ class Runner:
                 # Update the metrics
                 metrics[req_id] = server_metrics
 
-    def _find_satisfied_servers(self, exp_spec, metrics, deployed):
+    def _find_satisfied_servers(self, packet_spec, metrics, deployed):
         # Get servers spec
         servers_spec = self.user_spec.get('servers', [])
 
         # Initialize all indexes of servers
         satisfied = set(range(len(servers_spec)))
 
-        # Get experiment requirements
-        requirements = exp_spec.get('requirements', {})
+        # Get packet requirements
+        requirements = packet_spec.get('requirements', {})
 
         # Log the find
         if self.verbose:
@@ -327,33 +330,6 @@ class Runner:
 
         # Wait for some time
         time.sleep(deployment_interval)
-
-    def _log_round(self, round_idx, undeployed):
-        if self.verbose:
-            # Log the round number
-            logging.info('Round #{}'.format(round_idx + 1))
-
-            # Log the undeployed experiments
-            exps_spec = self.user_spec.get('experiments', [])
-            undeployed_names = [exps_spec[i].get('name', '#{}'.format(i))
-                                for i in undeployed]
-            logging.info('Undeployed experiments: {}'.format(
-                json.dumps(undeployed_names)))
-
-    def _log_round_time(self, prev_round_time):
-        if self.verbose:
-            # Calculate round time
-            elapsed_time = time.time() - prev_round_time
-
-            # Log the elapsed time
-            logging.info('Elapsed round time: {:.3f}s'.format(elapsed_time))
-
-    def _log_requirement_ids(self, req_ids):
-        logging.debug('Collected requirement IDs: {}'.format(
-            json.dumps(req_ids)))
-
-    def _log_metrics(self, metrics):
-        logging.debug('Server metrics: {}'.format(json.dumps(metrics)))
 
     def _is_metric_satisfied(self, metric, operator, value):
         if operator == '==':
@@ -425,3 +401,40 @@ class Runner:
             result = results
 
         return result
+
+    def _get_command_packets(self):
+        # Get packet box
+        packet_box = self.user_spec.get(self.packet_type, {})
+
+        # Get packet bundle
+        packets = packet_box.get('all', {})
+
+        # Return the packet bundle
+        return packets
+
+    def _log_round(self, round_idx, undeployed):
+        if self.verbose:
+            # Log the round number
+            logging.info('Round #{}'.format(round_idx + 1))
+
+            # Log the undeployed packets
+            packets_spec = self._get_command_packets()
+            undeployed_names = [packets_spec[i].get('name', '#{}'.format(i))
+                                for i in undeployed]
+            logging.info('Undeployed packets: {}'.format(
+                json.dumps(undeployed_names)))
+
+    def _log_round_time(self, prev_round_time):
+        if self.verbose:
+            # Calculate round time
+            elapsed_time = time.time() - prev_round_time
+
+            # Log the elapsed time
+            logging.info('Elapsed round time: {:.3f}s'.format(elapsed_time))
+
+    def _log_requirement_ids(self, req_ids):
+        logging.debug('Collected requirement IDs: {}'.format(
+            json.dumps(req_ids)))
+
+    def _log_metrics(self, metrics):
+        logging.debug('Server metrics: {}'.format(json.dumps(metrics)))

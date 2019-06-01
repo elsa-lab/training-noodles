@@ -1,9 +1,10 @@
 import logging
+import sys
 
 from training_noodles.arguments import parse_args
 from training_noodles.logger import init_logging
 from training_noodles.runner import Runner
-from training_noodles.spec import read_user_spec
+from training_noodles.spec import check_conflicted_type, read_user_spec
 
 
 def main():
@@ -16,25 +17,24 @@ def main():
     # Read the spec
     user_spec = read_user_spec(args)
 
-    # Check the command type
-    if args.command == 'run':
-        runner = Runner(user_spec, verbose=args.verbose)
-        runner.run()
-    elif args.command == 'status':
-        raise NotImplementedError()
-    elif args.command == 'monitor':
-        raise NotImplementedError()
-    elif args.command == 'stop':
-        raise NotImplementedError()
-    elif args.command == 'download':
-        raise NotImplementedError()
-    elif args.command == 'upload':
-        raise NotImplementedError()
+    # Check whether the command packet type conflicts with any builtin key
+    if check_conflicted_type(args):
+        # Return error code
+        return 1
     else:
-        message = 'Unknown command type: {}'.format(args.command)
-        logging.error(message)
-        raise ValueError(message)
+        # Build the runner
+        runner = Runner(args.type, user_spec, verbose=args.verbose)
+
+        # Start the runner
+        runner.run()
+
+        # Return success code
+        return 0
 
 
 if __name__ == '__main__':
-    main()
+    # Run main method
+    status = main()
+
+    # Exit with status
+    sys.exit(status)
