@@ -11,9 +11,3 @@ To run this example, use project root directory as working directory and execute
 ```bash
 noodles run examples/two_servers_same_user/spec.yml
 ```
-
-To understand how the commands are executed, specify extra arguments which turn on verbose logging and debugging info:
-
-```bash
-noodles run examples/two_servers_same_user/spec.yml --verbose --debug
-```

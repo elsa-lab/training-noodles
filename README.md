@@ -36,5 +36,7 @@ noodles upload my_training.yml
 You can also choose only some experiments:
 
 ```bash
-noodles run my_training.yml:experiment1,experiment2
+noodles run "my_training.yml:Experiment 1,Experiment 2"
 ```
+
+See the example in directory `examples/two_locals` to get started.

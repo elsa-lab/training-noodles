@@ -14,11 +14,19 @@ noodles run examples/two_locals/spec.yml
 
 You would see files `exp1.log`, `exp2.log` and `exp3.log` created under the directory `examples/two_locals/`, which are the results of the experiment commands written in the spec.
 
+### 10 Seconds Delay
+
+You would notice there is a 10 second delay between deployments of *Experiment 2* and *Experiment 3* due to the option `round_interval` in the spec. We generally want to keep a long delay between each deployment round because the system metrics would drastically change after the previous deployment round. In this example, if we deploy too quickly (e.g., set `round_interval` to 0), the CPU usage might still be low in the early stages of training, which would make Noodles deploy lots of experiments in a short time and result in higher CPU usage than expected.
+
+### Choose Only Some Experiments
+
 To run only *Experiment 2* and *Experiment 3*, specify them as the following
 
 ```bash
 noodles run "examples/two_locals/spec.yml:Experiment 2,Experiment 3"
 ```
+
+### See Details of Executions
 
 To understand how the commands are executed, specify extra arguments which turn on verbose logging and debugging info:
 

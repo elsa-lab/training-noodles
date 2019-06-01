@@ -23,15 +23,15 @@ class Runner:
         undeployed = set(range(self._count_experiments()))
 
         # Deploy all remaining experiments until there are none
-        deployment_idx = 0
+        round_idx = 0
 
         while len(undeployed) > 0:
-            # Log the deployment
-            self._log_deployment(deployment_idx, undeployed)
+            # Log the deployment round
+            self._log_round(round_idx, undeployed)
 
-            # Wait for next deployment
-            if deployment_idx > 0:
-                self._wait_for_next_deployment()
+            # Wait for next round
+            if round_idx > 0:
+                self._wait_for_next_round()
 
             # Filter the experiments to choose the undeployed experiments
             undeployed_exps = self._filter_undeployed_experiments(undeployed)
@@ -46,8 +46,8 @@ class Runner:
             # Remove deployed indexes
             undeployed -= deployed
 
-            # Increment deployment index
-            deployment_idx += 1
+            # Increment round index
+            round_idx += 1
 
         # Log the finish
         logging.info('Successfully deployed all experiments')
@@ -63,7 +63,7 @@ class Runner:
         servers_spec = self.user_spec.get('servers', [])
 
         # Iterate each experiment spec
-        for exp_spec in exps_spec:
+        for exp_idx, exp_spec in enumerate(exps_spec):
             # Get the experiment name
             exp_name = exp_spec.get('name', '')
 
@@ -80,11 +80,12 @@ class Runner:
 
             # Check whether there are any satisfied servers
             if len(satisfied_servers) > 0:
+                # Wait for next deployment
+                if len(deployed) > 0:
+                    self._wait_for_next_deployment()
+
                 # Choose the first satisfied server
                 server_idx = next(iter(satisfied_servers))
-
-                # Get experiment commands
-                commands = exp_spec.get('commands', [])
 
                 # Get server spec
                 server_spec = servers_spec[server_idx]
@@ -96,11 +97,14 @@ class Runner:
                 logging.info('Deploy experiment "{}" to server "{}"'.format(
                     exp_name, server_name))
 
+                # Get experiment commands
+                commands = exp_spec.get('commands', [])
+
                 # Deploy the experiment to the server
                 results = self._run_commands(commands, server_spec)
 
-                # Log the experiment results
-                logging.info('Experiment results->\n{}'.format(results))
+                # Log the experimental results
+                logging.info('Experimental results->\n{}'.format(results))
 
                 # Add the index to the deployed servers
                 deployed.add(server_idx)
@@ -286,6 +290,18 @@ class Runner:
         # Return indexes of satisfied servers
         return satisfied
 
+    def _wait_for_next_round(self):
+        # Get round interval
+        round_interval = self.user_spec.get('round_interval', 0)
+
+        # Log the wait
+        if self.verbose:
+            logging.info('Wait for next round for {}s'.format(
+                round_interval))
+
+        # Wait for some time
+        time.sleep(round_interval)
+
     def _wait_for_next_deployment(self):
         # Get deployment interval
         deployment_interval = self.user_spec.get('deployment_interval', 0)
@@ -298,10 +314,10 @@ class Runner:
         # Wait for some time
         time.sleep(deployment_interval)
 
-    def _log_deployment(self, deployment_idx, undeployed):
+    def _log_round(self, round_idx, undeployed):
         if self.verbose:
-            # Log the deployment number
-            logging.info('Deployment #{}'.format(deployment_idx + 1))
+            # Log the round number
+            logging.info('Round #{}'.format(round_idx + 1))
 
             # Log the undeployed experiments
             exps_spec = self.user_spec.get('experiments', [])
