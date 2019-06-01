@@ -155,14 +155,14 @@ class Runner:
             # Log the results
             logging.debug('Metric results:->\n{}'.format(results))
 
-            # Calculate mean metric of results
-            mean_metric = self._calc_mean(results)
+            # Try to calculate mean metric of results
+            metric = self._try_calc_mean(results)
 
-            # Log the mean
-            logging.debug('Mean metric: {}'.format(mean_metric))
+            # Log the metric
+            logging.debug('Metric: {}'.format(metric))
 
-            # Add the mean metric to the list
-            metrics.append(mean_metric)
+            # Add the metric to the list
+            metrics.append(metric)
 
         # Return list of metrics for all servers
         return metrics
@@ -368,18 +368,19 @@ class Runner:
             operator = m.group('operator')
             value = m.group('value')
 
-            # Convert the value to float
+            # Try to convert the value to float
             try:
                 value = float(value)
             except:
-                message = 'Could not convert value to float: {}'.format(value)
-                logging.error(message)
-                raise ValueError(message)
+                # Log the conversion fail
+                if self.verbose:
+                    logging.info(('Failed to convert value to float,' +
+                                  ' ignore now: {}').format(value))
 
         # Return operator and value
         return operator, value
 
-    def _calc_mean(self, results):
+    def _try_calc_mean(self, results):
         # Split the results by newlines
         results = results.split('\n')
 
@@ -391,11 +392,14 @@ class Runner:
             floats = list(map(float, results))
 
             # Calculate the mean
-            mean = sum(floats) / len(floats)
+            result = sum(floats) / len(floats)
         except:
-            message = 'Could not calculate mean from the results: {}'.format(
-                json.dumps(list(results)))
-            logging.error(message)
-            raise ValueError(message)
-        else:
-            return mean
+            # Log the conversion fail
+            if self.verbose:
+                logging.info(('Failed to convert results to floats,' +
+                              ' ignore now: {}').format(results))
+
+            # Use original results
+            result = results
+
+        return result
