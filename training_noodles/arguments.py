@@ -6,9 +6,9 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description='Training with instant noodles')
 
-    # Command packet type
+    # Command type
     parser.add_argument('type', type=str,
-                        help='Command packet type (e.g., "run", "stop")')
+                        help='Command type (e.g., "run", "stop")')
     # Spec
     parser.add_argument('spec', type=str,
                         help='Path to the spec file' +

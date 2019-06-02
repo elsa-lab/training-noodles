@@ -1,6 +1,9 @@
+import json
 import logging
 import os
 import subprocess
+
+from training_noodles.utils import convert_values_to_strs
 
 
 def decode_output(output):
@@ -20,42 +23,38 @@ def decode_output(output):
         return output
 
 
-def run_command(command_or_parts, stdin=None, extra_env=None, wait=True):
+def run_command(command, stdin=None, extra_envs=None, wait=True):
     """ Run the command using bash.
 
     Arguments:
-        command_or_parts (str or list): Single command as str or command parts
-            in list.
+        command (str): Command to run.
         stdin (file object): Input stream. Set to "None" to use default stdin.
-        extra_env (dict): Extra environment variables.
+        extra_envs (dict): Extra environment variables.
         wait (bool): Whether to wait for the command to finish.
 
     Returns:
         p_obj: A "Popen" object.
     """
-    # Convert the command arguments to string
-    if isinstance(command_or_parts, str):
-        command = command_or_parts
-    elif isinstance(command_or_parts, list):
-        command = ' '.join(command_or_parts)
-    else:
-        message = 'Unknown type of command arguments'
-        logging.error(message)
-        raise ValueError(message)
-
     # Wrap the command by bash
     command = 'bash -c "{}"'.format(command)
 
+    # Convert environment variable values to strings
+    extra_envs = convert_values_to_strs(extra_envs)
+
     # Print the command
-    logging.debug('Run command->\n{}'.format(command))
+    logging.debug('Run command: {}'.format(command))
+
+    # Print the extra environment variables
+    logging.debug(
+        'Extra environment variables: {}'.format(json.dumps(extra_envs)))
 
     try:
         # Get default environment variables
         env = os.environ.copy()
 
         # Update with extra environment variables
-        if extra_env:
-            env.update(extra_env)
+        if extra_envs:
+            env.update(extra_envs)
 
         # Run the program
         p_obj = subprocess.Popen(command, stdin=stdin, stdout=subprocess.PIPE,
@@ -86,7 +85,7 @@ def wait_command(p_obj):
     p_obj.wait()
 
 
-def read_command_results(p_obj, check_return_code=True):
+def read_command_results(p_obj):
     """ Read command results.
 
     Read the raw stdout and stderr. Will raise error if "check_return_code" is
@@ -94,7 +93,6 @@ def read_command_results(p_obj, check_return_code=True):
 
     Arguments:
         p_obj (Popen): The object given by "run_command" function.
-        check_return_code (bool): Whether to check return code.
 
     Returns:
         (Raw stdout, Raw stderr, Return code (int))
@@ -105,15 +103,5 @@ def read_command_results(p_obj, check_return_code=True):
     # Read return code
     return_code = p_obj.returncode
 
-    # Check return code
-    if check_return_code and return_code != 0:
-        # Log stdout and stderr
-        logging.error('STDOUT=>\n{}'.format(decode_output(stdout)))
-        logging.error('STDERR=>\n{}'.format(decode_output(stderr)))
-
-        # Raise error
-        message = 'Returned non-zero return code {}'.format(return_code)
-        logging.error(message)
-        raise ValueError(message)
-
+    # Return the raw results and return code
     return stdout, stderr, return_code

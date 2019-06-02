@@ -7,24 +7,35 @@ description: >
   user's spec if user doesn't specify them.
 
 ################################################################################
-# Command Packets
+# Experiments
 ################################################################################
 
-# Specify any command types like "monitor", "stop", "download", "upload", ...
-# here for Noodles to use (e.g., use "noodles pause <spec_path>" if you specify
-# "pause: ..." here)
+before_all_experiments:
+  name: <before all>
+  envs: {}
+  commands: {}
 
-# For example:
-# run:
-#   all:
-#   - name: Experiment 1
-#     description: Example experiment 1
-#     commands: "echo Running experiment 1"
-#   - name: Experiment 2
-#     description: Example experiment 2
-#     commands:
-#     - "echo Running experiment 2"
-#     - "date > ~/exp2.log"
+before_each_experiment:
+  name: <before each>
+  envs: {}
+  commands: {}
+
+each_experiment:
+  name: <each>
+  envs: {}
+  commands: {}
+
+experiments: []
+
+after_each_experiment:
+  name: <after each>
+  envs: {}
+  commands: {}
+
+after_all_experiments:
+  name: <after all>
+  envs: {}
+  commands: {}
 
 ################################################################################
 # Servers
@@ -74,3 +85,10 @@ requirements:
 round_interval: 10
 # The interval to deploy each experiment in each round
 deployment_interval: 0
+
+################################################################################
+# Error Handling
+################################################################################
+
+# Whether to check nonzero return code and nonempty stderr and raise error
+check_errors: True

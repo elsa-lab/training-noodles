@@ -4,7 +4,7 @@ import sys
 from training_noodles.arguments import parse_args
 from training_noodles.logger import init_logging
 from training_noodles.runner import Runner
-from training_noodles.spec import check_conflicted_type, read_user_spec
+from training_noodles.spec import read_user_spec
 
 
 def main():
@@ -17,19 +17,14 @@ def main():
     # Read the spec
     user_spec = read_user_spec(args)
 
-    # Check whether the command packet type conflicts with any builtin key
-    if check_conflicted_type(args):
-        # Return error code
-        return 1
-    else:
-        # Build the runner
-        runner = Runner(args.type, user_spec, verbose=args.verbose)
+    # Build the runner
+    runner = Runner(args.type, user_spec, verbose=args.verbose)
 
-        # Start the runner
-        runner.run()
+    # Start the runner
+    runner.run()
 
-        # Return success code
-        return 0
+    # Return success code
+    return 0
 
 
 if __name__ == '__main__':

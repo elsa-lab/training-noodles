@@ -5,27 +5,29 @@ import tempfile
 
 from training_noodles.cli import (
     decode_output, run_command, read_command_results)
+from training_noodles.utils import wrap_with_list
 
 
-def run_commands_over_ssh(commands, server_spec):
+def run_commands_over_ssh(server_spec, commands, envs={}):
     """ Run commands over SSH.
 
+    The "commands" will be written into the temporary file. The final command
+    would use bash to execute these "commands" from the temporary file and write
+    STDOUT and STDERR into the newly created temporary files (Temp STDOUT and
+    Temp STDERR).
+
     Arguments:
-        commands (str or list): A single command (str) or list of commands.
         server_spec (dict): The server spec.
+        commands (str or list): A single command (str) or list of commands.
+        envs (dict): Environment variables.
 
     Returns:
-        Raw stdout.
+        (results, debug_info) where "results" is a dict(stdout, stderr,
+        returncode, temp_stdout, temp_stderr) and "debug_info" is a dict(
+        inner_command, outer_command).
     """
-    # Convert to list of commands for consistency
-    if isinstance(commands, str):
-        commands = [commands]
-    elif isinstance(commands, list):
-        commands = commands
-    else:
-        message = 'Unknown type of command arguments'
-        logging.error(message)
-        raise ValueError(message)
+    # Wrap the commands in list for consistency
+    commands = wrap_with_list(commands)
 
     # Create temporary files
     temp_files = _create_temp_files()
@@ -34,28 +36,49 @@ def run_commands_over_ssh(commands, server_spec):
     ssh_command = _build_ssh_command(server_spec)
 
     # Concatenate commands by newlines
-    command = '\n'.join(commands)
+    inner_command = '\n'.join(commands)
 
     # Write command to temporary stdin file
-    _write_command_to_stdin(command, temp_files)
+    _write_command_to_stdin(inner_command, temp_files)
 
-    # Build remote command
-    remote_command = _build_remote_command(ssh_command, temp_files)
+    # Build outer command
+    outer_command = _build_outer_command(ssh_command, temp_files)
 
-    # Execute the remote command
-    p_obj = run_command(remote_command)
+    # Execute the final command
+    p_obj = run_command(outer_command, extra_envs=envs)
 
-    # Read the command results (just for checking errors)
-    read_command_results(p_obj)
+    # Read the command results
+    stdout, stderr, returncode = read_command_results(p_obj)
 
     # Read stdout and stderr from temporary files
-    stdout, stderr = _read_stdout_and_stderr(temp_files)
+    temp_stdout, temp_stderr = _read_stdout_and_stderr(temp_files)
 
     # Delete temporary files
     _delete_temp_files(temp_files)
 
+    # Decode the results
+    stdout = decode_output(stdout)
+    stderr = decode_output(stderr)
+    temp_stdout = decode_output(temp_stdout)
+    temp_stderr = decode_output(temp_stderr)
+
+    # Build the results
+    results = {
+        'stdout': stdout,
+        'stderr': stderr,
+        'returncode': returncode,
+        'temp_stdout': temp_stdout,
+        'temp_stderr': temp_stderr,
+    }
+
+    # Build debugging info
+    debug_info = {
+        'inner_command': inner_command,
+        'outer_command': outer_command,
+    }
+
     # Return the results
-    return stdout, stderr
+    return results, debug_info
 
 
 def _create_temp_files():
@@ -186,15 +209,15 @@ def _build_ssh_command(server_spec):
         return ssh_command
 
 
-def _build_remote_command(ssh_command, temp_files):
+def _build_outer_command(ssh_command, temp_files):
     # Get temporary file paths
     stdin_path = temp_files['stdin_path']
     stdout_path = temp_files['stdout_path']
     stderr_path = temp_files['stderr_path']
 
     # Build the command
-    remote_command = '{} \'bash -s\' < {} > {} 2> {}'.format(
+    outer_command = '{} \'bash -s\' < {} > {} 2> {}'.format(
         ssh_command, stdin_path, stdout_path, stderr_path)
 
-    # Return the remote command
-    return remote_command
+    # Return the final command
+    return outer_command

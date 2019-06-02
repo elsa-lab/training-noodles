@@ -1,4 +1,3 @@
-import copy
 import json
 import logging
 import re
@@ -6,12 +5,13 @@ import time
 
 from training_noodles.cli import decode_output
 from training_noodles.remote import run_commands_over_ssh
+from training_noodles.utils import update_dict_with_missing, wrap_with_list
 
 
 class Runner:
-    def __init__(self, packet_type, user_spec, verbose=False):
-        # Save the packet type
-        self.packet_type = packet_type
+    def __init__(self, command_type, user_spec, verbose=False):
+        # Save the command type
+        self.command_type = command_type
 
         # Save the user spec
         self.user_spec = user_spec
@@ -20,15 +20,33 @@ class Runner:
         self.verbose = verbose
 
     def run(self):
-        """ Deploy all the command packets until finish.
+        """ Deploy all the experiments until finish.
         """
         # Save the first timestamp
         start_time = time.time()
 
-        # Initialize a set of indexes of undeployed packets
-        undeployed = set(range(self._count_packets()))
+        # Deploy "before all" experiments
+        self._deploy_side_experiments('before_all_experiments')
 
-        # Deploy all remaining packets until there are none
+        # Deploy main experiments
+        self._deploy_main_experiments()
+
+        # Deploy "after all" experiments
+        self._deploy_side_experiments('after_all_experiments')
+
+        # Calculate total elapsed time
+        elapsed = time.time() - start_time
+
+        # Log the finish
+        logging.info('Total elapsed time: {:.3f}s'.format(elapsed))
+        logging.info('Successfully deployed all "{}" commands'.format(
+            self.command_type))
+
+    def _deploy_main_experiments(self):
+        # Initialize a set of indexes of undeployed experiments
+        undeployed = set(range(self._count_experiments()))
+
+        # Deploy all remaining experiments until there are none
         round_idx = 0
         prev_round_time = time.time()
 
@@ -40,11 +58,11 @@ class Runner:
             if round_idx > 0:
                 self._wait_for_next_round()
 
-            # Create undeployed packets
-            undeployed_packets = self._filter_undeployed_packets(undeployed)
+            # Create undeployed experiments
+            undeployed_exps = self._filter_undeployed_experiments(undeployed)
 
-            # Try to deploy each packet to one of the satisfied servers
-            deployed = self._deploy_packets(undeployed_packets)
+            # Try to deploy each experiment to one of the satisfied servers
+            deployed = self._deploy_experiment_specs(undeployed_exps)
 
             # Restore the original deployed indexes
             undeployed_list = list(undeployed)
@@ -62,14 +80,47 @@ class Runner:
             # Increment round index
             round_idx += 1
 
-        # Calculate total elapsed time
-        elapsed = time.time() - start_time
+        # Log the finish
+        logging.info('Successfully deployed main stage')
+
+    def _deploy_side_experiments(self, stage):
+        # Get the side experiment spec
+        side_exp_spec = self._get_side_experiments_spec(stage)
+
+        # Wrap the side experiment spec in list
+        wrapped_spec = [side_exp_spec]
+
+        # Initialize the deployed set
+        deployed = set()
+
+        # Deploy all remaining experiments until there are none
+        round_idx = 0
+        prev_round_time = time.time()
+
+        while len(deployed) <= 0:
+            # Log the deployment round
+            self._log_side_round(stage, round_idx)
+
+            # Wait for next round
+            if round_idx > 0:
+                self._wait_for_next_round()
+
+            # Try to deploy each experiment to one of the satisfied servers
+            deployed = self._deploy_experiment_specs(wrapped_spec, main=False)
+
+            # Log the round time
+            self._log_round_time(prev_round_time)
+
+            # Update previous round time
+            prev_round_time = time.time()
+
+            # Increment round index
+            round_idx += 1
 
         # Log the finish
-        logging.info('Total elapsed time: {:.3f}s'.format(elapsed))
-        logging.info('Successfully deployed all commands')
+        logging.info('Successfully deployed side stage "{}"'.format(stage))
 
-    def _deploy_packets(self, packets_spec):
+    def _deploy_experiment_specs(self, exps_spec, main=True):
         # Initialize set of indexes of deployed servers
         deployed = set()
 
@@ -79,21 +130,21 @@ class Runner:
         # Get servers spec
         servers_spec = self.user_spec.get('servers', [])
 
-        # Iterate each packet spec
-        for packet_idx, packet_spec in enumerate(packets_spec):
-            # Get the packet name
-            packet_name = packet_spec.get('name', '')
+        # Iterate each experiment spec
+        for exp_idx, exp_spec in enumerate(exps_spec):
+            # Get the experiment name
+            exp_name = exp_spec.get('name', '')
 
-            # Log the packet
+            # Log the experiment
             if self.verbose:
-                logging.info('Try to deploy packet "{}"'.format(packet_name))
+                logging.info('Try to deploy experiment "{}"'.format(exp_name))
 
             # Update metrics lazily
-            self._update_metrics(packet_spec, metrics)
+            self._update_metrics(exp_spec, metrics)
 
             # Find satisfied servers
             satisfied_servers = self._find_satisfied_servers(
-                packet_spec, metrics, deployed)
+                exp_spec, metrics, deployed)
 
             # Check whether there are any satisfied servers
             if len(satisfied_servers) > 0:
@@ -111,14 +162,19 @@ class Runner:
                 server_name = server_spec.get('name', '')
 
                 # Log the deployment
-                logging.info('Deploy packet "{}" to server "{}"'.format(
-                    packet_name, server_name))
+                logging.info('Deploy experiment "{}" to server "{}"'.format(
+                    exp_name, server_name))
 
-                # Get packet commands
-                commands = packet_spec.get('commands', [])
+                # Build experiment commands
+                commands = self._build_experiment_details(
+                    exp_spec, 'commands', main=main)
 
-                # Deploy the packet to the server
-                results = self._run_commands(commands, server_spec)
+                # Build experiment environment variables
+                envs = self._build_experiment_details(
+                    exp_spec, 'envs', main=main)
+
+                # Deploy the experiment to the server
+                results = self._run_commands(server_spec, commands, envs=envs)
 
                 # Log the results
                 logging.info('Commands results->\n{}'.format(results))
@@ -134,7 +190,7 @@ class Runner:
 
                 break
 
-        # Return the deployed packet indexes
+        # Return the deployed experiment indexes
         return deployed
 
     def _check_server_metrics(self, req_id):
@@ -167,7 +223,7 @@ class Runner:
                 raise ValueError(message)
 
             # Run the remote command on server
-            results = self._run_commands(req_commands, server_spec)
+            results = self._run_commands(server_spec, req_commands)
 
             # Log the results
             logging.debug('Metric results:->\n{}'.format(results))
@@ -184,66 +240,86 @@ class Runner:
         # Return list of metrics for all servers
         return metrics
 
-    def _run_commands(self, commands, server_spec):
+    def _run_commands(self, server_spec, commands, envs={}):
         # Get global server spec
         global_server_spec = self.user_spec.get('each_server', {})
 
         # Copy the server spec to avoid changing the original server spec
-        server_spec = copy.deepcopy(server_spec)
+        server_spec = server_spec.copy()
 
         # Update missing properties in server spec by global server spec
-        server_spec.update({k: v for k, v in global_server_spec.items()
-                            if k not in server_spec})
+        server_spec = update_dict_with_missing(server_spec, global_server_spec)
 
         # Run the commands on remote
-        stdout, stderr = run_commands_over_ssh(commands, server_spec)
+        results, debug_info = run_commands_over_ssh(
+            server_spec, commands, envs=envs)
 
-        # Decode the output
-        stdout_results = decode_output(stdout)
-        stderr_results = decode_output(stderr)
+        # Check errors
+        self._check_command_errors(results, debug_info)
 
-        # Log the errors if there are any
-        if self.verbose and len(stderr_results) > 0:
-            logging.error('STDERR->\n{}'.format(stderr_results))
+        # Return the STDOUT from inner command
+        return results['temp_stdout']
 
-        # Return the results
-        return stdout_results
+    def _check_command_errors(self, results, debug_info):
+        # Initialize empty message
+        message = ''
 
-    def _count_packets(self):
-        # Get command packets
-        packets_spec = self._get_command_packets()
+        # Check error when running the outer command
+        if len(results['stderr']) > 0 or results['returncode'] != 0:
+            message += ('Error occurred when running the outer command:' +
+                        ' {}').format(debug_info['outer_command'])
+            message += '\nSTDOUT->\n{}\nSTDERR->\n{}\nReturn code: {}'.format(
+                results['stdout'], results['stderr'], results['returncode'])
+
+        # Check error when running the inner command
+        if len(results['temp_stderr']) > 0:
+            if len(message) > 0:
+                message += '\n'
+
+            message += ('Error occurred when running the inner command:' +
+                        ' {}').format(debug_info['inner_command'])
+            message += '\nSTDOUT->\n{}\nSTDERR->\n{}'.format(
+                results['temp_stdout'], results['temp_stderr'])
+
+        # Check whether to handle the error
+        if len(message) > 0:
+            self._raise_error_or_log(message)
+
+    def _count_experiments(self):
+        # Get experiment specs
+        exps_spec = self._get_experiments_spec()
 
         # Return the count
-        return len(packets_spec)
+        return len(exps_spec)
 
-    def _filter_undeployed_packets(self, undeployed):
-        # Initialize the list of undeployed packets
-        undeployed_packets = []
+    def _filter_undeployed_experiments(self, undeployed):
+        # Initialize the list of undeployed experiments
+        undeployed_exps = []
 
-        # Get command packets
-        packets_spec = self._get_command_packets()
+        # Get experiments
+        exps_spec = self._get_experiments_spec()
 
-        # Add each undeployed packet to the list
-        for packet_idx in undeployed:
-            # Get the packet spec
-            packet_spec = packets_spec[packet_idx]
+        # Add each undeployed experiment to the list
+        for exp_idx in undeployed:
+            # Get the experiment spec
+            exp_spec = exps_spec[exp_idx]
 
-            # Add to the undeployed packets
-            undeployed_packets.append(packet_spec)
+            # Add to the undeployed list
+            undeployed_exps.append(exp_spec)
 
-        # Return the undeployed packets
-        return undeployed_packets
+        # Return the undeployed experiments
+        return undeployed_exps
 
-    def _update_metrics(self, packet_spec, metrics):
-        # Get packet requirements
-        requirements = packet_spec.get('requirements', {})
+    def _update_metrics(self, exp_spec, metrics):
+        # Get experiment requirements
+        reqs_spec = self._get_experiment_requirements(exp_spec)
 
         # Log the update
         if self.verbose:
             logging.info('Update metrics')
 
         # Iterate each requirement
-        for req_id in requirements.keys():
+        for req_id in reqs_spec.keys():
             # Check whether the requirement ID has been existed in metrics
             if req_id not in metrics:
                 # Log the check
@@ -257,22 +333,22 @@ class Runner:
                 # Update the metrics
                 metrics[req_id] = server_metrics
 
-    def _find_satisfied_servers(self, packet_spec, metrics, deployed):
+    def _find_satisfied_servers(self, exp_spec, metrics, deployed):
         # Get servers spec
         servers_spec = self.user_spec.get('servers', [])
 
         # Initialize all indexes of servers
         satisfied = set(range(len(servers_spec)))
 
-        # Get packet requirements
-        requirements = packet_spec.get('requirements', {})
+        # Get experiment requirements
+        reqs_spec = self._get_experiment_requirements(exp_spec)
 
         # Log the find
         if self.verbose:
             logging.info('Find satisfied servers')
 
         # Iterate each requirement
-        for req_id, req_expr in requirements.items():
+        for req_id, req_expr in reqs_spec.items():
             # Parse the requirement expression
             operator, value = self._parse_requirement_expression(req_expr)
 
@@ -402,26 +478,148 @@ class Runner:
 
         return result
 
-    def _get_command_packets(self):
-        # Get packet box
-        packet_box = self.user_spec.get(self.packet_type, {})
+    def _build_experiment_details(self, exp_spec, detail_name, main=True):
+        # Get details in the experiment
+        exp_details = self._get_experiment_details(exp_spec, detail_name)
 
-        # Get packet bundle
-        packets = packet_box.get('all', {})
+        # Check whether to merge specs from "before each", "each" and
+        # "after each"
+        if main:
+            # Get "before each" experiment details
+            before_each_exp_details = self._get_side_experiment_details(
+                'before_each_experiment', detail_name)
 
-        # Return the packet bundle
-        return packets
+            # Get "each" experiment details
+            each_exp_details = self._get_side_experiment_details(
+                'each_experiment', detail_name)
+
+            # Get "after each" experiment details
+            after_each_exp_details = self._get_side_experiment_details(
+                'after_each_experiment', detail_name)
+
+            # Check whether to use default details from "each" experiment
+            # details
+            if len(exp_details) <= 0:
+                # Log the use
+                if self.verbose:
+                    logging.info(('Use default "{}" from' +
+                                  ' "each_experiment"->\n').format(
+                        detail_name, json.dumps(each_exp_details)))
+
+                # Use commands from "each" commands
+                exp_details = each_exp_details
+
+            # Merge with "before each" and "after each" commands then return
+            return self._merge_experiment_details(
+                before_each_exp_details, exp_details, after_each_exp_details)
+
+        else:
+            return exp_details
+
+    def _merge_experiment_details(self, before_each_exp_details, exp_details,
+                                  after_each_exp_details):
+        if isinstance(exp_details, list):
+            return (before_each_exp_details + exp_details +
+                    after_each_exp_details)
+        elif isinstance(exp_details, dict):
+            return update_dict_with_missing(before_each_exp_details,
+                                            exp_details, after_each_exp_details)
+        else:
+            message = 'Unknown type of experiment details: {}'.format(
+                type(exp_details))
+            logging.error(message)
+            raise ValueError(message)
+
+    def _get_side_experiments_spec(self, stage):
+        # Return the side experiment
+        return self.user_spec.get(stage, {})
+
+    def _get_experiments_spec(self):
+        # Return all experiments
+        return self.user_spec.get('experiments', {})
+
+    def _get_experiment_details(self, exp_spec, detail_name):
+        # Get the details
+        details = exp_spec.get(detail_name, {})
+
+        # Get the corresponding details
+        details = self._get_corresponding_details(detail_name, details)
+
+        # Wrap the details and return
+        return self._wrap_details(detail_name, details)
+
+    def _get_side_experiment_details(self, stage, detail_name):
+        # Get the spec
+        stage_spec = self.user_spec.get(stage, {})
+
+        # Get the details
+        details = stage_spec.get(detail_name, {})
+
+        # Get the corresponding details
+        details = self._get_corresponding_details(detail_name, details)
+
+        # Wrap the details and return
+        return self._wrap_details(detail_name, details)
+
+    def _get_experiment_requirements(self, exp_spec):
+        # Get requirement specs
+        reqs_spec = exp_spec.get('requirements', {})
+
+        # Return type requirement spec
+        return reqs_spec.get(self.command_type, {})
+
+    def _get_corresponding_details(self, detail_name, details):
+        if detail_name == 'commands':
+            # Return the corresponding type
+            return details.get(self.command_type, [])
+        elif detail_name == 'envs':
+            # Return the original details
+            return details
+        else:
+            message = 'Unknown detail name: {}'.format(detail_name)
+            logging.error(message)
+            raise ValueError(message)
+
+    def _wrap_details(self, detail_name, details):
+        if detail_name == 'commands':
+            # Wrap the details in list and return
+            return wrap_with_list(details)
+        elif detail_name == 'envs':
+            # Return the dict
+            return details
+        else:
+            message = 'Unknown detail name: {}'.format(detail_name)
+            logging.error(message)
+            raise ValueError(message)
+
+    def _raise_error_or_log(self, message):
+        # Get error handling spec
+        check_errors = self.user_spec.get('check_errors', True)
+
+        # Check whether to raise or log the error
+        if check_errors:
+            logging.error(message)
+            raise ValueError(message)
+        else:
+            # Only log the error when verbose is on
+            if self.verbose:
+                logging.info(message)
+
+    def _log_side_round(self, stage, round_idx):
+        if self.verbose:
+            # Log the round number
+            logging.info('Side round #{} ({})'.format(round_idx + 1, stage))
 
     def _log_round(self, round_idx, undeployed):
         if self.verbose:
             # Log the round number
-            logging.info('Round #{}'.format(round_idx + 1))
+            logging.info('Main round #{}'.format(round_idx + 1))
 
-            # Log the undeployed packets
-            packets_spec = self._get_command_packets()
-            undeployed_names = [packets_spec[i].get('name', '#{}'.format(i))
+            # Log the undeployed experiments
+            exps_spec = self._get_experiments_spec()
+            undeployed_names = [exps_spec[i].get('name', '#{}'.format(i))
                                 for i in undeployed]
-            logging.info('Undeployed packets: {}'.format(
+            logging.info('Undeployed experiments: {}'.format(
                 json.dumps(undeployed_names)))
 
     def _log_round_time(self, prev_round_time):

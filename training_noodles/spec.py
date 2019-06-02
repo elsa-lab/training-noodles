@@ -8,27 +8,6 @@ import yaml
 default_spec_path = 'training_noodles/specs/defaults.yml'
 
 
-def check_conflicted_type(args):
-    # Read the default spec
-    default_spec = _read_spec(default_spec_path)
-
-    # Get the first-level keys
-    builtin_keys = default_spec.keys()
-
-    # Check whether the packet type conflicts with any builtin key
-    if args.type in builtin_keys:
-        message = ('The command packet type "{}" conflicts with a builtin' +
-                   ' key, please change the command packet type').format(
-                       args.type)
-        logging.critical(message)
-
-        # Indicate conflicts
-        return True
-    else:
-        # Indicate no conflicts
-        return False
-
-
 def read_user_spec(args):
     # Split the spec into spec path and experiments spec
     user_spec_path, experiments = _split_path_and_experiments(args.spec)
@@ -96,13 +75,16 @@ def _fill_missing_with_defaults(default_spec, user_spec):
         'description',
         'before_all_experiments',
         'before_each_experiment',
+        'each_experiment',
         'experiments',
         'after_each_experiment',
         'after_all_experiments',
         'each_server/*',
         'servers',
         'requirements/*',
+        'round_interval',
         'deployment_interval',
+        'check_errors',
     ]
 
     # Iterate each key

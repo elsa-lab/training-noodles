@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "two locals",
+            "name": "two locals (run)",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/training_noodles/noodles.py",
@@ -18,7 +18,33 @@
             ]
         },
         {
-            "name": "two servers same user",
+            "name": "local tmux (run)",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/training_noodles/noodles.py",
+            "console": "integratedTerminal",
+            "args": [
+                "run",
+                "examples/local_tmux/spec.yml",
+                "--verbose",
+                "--debug"
+            ]
+        },
+        {
+            "name": "local tmux (stop)",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/training_noodles/noodles.py",
+            "console": "integratedTerminal",
+            "args": [
+                "stop",
+                "examples/local_tmux/spec.yml",
+                "--verbose",
+                "--debug"
+            ]
+        },
+        {
+            "name": "two servers same user (run)",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/training_noodles/noodles.py",

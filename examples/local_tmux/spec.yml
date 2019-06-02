@@ -1,0 +1,91 @@
+# Name of the spec
+name: Two Tmux
+
+# Description of the spec
+description: Run two Tmux sessions with different delays on localhosts
+
+################################################################################
+# Experiments
+################################################################################
+
+before_all_experiments:
+  envs:
+    TMUX_PREFIX: test
+  commands:
+    run:
+    - >
+      tmux kill-ses -t "$TMUX_PREFIX/short_tmux" 2> /dev/null || true
+    - >
+      tmux kill-ses -t "$TMUX_PREFIX/long_tmux" 2> /dev/null || true
+
+before_each_experiment:
+  envs:
+    TMUX_PREFIX: test
+    OUTPUT: examples/local_tmux/output.log
+
+each_experiment:
+  commands:
+    stop: >
+      tmux kill-ses -t "$TMUX_PREFIX/$NAME" 2> /dev/null || true
+
+experiments:
+- name: Short Tmux
+  description: Run tmux session, delay for 10 seconds, and write current time to output
+  envs:
+    NAME: short_tmux
+    SCRIPT: examples/local_tmux/script1.sh
+    DELAY: 10
+  commands:
+    run:
+    - >
+      echo "sleep $DELAY" > $SCRIPT
+    - >
+      echo 'echo $(date) > $OUTPUT' >> $SCRIPT
+- name: Long Tmux
+  description: After "Short Tmux" has finished, delay for 30 seconds, and delete the output produced by "Short Tmux"
+  envs:
+    NAME: long_tmux
+    SCRIPT: examples/local_tmux/script2.sh
+    DELAY: 30
+  commands:
+    run:
+    - >
+      echo "sleep $DELAY" > $SCRIPT
+    - >
+      echo "rm $OUTPUT" >> $SCRIPT
+  requirements:
+    run:
+      short_tmux_count: "==0"
+
+after_each_experiment:
+  commands:
+    run: >
+      tmux new -d -s "$TMUX_PREFIX/$NAME" "bash -s < $SCRIPT"
+
+################################################################################
+# Servers
+################################################################################
+
+# All servers
+servers:
+- name: Localhost 1
+  hostname: localhost
+- name: Localhost 2
+  hostname: localhost
+
+################################################################################
+# Requirements
+################################################################################
+
+# Commands to run to check requirements on servers
+requirements:
+  short_tmux_count: tmux ls 2>/dev/null | grep test/short_tmux | wc -l
+
+################################################################################
+# Deployment
+################################################################################
+
+# The interval to run each deployment round
+round_interval: 10
+# The interval to deploy each experiment in each round
+deployment_interval: 0
