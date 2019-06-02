@@ -12,17 +12,24 @@ pip install -e .
 
 ## Features
 
-* Is simple to use
-* Is easy to customize
+* Automatically deploys experiments to available servers
 * No need to change any existing code
 * Considers CPU usage, GPU usage, memory usage, disk usage, and more
 * Uses only SSH protocol
 * Relies on minimal dependencies
-* Just like instant noodles
+* Allows fast prototyping
+
+## Usage
+
+```bash
+noodles <command_type> <path_to_spec>
+```
+
+It's just that simple.
 
 ## Examples
 
-Here are some examples showing how the tools are used:
+Here are some examples showing how Noodles is used:
 
 ```bash
 noodles run my_training.yml
@@ -41,3 +48,7 @@ noodles run "my_training.yml:Experiment 1,Experiment 2"
 ```
 
 See the example in directory `examples/two_locals` to get started.
+
+## Default Spec
+
+Noodles will use properties from default spec if the user spec doesn't specify them. See `training_noodles/specs/defaults.yml` for the default settings.

@@ -10,28 +10,35 @@ description: >
 # Experiments
 ################################################################################
 
+# Runs before the start of main experiments
 before_all_experiments:
   name: <before all>
   envs: {}
   commands: {}
 
+# Runs before each main experiment
 before_each_experiment:
   name: <before each>
   envs: {}
   commands: {}
 
+# The environment variables "envs" or "commands" would override each main
+# experiment if the main experiment doesn't specify them
 each_experiment:
   name: <each>
   envs: {}
   commands: {}
 
+# The main experiments
 experiments: []
 
+# Runs after each main experiment
 after_each_experiment:
   name: <after each>
   envs: {}
   commands: {}
 
+# Runs after the main experiments have finished
 after_all_experiments:
   name: <after all>
   envs: {}
