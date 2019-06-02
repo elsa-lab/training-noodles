@@ -1,3 +1,4 @@
+import ast
 import json
 import logging
 import re
@@ -408,20 +409,26 @@ class Runner:
         time.sleep(deployment_interval)
 
     def _is_metric_satisfied(self, metric, operator, value):
-        if operator == '==':
-            return metric == value
-        elif operator == '!=':
-            return metric != value
-        elif operator == '<':
-            return metric < value
-        elif operator == '>':
-            return metric > value
-        elif operator == '<=':
-            return metric <= value
-        elif operator == '>=':
-            return metric >= value
-        else:
-            message = 'Unknown operator: {}'.format(operator)
+        try:
+            if operator == '==':
+                return metric == value
+            elif operator == '!=':
+                return metric != value
+            elif operator == '<':
+                return metric < value
+            elif operator == '>':
+                return metric > value
+            elif operator == '<=':
+                return metric <= value
+            elif operator == '>=':
+                return metric >= value
+            else:
+                message = 'Unknown operator: {}'.format(operator)
+                logging.error(message)
+                raise ValueError(message)
+        except:
+            message = 'Could not compare the values: "{}" "{}" "{}"'.format(
+                metric, operator, value)
             logging.error(message)
             raise ValueError(message)
 
@@ -442,14 +449,11 @@ class Runner:
             operator = m.group('operator')
             value = m.group('value')
 
-            # Try to convert the value to float
+            # Try to parse the value
             try:
-                value = float(value)
+                value = ast.literal_eval(value)
             except:
-                # Log the conversion fail
-                if self.verbose:
-                    logging.info(('Failed to convert value to float,' +
-                                  ' ignore now: {}').format(value))
+                pass
 
         # Return operator and value
         return operator, value
@@ -462,16 +466,13 @@ class Runner:
         results = filter(lambda s: len(s.strip()) > 0, results)
 
         try:
-            # Convert the results to floats
-            floats = list(map(float, results))
+            # Parse the results
+            results = list(map(ast.literal_eval, results))
 
             # Calculate the mean
-            result = sum(floats) / len(floats)
+            result = sum(results) / len(results)
         except:
-            # Log the conversion fail
-            if self.verbose:
-                logging.info(('Failed to convert results to floats,' +
-                              ' ignore now: {}').format(results))
+            pass
 
             # Use original results
             result = results
