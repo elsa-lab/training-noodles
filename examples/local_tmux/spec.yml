@@ -2,7 +2,7 @@
 name: Two Tmux
 
 # Description of the spec
-description: Run two Tmux sessions with different delays on localhosts
+description: Run two Tmux sessions with different delays on localhost
 
 ################################################################################
 # Experiments
@@ -28,8 +28,7 @@ before_each_experiment:
 
 each_experiment:
   commands:
-    # Because the specified servers are actually localhosts, it doesn't matter
-    # what server is chosen to run on it
+    # Stop the Tmux session corresponding to the experiment
     stop: >
       tmux kill-ses -t "$TMUX_PREFIX/$NAME" 2> /dev/null || true
 
@@ -48,12 +47,13 @@ experiments:
     - >
       echo "sleep $DELAY" > $SCRIPT
     - >
-      echo 'echo $(date) > $OUTPUT' >> $SCRIPT
+      echo "echo $(date) > $OUTPUT" >> $SCRIPT
 - name: Long Tmux
   description: After "Short Tmux" has finished, delay for 30 seconds, and delete the output produced by "Short Tmux"
   # Specify environment variables only for this experiment
   envs:
     NAME: long_tmux
+    OTHER_NAME: short_tmux
     SCRIPT: examples/local_tmux/script2.sh
     DELAY: 30
   commands:
@@ -67,7 +67,7 @@ experiments:
     # We require that the short Tmux session is not present when running this
     # experiment
     run:
-      short_tmux_count: "==0"
+      other_tmux_count: "==0"
 
 after_each_experiment:
   commands:
@@ -83,8 +83,6 @@ after_each_experiment:
 servers:
 - name: Localhost 1
   hostname: localhost
-- name: Localhost 2
-  hostname: localhost
 
 ################################################################################
 # Requirements
@@ -95,7 +93,7 @@ requirements:
   # Count the number of lines of Tmux session list which contains the name
   # "test/short_tmux". If the output is 1, it means the short Tmux session is
   # still running, otherwise it would be 0
-  short_tmux_count: tmux ls 2>/dev/null | grep test/short_tmux | wc -l
+  other_tmux_count: "tmux ls 2>/dev/null | grep $TMUX_PREFIX/$OTHER_NAME | wc -l"
 
 ################################################################################
 # Deployment

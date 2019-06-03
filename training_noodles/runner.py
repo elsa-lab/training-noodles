@@ -6,7 +6,8 @@ import time
 
 from training_noodles.cli import decode_output
 from training_noodles.remote import run_commands_over_ssh
-from training_noodles.utils import update_dict_with_missing, wrap_with_list
+from training_noodles.utils import (
+    split_by_scheme, update_dict_with_missing, wrap_with_list)
 
 
 class Runner:
@@ -40,7 +41,7 @@ class Runner:
 
         # Log the finish
         logging.info('Total elapsed time: {:.3f}s'.format(elapsed))
-        logging.info('Successfully deployed all "{}" commands'.format(
+        logging.info('Successfully deployed all "{}" experiments'.format(
             self.command_type))
 
     def _deploy_main_experiments(self):
@@ -137,11 +138,10 @@ class Runner:
             exp_name = exp_spec.get('name', '')
 
             # Log the experiment
-            if self.verbose:
-                logging.info('Try to deploy experiment "{}"'.format(exp_name))
+            self._log_verbose('Try to deploy experiment "{}"'.format(exp_name))
 
             # Update metrics lazily
-            self._update_metrics(exp_spec, metrics)
+            self._update_metrics(exp_spec, metrics, main=main)
 
             # Find satisfied servers
             satisfied_servers = self._find_satisfied_servers(
@@ -186,15 +186,14 @@ class Runner:
             # Check whether there are no available servers in this deployment
             if len(deployed) >= len(servers_spec):
                 # Log the break
-                if self.verbose:
-                    logging.info('No available servers, skip the deployment')
+                self._log_verbose('No available servers, skip the deployment')
 
                 break
 
         # Return the deployed experiment indexes
         return deployed
 
-    def _check_server_metrics(self, req_id):
+    def _check_server_metrics(self, req_id, envs):
         # Initialize the metric outputs
         metrics = []
 
@@ -210,9 +209,8 @@ class Runner:
             name = server_spec['name']
 
             # Log the server and requirement ID
-            if self.verbose:
-                logging.info('Check requirement "{}" on server: {}'.format(
-                    req_id, name))
+            self._log_verbose('Check requirement "{}" on server "{}"'.format(
+                req_id, name))
 
             # Get the requirement commands
             req_commands = reqs_spec.get(req_id, None)
@@ -224,7 +222,7 @@ class Runner:
                 raise ValueError(message)
 
             # Run the remote command on server
-            results = self._run_commands(server_spec, req_commands)
+            results = self._run_commands(server_spec, req_commands, envs=envs)
 
             # Log the results
             logging.debug('Metric results:->\n{}'.format(results))
@@ -311,25 +309,25 @@ class Runner:
         # Return the undeployed experiments
         return undeployed_exps
 
-    def _update_metrics(self, exp_spec, metrics):
+    def _update_metrics(self, exp_spec, metrics, main=True):
         # Get experiment requirements
         reqs_spec = self._get_experiment_requirements(exp_spec)
 
+        # Build experiment environment variables
+        envs = self._build_experiment_details(exp_spec, 'envs', main=main)
+
         # Log the update
-        if self.verbose:
-            logging.info('Update metrics')
+        self._log_verbose('Update metrics')
 
         # Iterate each requirement
         for req_id in reqs_spec.keys():
-            # Check whether the requirement ID has been existed in metrics
-            if req_id not in metrics:
+            # Check whether we should update the metric
+            if self._should_update_metric(req_id, metrics):
                 # Log the check
-                if self.verbose:
-                    logging.info(('Requirement "{}" has not been checked, ' +
-                                  'check now').format(req_id))
+                self._log_verbose(('Check requirement ID: {}').format(req_id))
 
                 # Check server metrics
-                server_metrics = self._check_server_metrics(req_id)
+                server_metrics = self._check_server_metrics(req_id, envs)
 
                 # Update the metrics
                 metrics[req_id] = server_metrics
@@ -345,8 +343,7 @@ class Runner:
         reqs_spec = self._get_experiment_requirements(exp_spec)
 
         # Log the find
-        if self.verbose:
-            logging.info('Find satisfied servers')
+        self._log_verbose('Find satisfied servers')
 
         # Iterate each requirement
         for req_id, req_expr in reqs_spec.items():
@@ -354,8 +351,8 @@ class Runner:
             operator, value = self._parse_requirement_expression(req_expr)
 
             # Log the requirement
-            logging.debug('Requirement ID: {}, Operator: {}, Value: {}'.format(
-                req_id, operator, value))
+            logging.debug(('Requirement ID: "{}", Operator: "{}",' +
+                           ' Value: "{}"').format(req_id, operator, value))
 
             # Get the list of server metrics of the requirement
             servers_metrics = metrics.get(req_id, None)
@@ -389,9 +386,8 @@ class Runner:
         round_interval = self.user_spec.get('round_interval', 0)
 
         # Log the wait
-        if self.verbose:
-            logging.info('Wait for next round for {}s'.format(
-                round_interval))
+        self._log_verbose('Wait for next round for {}s'.format(
+            round_interval))
 
         # Wait for some time
         time.sleep(round_interval)
@@ -401,12 +397,57 @@ class Runner:
         deployment_interval = self.user_spec.get('deployment_interval', 0)
 
         # Log the wait
-        if self.verbose:
-            logging.info('Wait for next deployment for {}s'.format(
-                deployment_interval))
+        self._log_verbose('Wait for next deployment for {}s'.format(
+            deployment_interval))
 
         # Wait for some time
         time.sleep(deployment_interval)
+
+    def _should_update_metric(self, req_id, metrics):
+        # Check whether the requirement ID contains any scheme (e.g.,
+        # "static:cpu_usage", "dynamic:cpu_usage")
+        schemes = ['static', 'dynamic']
+        success, scheme, req_id = split_by_scheme(req_id, schemes)
+
+        # Check whether there is unknown scheme
+        if success:
+            # Set default scheme to "dynamic"
+            scheme = scheme or 'dynamic'
+
+            # Log the scheme
+            self._log_verbose('Requirement ID "{}" has scheme: {}'.format(
+                req_id, scheme))
+
+            # Check whether to update metric
+            if scheme == 'dynamic':
+                # Log the result
+                self._log_verbose(
+                    'Requirement ID "{}" should be checked'.format(req_id))
+
+                return True
+            elif scheme == 'static':
+                # Check whether the requirement ID has existed in metrics
+                if req_id in metrics:
+                    # Log the result
+                    self._log_verbose(
+                        'Requirement ID "{}" is not in metrics'.format(req_id))
+
+                    return False
+                else:
+                    # Log the result
+                    self._log_verbose(
+                        'Requirement ID "{}" is already in metrics'.format(
+                            req_id))
+
+                    return True
+            else:
+                # Should not reach here
+                raise ValueError('Unknown scheme')
+        else:
+            message = 'Unknown scheme "{}" in requirement ID "{}"'.format(
+                scheme, req_id)
+            logging.error(message)
+            raise ValueError(message)
 
     def _is_metric_satisfied(self, metric, operator, value):
         try:
@@ -637,3 +678,7 @@ class Runner:
 
     def _log_metrics(self, metrics):
         logging.debug('Server metrics: {}'.format(json.dumps(metrics)))
+
+    def _log_verbose(self, message):
+        if self.verbose:
+            logging.info(message)

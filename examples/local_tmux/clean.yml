@@ -1,0 +1,32 @@
+# Name of the spec
+name: Two Tmux (Clean)
+
+# Description of the spec
+description: Clean the scripts produced by "run" experiments
+
+################################################################################
+# Experiments
+################################################################################
+
+# Main experiments go here
+experiments:
+- name: Clean
+  description: Clean the scripts
+  # Specify environment variables only for this experiment
+  envs:
+    SCRIPT1: examples/local_tmux/script1.sh
+    SCRIPT2: examples/local_tmux/script2.sh
+  commands:
+    clean:
+      - "echo Cleaning script files"
+      - "rm -f $SCRIPT1"
+      - "rm -f $SCRIPT2"
+
+################################################################################
+# Servers
+################################################################################
+
+# All servers
+servers:
+- name: Localhost 1
+  hostname: localhost

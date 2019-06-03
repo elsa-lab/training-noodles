@@ -3,6 +3,8 @@ import logging
 
 import yaml
 
+from training_noodles.utils import update_dict_with_missing
+
 
 # Set the path to default spec
 default_spec_path = 'training_noodles/specs/defaults.yml'
@@ -67,18 +69,31 @@ def _split_path_and_experiments(spec_path):
 
 def _fill_missing_with_defaults(default_spec, user_spec):
     """ Fill missing values with default values.
-    For example, default_spec = {'a': {'b': 3.14}}, user_spec = {}
+
+    Examples:
+    1. default_spec = {'a': {'pi': 3.14}}, user_spec = {'a': {'g': 9.8}}. The
+    keys are ["a/pi"], then user_spec would become
+    {'a': {'g': 9.8, 'pi': 3.14}}.
+    2. default_spec = {'a': {'g': 9.8, 'pi': 3.14}}, user_spec = {}. The keys
+    are ["a/*"], then user_spec would become {'a': {'g': 9.8, 'pi': 3.14}}.
+
+    Arguments:
+        default_spec (dict): Default spec.
+        user_spec (dict): User spec.
+
+    Returns:
+        dict: User spec with missing keys filled from default spec.
     """
     # Set the keys to be targets of filling
     keys = [
         'name',
         'description',
-        'before_all_experiments',
-        'before_each_experiment',
-        'each_experiment',
+        'before_all_experiments/*',
+        'before_each_experiment/*',
+        'each_experiment/*',
         'experiments',
-        'after_each_experiment',
-        'after_all_experiments',
+        'after_each_experiment/*',
+        'after_all_experiments/*',
         'each_server/*',
         'servers',
         'requirements/*',
@@ -103,12 +118,12 @@ def _fill_missing_with_defaults(default_spec, user_spec):
                 # e.g., key = 'a/*', part = '*',
                 # user_value = user_spec['a']
 
-                # Assign each default value
-                for default_k, default_v in default_value.items():
-                    # e.g., default_k = 'b', default_v = 3.14
+                # Update missing values
+                updated_user_value = update_dict_with_missing(
+                    user_value, default_value)
 
-                    # Assign default value
-                    user_value[default_k] = default_v
+                for k, v in updated_user_value.items():
+                    user_value[k] = v
             else:
                 # e.g., part = 'b'
 
@@ -121,10 +136,13 @@ def _fill_missing_with_defaults(default_spec, user_spec):
 
                 # Check whether to set missing user dict
                 if user_value == {}:
+                    # Set the children to empty dict
                     user_parent[part] = {}
+
+                    # Set the user value to the created empty dict
                     user_value = user_parent.get(part, {})
 
-        # Assign default value
+        # Assign default value in last part
         if part != '*':
             # e.g., part = 'b', user_parent = user_spec['a'],
             # default_value = 3.14
@@ -133,7 +151,8 @@ def _fill_missing_with_defaults(default_spec, user_spec):
             user_value = user_parent.get(part, None)
 
             # Assign the default value if user value is not specified
-            user_parent[part] = user_value or default_value
+            if user_value is None:
+                user_parent[part] = default_value
 
 
 def _filter_experiments(user_spec, experiments):

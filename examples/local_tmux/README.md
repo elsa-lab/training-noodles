@@ -29,3 +29,13 @@ Then the output file would never be deleted because the Tmux sessions are killed
 ```bash
 tmux ls
 ```
+
+## Clean
+
+To remove the script files produced by "run" commands, execute the following:
+
+```bash
+noodles clean examples/local_tmux/clean.yml
+```
+
+`script1.sh` and `script2.sh` would be deleted afterwards.
