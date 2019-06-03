@@ -15,9 +15,9 @@ before_all_experiments:
   commands:
     # Kill short and long Tmux sessions before the main experiments start
     run:
-    - >
+    - |-
       tmux kill-ses -t "$TMUX_PREFIX/short_tmux" 2> /dev/null || true
-    - >
+    - |-
       tmux kill-ses -t "$TMUX_PREFIX/long_tmux" 2> /dev/null || true
 
 before_each_experiment:
@@ -29,7 +29,7 @@ before_each_experiment:
 each_experiment:
   commands:
     # Stop the Tmux session corresponding to the experiment
-    stop: >
+    stop: |-
       tmux kill-ses -t "$TMUX_PREFIX/$NAME" 2> /dev/null || true
 
 # Main experiments go here
@@ -44,9 +44,9 @@ experiments:
   commands:
     # Write the scripts into the file
     run:
-    - >
+    - |-
       echo "sleep $DELAY" > $SCRIPT
-    - >
+    - |-
       echo "echo $(date) > $OUTPUT" >> $SCRIPT
 - name: Long Tmux
   description: After "Short Tmux" has finished, delay for 30 seconds, and delete the output produced by "Short Tmux"
@@ -59,9 +59,9 @@ experiments:
   commands:
     # Write the scripts into the file
     run:
-    - >
+    - |-
       echo "sleep $DELAY" > $SCRIPT
-    - >
+    - |-
       echo "rm $OUTPUT" >> $SCRIPT
   requirements:
     # We require that the short Tmux session is not present when running this
@@ -72,7 +72,7 @@ experiments:
 after_each_experiment:
   commands:
     # This command would be appended after the commands in main experiments
-    run: >
+    run: |-
       tmux new -d -s "$TMUX_PREFIX/$NAME" "bash -s < $SCRIPT"
 
 ################################################################################

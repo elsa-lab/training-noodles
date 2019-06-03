@@ -2,7 +2,7 @@
 name: Default spec
 
 # Description of the spec
-description: >
+description: |-
   All default settings are in this spec, which would override the settings in
   user's spec if user doesn't specify them.
 
