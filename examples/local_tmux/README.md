@@ -32,7 +32,7 @@ tmux ls
 
 ## Clean
 
-To remove the script files produced by "run" commands, execute the following:
+To remove the script files produced by *run* commands, execute the following:
 
 ```bash
 noodles clean examples/local_tmux/clean.yml

@@ -1,0 +1,83 @@
+# Name of the spec
+name: File transfer (Clean)
+
+# Description of the spec
+description: Clean the uploaded scripts and log files
+
+################################################################################
+# Experiments
+################################################################################
+
+# Let "commands" and "requirements" be default when main experiments don't
+# specify them
+each_experiment:
+  commands:
+    clean:
+    - "remote:rm -f ~/$LOG"
+    - "remote:rm -f ~/$SCRIPT"
+
+# Main experiments go here
+experiments:
+- name: Clean experiment 1
+  description: Clean the script and log on server
+  envs:
+    SCRIPT: remote_experiment1.sh
+    LOG: exp1_result.log
+  requirements:
+    clean:
+      find_experiment: "==1"
+- name: Clean experiment 2
+  description: Clean the script and log on server
+  envs:
+    SCRIPT: remote_experiment2.sh
+    LOG: exp2_result.log
+  requirements:
+    clean:
+      find_experiment: "==1"
+- name: Clean local results
+  description: Clean downloaded log files
+  envs:
+    LOCAL_DIR: examples/file_transfer
+  # Override "commands" in "each_experiment"
+  commands:
+    clean:
+    - "local:rm -f $LOCAL_DIR/*.log"
+
+################################################################################
+# Servers
+################################################################################
+
+# Applies to the server spec if not specified
+each_server:
+  # Path to the private key on local
+  private_key_path: $HOME/.ssh/id_rsa
+  # Username on the server (e.g., 'user1')
+  username: $USER
+
+# All servers
+servers:
+- name: Server 1
+  # Hostname of the server (e.g., "server1.example.com", "123.123.123.123")
+  hostname: server1
+- name: Server 2
+  # Hostname of the server (e.g., "server1.example.com", "123.123.123.123")
+  hostname: server2
+
+################################################################################
+# Requirements
+################################################################################
+
+# Commands to run to check requirements on servers
+requirements:
+  # Count the number of output file. The result is 1 if the output file exists,
+  # otherwise 0.
+  find_experiment: "ls -al ~ | grep $SCRIPT | wc -l"
+
+################################################################################
+# Deployment
+################################################################################
+
+# The interval to run each deployment round
+round_interval: 10
+# The interval to deploy each experiment in each round
+deployment_interval: 0

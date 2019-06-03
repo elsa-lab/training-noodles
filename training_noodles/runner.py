@@ -4,8 +4,8 @@ import logging
 import re
 import time
 
-from training_noodles.cli import decode_output
-from training_noodles.remote import run_commands_over_ssh
+from training_noodles.remote import (
+    eval_expression_on_local, run_commands_over_ssh, get_error_message)
 from training_noodles.utils import (
     split_by_scheme, update_dict_with_missing, wrap_with_list)
 
@@ -151,7 +151,7 @@ class Runner:
             self._log_verbose('Try to deploy experiment "{}"'.format(exp_name))
 
             # Check whether the experiment is empty
-            if self._check_empty_experiment(exp_spec):
+            if self._check_empty_experiment(exp_spec, main=main):
                 # Log the skip
                 self._log_verbose('Experiment "{}" is empty, skip'.format(
                     exp_name))
@@ -166,7 +166,7 @@ class Runner:
 
             # Find satisfied servers
             satisfied_servers = self._find_satisfied_servers(
-                exp_spec, metrics, deployed_servers)
+                exp_spec, metrics, deployed_servers, main=main)
 
             # Check whether there are any satisfied servers
             if len(satisfied_servers) > 0:
@@ -194,6 +194,12 @@ class Runner:
                 # Build experiment environment variables
                 envs = self._build_experiment_details(
                     exp_spec, 'envs', main=main)
+
+                # Add environment variables of the satisfied server
+                server_envs = self._build_server_envs(server_spec, envs)
+
+                # Merge enviornment variables
+                envs = {**envs, **server_envs}
 
                 # Deploy the experiment to the server
                 results = self._run_commands(server_spec, commands, envs=envs)
@@ -264,57 +270,26 @@ class Runner:
         return metrics
 
     def _run_commands(self, server_spec, commands, envs={}):
-        # Get global server spec
-        global_server_spec = self.user_spec.get('each_server', {})
-
-        # Copy the server spec to avoid changing the original server spec
-        server_spec = server_spec.copy()
-
-        # Update missing properties in server spec by global server spec
-        server_spec = update_dict_with_missing(server_spec, global_server_spec)
-
         # Run the commands on remote
-        results, debug_infos = run_commands_over_ssh(
+        all_results, debug_infos = run_commands_over_ssh(
             server_spec, commands, envs=envs)
 
         # Check errors
-        self._check_command_errors(results, debug_infos)
+        for results, debug_info in zip(all_results, debug_infos):
+            self._check_command_errors(results, debug_info)
 
-        # Concatenate STDOUT from inner command
-        inner_stdout = ''.join(results['temp_stdouts'])
+        # Get STDOUTs produced by inner commands
+        inner_stdouts = map(lambda x: x['inner_stdout'], all_results)
+
+        # Concatenate the STDOUTs
+        inner_stdout = ''.join(inner_stdouts)
 
         # Return the STDOUT
         return inner_stdout
 
-    def _check_command_errors(self, results, debug_infos):
-        # Initialize empty message
-        message = ''
-
-        # Check error when running the outer command
-        zipped = zip(results['stdouts'], results['stderrs'],
-                     results['returncodes'], debug_infos['outer_commands'])
-
-        for stdout, stderr, returncode, outer_command in zipped:
-            if len(stderr) > 0 or returncode != 0:
-                message += ('Error occurred when running the outer command:' +
-                            ' {}').format(outer_command)
-                message += '\nSTDOUT->\n{}'.format(stdout)
-                message += '\nSTDERR->\n{}'.format(stderr)
-                message += '\nRETURNCODE->\n{}'.format(returncode)
-
-        # Check error when running the inner command
-        zipped = zip(results['temp_stdouts'], results['temp_stderrs'],
-                     debug_infos['inner_commands'])
-
-        for temp_stdout, temp_stderr, inner_command in zipped:
-            if len(temp_stderr) > 0:
-                if len(message) > 0:
-                    message += '\n'
-
-                message += ('Error occurred when running the inner command:' +
-                            ' {}').format(inner_command)
-                message += '\nSTDOUT->\n{}'.format(temp_stdout)
-                message += '\nSTDERR->\n{}'.format(temp_stderr)
+    def _check_command_errors(self, results, debug_info):
+        # Check errors
+        message = get_error_message(results, debug_info)
 
         # Check whether to handle the error
         if len(message) > 0:
@@ -346,11 +321,12 @@ class Runner:
         return undeployed_exps
 
     def _update_metrics(self, exp_spec, metrics, main=True):
-        # Get experiment requirements
-        reqs_spec = self._get_experiment_requirements(exp_spec)
-
         # Build experiment environment variables
         envs = self._build_experiment_details(exp_spec, 'envs', main=main)
+
+        # Build experiment requirements
+        reqs_spec = self._build_experiment_details(
+            exp_spec, 'requirements', main=main)
 
         # Log the update
         self._log_verbose('Update metrics')
@@ -368,15 +344,16 @@ class Runner:
                 # Update the metrics
                 metrics[req_id] = server_metrics
 
-    def _find_satisfied_servers(self, exp_spec, metrics, deployed):
+    def _find_satisfied_servers(self, exp_spec, metrics, deployed, main=True):
         # Get servers spec
         servers_spec = self.user_spec.get('servers', [])
 
         # Initialize all indexes of servers
         satisfied = set(range(len(servers_spec)))
 
-        # Get experiment requirements
-        reqs_spec = self._get_experiment_requirements(exp_spec)
+        # Build experiment requirements
+        reqs_spec = self._build_experiment_details(
+            exp_spec, 'requirements', main=main)
 
         # Log the find
         self._log_verbose('Find satisfied servers')
@@ -416,6 +393,55 @@ class Runner:
 
         # Return indexes of satisfied servers
         return satisfied
+
+    def _build_server_envs(self, server_spec, envs):
+        # Build environment variables
+        server_envs = {
+            'NOODLES_SERVER_NAME': server_spec.get('name', ''),
+            'NOODLES_SERVER_PRIVATE_KEY_PATH':
+                server_spec.get('private_key_path', ''),
+            'NOODLES_SERVER_PORT': server_spec.get('port', ''),
+            'NOODLES_SERVER_USERNAME': server_spec.get('username', ''),
+            'NOODLES_SERVER_HOSTNAME': server_spec.get('hostname', ''),
+            'NOODLES_SERVER_AUTHORITY':
+                self._build_server_authority(server_spec),
+        }
+
+        # Evaluate values in environment variables
+        for key, expr in server_envs.items():
+            # Convert to string
+            expr = str(expr)
+
+            if expr != '':
+                # Check whether any environment variables exist
+                m = re.match(r'(\$.+)|(\${.+})', expr)
+
+                if m is not None:
+                    # Evaluate expression on local
+                    results, debug_info = eval_expression_on_local(
+                        expr, envs=envs)
+
+                    # Check command errors
+                    self._check_command_errors(results, debug_info)
+
+                    # Set evaluated values
+                    server_envs[key] = results['inner_stdout']
+
+        # Return evaluated environment variables
+        return server_envs
+
+    def _build_server_authority(self, server_spec):
+        # Get username
+        username = server_spec.get('username', None)
+
+        # Get hostname
+        hostname = server_spec.get('hostname', '')
+
+        # Check whether to include username
+        if username is None:
+            return '{}'.format(hostname)
+        else:
+            return '{}@{}'.format(username, hostname)
 
     def _wait_for_next_round(self):
         # Get round interval
@@ -649,30 +675,29 @@ class Runner:
         # Wrap the details and return
         return self._wrap_details(detail_name, details)
 
-    def _get_experiment_requirements(self, exp_spec):
-        # Get requirement specs
-        reqs_spec = exp_spec.get('requirements', {})
-
-        # Return type requirement spec
-        return reqs_spec.get(self.command_type, {})
-
     def _get_corresponding_details(self, detail_name, details):
-        if detail_name == 'commands':
-            # Return the corresponding type
-            return details.get(self.command_type, [])
-        elif detail_name == 'envs':
+        if detail_name == 'envs':
             # Return the original details
             return details
+        elif detail_name == 'commands':
+            # Return the corresponding type
+            return details.get(self.command_type, [])
+        elif detail_name == 'requirements':
+            # Return the corresponding type
+            return details.get(self.command_type, {})
         else:
             message = 'Unknown detail name: {}'.format(detail_name)
             logging.error(message)
             raise ValueError(message)
 
     def _wrap_details(self, detail_name, details):
-        if detail_name == 'commands':
+        if detail_name == 'envs':
+            # Return the dict
+            return details
+        elif detail_name == 'commands':
             # Wrap the details in list and return
             return wrap_with_list(details)
-        elif detail_name == 'envs':
+        elif detail_name == 'requirements':
             # Return the dict
             return details
         else:
@@ -680,15 +705,13 @@ class Runner:
             logging.error(message)
             raise ValueError(message)
 
-    def _check_empty_experiment(self, exp_spec):
-        # Get the commands
-        commands = exp_spec.get('commands', {})
+    def _check_empty_experiment(self, exp_spec, main=True):
+        # Build the commands
+        commands = self._build_experiment_details(
+            exp_spec, 'commands', main=main)
 
-        # Get the corresponding type
-        details = commands.get(self.command_type, [])
-
-        # Check whether the details are empty
-        return len(details) <= 0
+        # Check whether the commands are empty
+        return len(commands) <= 0
 
     def _raise_error_or_log(self, message):
         # Get error handling spec

@@ -5,20 +5,33 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "two locals (run)",
+            "name": "file_transfer (run)",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/training_noodles/noodles.py",
             "console": "integratedTerminal",
             "args": [
                 "run",
-                "examples/two_locals/spec.yml",
+                "examples/file_transfer/spec.yml",
                 "--verbose",
                 "--debug"
             ]
         },
         {
-            "name": "local tmux (run)",
+            "name": "file_transfer (clean)",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/training_noodles/noodles.py",
+            "console": "integratedTerminal",
+            "args": [
+                "clean",
+                "examples/file_transfer/clean.yml",
+                "--verbose",
+                "--debug"
+            ]
+        },
+        {
+            "name": "local_tmux (run)",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/training_noodles/noodles.py",
@@ -31,7 +44,7 @@
             ]
         },
         {
-            "name": "local tmux (stop)",
+            "name": "local_tmux (stop)",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/training_noodles/noodles.py",
@@ -44,7 +57,20 @@
             ]
         },
         {
-            "name": "two servers same user (run)",
+            "name": "two_locals (run)",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/training_noodles/noodles.py",
+            "console": "integratedTerminal",
+            "args": [
+                "run",
+                "examples/two_locals/spec.yml",
+                "--verbose",
+                "--debug"
+            ]
+        },
+        {
+            "name": "two_servers_same_user (run)",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/training_noodles/noodles.py",

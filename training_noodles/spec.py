@@ -9,6 +9,29 @@ from training_noodles.utils import update_dict_with_missing
 # Set the path to default spec
 default_spec_path = 'training_noodles/specs/defaults.yml'
 
+# Set root keys
+root_keys = [
+    'name',
+    'description',
+    'before_all_experiments/*',
+    'before_each_experiment/*',
+    'each_experiment/*',
+    'experiments',
+    'after_each_experiment/*',
+    'after_all_experiments/*',
+    'each_server/*',
+    'servers',
+    'requirements/*',
+    'round_interval',
+    'deployment_interval',
+    'check_errors',
+]
+
+# Set server spec keys
+server_spec_keys = [
+    '*'
+]
+
 
 def read_user_spec(args):
     # Split the spec into spec path and experiments spec
@@ -20,14 +43,20 @@ def read_user_spec(args):
     # Read the user spec
     user_spec = _read_spec(user_spec_path)
 
+    # Log the original user spec
+    logging.debug('Original user spec->\n{}'.format(json.dumps(user_spec)))
+
     # Fill missing values with default values
-    _fill_missing_with_defaults(default_spec, user_spec)
+    _fill_missing_with_defaults(default_spec, user_spec, root_keys)
+
+    # Fill missing values in server specs
+    _fill_missing_in_server_specs(user_spec)
 
     # Filter the experiments
     _filter_experiments(user_spec, experiments)
 
-    # Log the user spec
-    logging.debug('User spec->\n{}'.format(json.dumps(user_spec)))
+    # Log the processed user spec
+    logging.debug('Processed user spec->\n{}'.format(json.dumps(user_spec)))
 
     # Return the filled user spec
     return user_spec
@@ -67,7 +96,21 @@ def _split_path_and_experiments(spec_path):
     return path, experiments
 
 
-def _fill_missing_with_defaults(default_spec, user_spec):
+def _fill_missing_in_server_specs(user_spec):
+    # Get "each server" spec
+    each_server_spec = user_spec.get('each_server', {})
+
+    # Get server specs
+    servers_spec = user_spec.get('servers', [])
+
+    # Iterate each server spec
+    for server_spec in servers_spec:
+        # Fill missing values
+        _fill_missing_with_defaults(
+            each_server_spec, server_spec, server_spec_keys)
+
+
+def _fill_missing_with_defaults(default_spec, user_spec, keys):
     """ Fill missing values with default values.
 
     Examples:
@@ -80,28 +123,11 @@ def _fill_missing_with_defaults(default_spec, user_spec):
     Arguments:
         default_spec (dict): Default spec.
         user_spec (dict): User spec.
+        keys (list): List of keys (str).
 
     Returns:
         dict: User spec with missing keys filled from default spec.
     """
-    # Set the keys to be targets of filling
-    keys = [
-        'name',
-        'description',
-        'before_all_experiments/*',
-        'before_each_experiment/*',
-        'each_experiment/*',
-        'experiments',
-        'after_each_experiment/*',
-        'after_all_experiments/*',
-        'each_server/*',
-        'servers',
-        'requirements/*',
-        'round_interval',
-        'deployment_interval',
-        'check_errors',
-    ]
-
     # Iterate each key
     for key in keys:
         # Split the key by '/' into parts (e.g., 'a/b' becomes ['a', 'b'])
@@ -151,7 +177,7 @@ def _fill_missing_with_defaults(default_spec, user_spec):
             user_value = user_parent.get(part, None)
 
             # Assign the default value if user value is not specified
-            if user_value is None:
+            if not user_value:
                 user_parent[part] = default_value
 
 

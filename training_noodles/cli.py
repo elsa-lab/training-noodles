@@ -6,23 +6,6 @@ import subprocess
 from training_noodles.utils import convert_values_to_strs
 
 
-def decode_output(output):
-    """ Decode the output.
-
-    Try to return the decoded output, if it fails, return the original output.
-
-    Arguments:
-        output: Raw output which can be stdout or stderr.
-
-    Returns:
-        The decoded output.
-    """
-    try:
-        return output.decode('utf-8')
-    except UnicodeDecodeError:
-        return output
-
-
 def run_command(command, stdin=None, extra_envs=None, wait=True):
     """ Run the command using bash.
 
@@ -105,3 +88,27 @@ def read_command_results(p_obj):
 
     # Return the raw results and return code
     return stdout, stderr, return_code
+
+
+def decode_output(output):
+    """ Decode the output.
+
+    Try to return the decoded output, if it fails, return the original output.
+
+    Arguments:
+        output: Raw output which can be stdout or stderr.
+
+    Returns:
+        The decoded output.
+    """
+    try:
+        return output.decode('utf-8')
+    except UnicodeDecodeError:
+        return output
+
+
+def escape_command(command, quote='"'):
+    # Replace all quotes by a backslash and a quote
+    escaped_quote = '\\{}'.format(quote)
+
+    return command.replace(quote, escaped_quote)

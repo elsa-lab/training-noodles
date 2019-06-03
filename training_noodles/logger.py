@@ -1,3 +1,4 @@
+import json
 import logging
 
 
@@ -26,4 +27,5 @@ def init_logging(args):
         logging.warning('Debug logging is on')
 
         # Log arguments
-        logging.debug('Arguments: {}'.format(args))
+        args_as_dict = vars(args)
+        logging.debug('Arguments: {}'.format(json.dumps(args_as_dict)))

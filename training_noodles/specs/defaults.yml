@@ -15,19 +15,22 @@ before_all_experiments:
   name: <before all>
   envs: {}
   commands: {}
+  requirements: {}
 
 # Runs before each main experiment
 before_each_experiment:
   name: <before each>
   envs: {}
   commands: {}
+  requirements: {}
 
-# The environment variables "envs" or "commands" would override each main
+# The properties in "each_experiment" would override the properties in each main
 # experiment if the main experiment doesn't specify them
 each_experiment:
   name: <each>
   envs: {}
   commands: {}
+  requirements: {}
 
 # The main experiments
 experiments: []
@@ -37,12 +40,14 @@ after_each_experiment:
   name: <after each>
   envs: {}
   commands: {}
+  requirements: {}
 
 # Runs after the main experiments have finished
 after_all_experiments:
   name: <after all>
   envs: {}
   commands: {}
+  requirements: {}
 
 ################################################################################
 # Servers

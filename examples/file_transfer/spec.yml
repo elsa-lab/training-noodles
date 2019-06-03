@@ -1,0 +1,106 @@
+# Name of the spec
+name: File transfer
+
+# Description of the spec
+description: Upload files to run on servers and download the results
+
+################################################################################
+# Experiments
+################################################################################
+
+before_each_experiment:
+  # Specify environment variables for all experiments
+  envs:
+    LOCAL_DIR: examples/file_transfer
+
+# Main experiments go here
+experiments:
+- name: Upload experiment 1
+  description: Upload simple script to a server
+  envs:
+    SCRIPT: remote_experiment1.sh
+  commands:
+    run: "local:scp $LOCAL_DIR/$SCRIPT $NOODLES_SERVER_AUTHORITY:~/$SCRIPT"
+- name: Upload experiment 2
+  description: Upload simple script to a server
+  envs:
+    SCRIPT: remote_experiment2.sh
+  commands:
+    run: "local:scp $LOCAL_DIR/$SCRIPT $NOODLES_SERVER_AUTHORITY:~/$SCRIPT"
+- name: Run experiment 1
+  description: Run the simple script on server
+  envs:
+    SCRIPT: remote_experiment1.sh
+  commands:
+    run: "remote:bash -s < ~/$SCRIPT"
+  requirements:
+    run:
+      find_experiment: "==1"
+- name: Run experiment 2
+  description: Run the simple script on server
+  envs:
+    SCRIPT: remote_experiment2.sh
+  commands:
+    run: "remote:bash -s < ~/$SCRIPT"
+  requirements:
+    run:
+      find_experiment: "==1"
+- name: Download experimental result 1
+  description: Download experimental result from the server
+  envs:
+    SCRIPT: remote_experiment1.sh
+    LOG: exp1_result.log
+  commands:
+    run: "local:scp $NOODLES_SERVER_AUTHORITY:~/$LOG $LOCAL_DIR/$LOG"
+  requirements:
+    run:
+      find_experiment: "==1"
+- name: Download experimental result 2
+  description: Download experimental result from the server
+  envs:
+    SCRIPT: remote_experiment2.sh
+    LOG: exp2_result.log
+  commands:
+    run: "local:scp $NOODLES_SERVER_AUTHORITY:~/$LOG $LOCAL_DIR/$LOG"
+  requirements:
+    run:
+      find_experiment: "==1"
+
+################################################################################
+# Servers
+################################################################################
+
+# Applies to the server spec if not specified
+each_server:
+  # Path to the private key on local
+  private_key_path: $HOME/.ssh/id_rsa
+  # Username on the server (e.g., 'user1')
+  username: $USER
+
+# All servers
+servers:
+- name: Server 1
+  # Hostname of the server (e.g., "server1.example.com", "123.123.123.123")
+  hostname: server1
+- name: Server 2
+  # Hostname of the server (e.g., "server1.example.com", "123.123.123.123")
+  hostname: server2
+
+################################################################################
+# Requirements
+################################################################################
+
+# Commands to run to check requirements on servers
+requirements:
+  # Count the number of output file. The result is 1 if the output file exists,
+  # otherwise 0.
+  find_experiment: "ls -al ~ | grep $SCRIPT | wc -l"
+
+################################################################################
+# Deployment
+################################################################################
+
+# The interval to run each deployment round
+round_interval: 10
+# The interval to deploy each experiment in each round
+deployment_interval: 0

@@ -4,8 +4,19 @@ import pathlib
 import tempfile
 
 from training_noodles.cli import (
-    decode_output, run_command, read_command_results)
+    run_command, read_command_results, decode_output, escape_command)
 from training_noodles.utils import split_by_scheme, wrap_with_list
+
+
+def eval_expression_on_local(expr, envs={}):
+    # Build endpoint command
+    endpoint_command = _build_local_command()
+
+    # Build inner command
+    inner_command = _build_eval_command(expr)
+
+    # Run commands on endpoint
+    return _run_commands_on_endpoint(endpoint_command, inner_command, envs=envs)
 
 
 def run_commands_over_ssh(server_spec, commands, envs={}):
@@ -22,76 +33,72 @@ def run_commands_over_ssh(server_spec, commands, envs={}):
         envs (dict): Environment variables.
 
     Returns:
-        (results, debug_infos) where "results" is a dict(stdouts, stderrs,
-        returncodes, temp_stdouts, temp_stderrs) and "debug_infos" is a list of
-        dict(inner_command, outer_command).
+        (all_results, debug_infos) where "all_results" is a list of "results"
+        and "debug_infos" is a list of "debug_info". See
+        function "_run_commands_on_endpoint".
     """
     # Wrap the commands in list for consistency
     commands = wrap_with_list(commands)
 
     # Group commands by endpoints
-    endpoint_results = _group_commands_by_endpoints(server_spec, commands)
+    group_results = _group_commands_by_endpoints(server_spec, commands)
 
-    # Initialize the results
-    stdouts, stderrs, returncodes, temp_stdouts, temp_stderrs = (
-        [], [], [], [], [])
-
-    # Initialize the debug infos
-    inner_commands = []
-    outer_commands = []
+    # Initialize the outputs
+    all_results = []
+    debug_infos = []
 
     # Iterate each endpoint group
-    for ssh_command, command_group in endpoint_results:
-        # Create temporary files
-        temp_files = _create_temp_files()
+    for endpoint_command, inner_commands in group_results:
+        # Build remote commands
+        inner_commands = _build_remote_command(inner_commands, envs)
 
-        # Concatenate commands by newlines
-        inner_command = '\n'.join(command_group)
+        # Run commands on endpoint
+        results, debug_info = _run_commands_on_endpoint(
+            endpoint_command, inner_commands, envs=envs)
 
-        # Write command to temporary stdin file
-        _write_command_to_stdin(inner_command, temp_files)
+        # Add the results and debug info to the outputs
+        all_results.append(results)
+        debug_infos.append(debug_info)
 
-        # Build outer command
-        outer_command = _build_outer_command(ssh_command, temp_files)
+    # Return the results
+    return all_results, debug_infos
 
-        # Execute the outer command
-        p_obj = run_command(outer_command, extra_envs=envs)
 
-        # Read the command results
-        stdout, stderr, returncode = read_command_results(p_obj)
+def _run_commands_on_endpoint(endpoint_command, inner_commands, envs={}):
+    # Create temporary files
+    temp_files = _create_temp_files()
 
-        # Read stdout and stderr from temporary files
-        temp_stdout, temp_stderr = _read_stdout_and_stderr(temp_files)
+    # Write command to temporary stdin file
+    _write_command_to_stdin(inner_commands, temp_files)
 
-        # Delete temporary files
-        _delete_temp_files(temp_files)
+    # Build outer command
+    outer_command = _build_outer_command(endpoint_command, temp_files)
 
-        # Decode and append the results
-        stdouts.append(decode_output(stdout))
-        stderrs.append(decode_output(stderr))
-        temp_stdouts.append(decode_output(temp_stdout))
-        temp_stderrs.append(decode_output(temp_stderr))
+    # Execute the outer command
+    p_obj = run_command(outer_command, extra_envs=envs)
 
-        # Append the returncode
-        returncodes.append(returncode)
+    # Read the command results
+    stdout, stderr, returncode = read_command_results(p_obj)
 
-        # Append the commands
-        inner_commands.append(inner_command)
-        outer_commands.append(outer_command)
+    # Read stdout and stderr from temporary files
+    temp_stdout, temp_stderr = _read_stdout_and_stderr(temp_files)
 
-    # Build the results
+    # Delete temporary files
+    _delete_temp_files(temp_files)
+
+    # Build the decoded results
     results = {
-        'stdouts': stdouts,
-        'stderrs': stderrs,
-        'returncodes': returncodes,
-        'temp_stdouts': temp_stdouts,
-        'temp_stderrs': temp_stderrs,
+        'inner_stdout': decode_output(temp_stdout),
+        'inner_stderr': decode_output(temp_stderr),
+        'outer_stdout': decode_output(stdout),
+        'outer_stderr': decode_output(stderr),
+        'returncode': returncode,
     }
 
     # Build debugging info
     debug_info = {
         'inner_commands': inner_commands,
-        'outer_commands': outer_commands,
+        'outer_command': outer_command,
     }
 
     # Return the results
@@ -100,8 +107,8 @@ def run_commands_over_ssh(server_spec, commands, envs={}):
 
 def _group_commands_by_endpoints(server_spec, commands):
     # Initialize empty outputs
-    ssh_commands = []
     endpoint_commands = []
+    inner_commands = []
 
     # Set identifiable endpoint schemes
     schemes = ['local', 'remote']
@@ -125,11 +132,14 @@ def _group_commands_by_endpoints(server_spec, commands):
             else:
                 # Add results to outputs
                 _add_endpoint_results_to_outputs(
-                    server_spec, prev_scheme, cur_group, ssh_commands,
-                    endpoint_commands)
+                    server_spec, prev_scheme, cur_group, endpoint_commands,
+                    inner_commands)
 
                 # Reset current group of commands
                 cur_group = [follow_command]
+
+            # Save the scheme
+            prev_scheme = scheme
         else:
             message = 'Unknown scheme "{}" in command "{}"'.format(
                 scheme, command)
@@ -138,26 +148,26 @@ def _group_commands_by_endpoints(server_spec, commands):
 
     # Add final results to outputs
     _add_endpoint_results_to_outputs(
-        server_spec, prev_scheme, cur_group, ssh_commands,
-        endpoint_commands)
+        server_spec, prev_scheme, cur_group, endpoint_commands,
+        inner_commands)
 
     # Return zipped results
-    return zip(ssh_commands, endpoint_commands)
+    return zip(endpoint_commands, inner_commands)
 
 
 def _add_endpoint_results_to_outputs(server_spec, prev_scheme, cur_group,
-                                     ssh_commands, endpoint_commands):
+                                     endpoint_commands, inner_commands):
     # Check whether to build local or remote command
     if prev_scheme == 'local':
-        ssh_command = _build_local_command()
+        endpoint_command = _build_local_command()
     else:
-        ssh_command = _build_ssh_command(server_spec)
+        endpoint_command = _build_endpoint_command(server_spec)
 
-    # Add SSH command to the outputs
-    ssh_commands.append(ssh_command)
+    # Add endpoint command to the outputs
+    endpoint_commands.append(endpoint_command)
 
     # Add current group of commands to the outputs
-    endpoint_commands.append(cur_group)
+    inner_commands.append(cur_group)
 
 
 def _create_temp_files():
@@ -240,8 +250,11 @@ def _delete_temp_files(temp_files):
                            ' ignore now: {}').format(temp_files))
 
 
-def _build_ssh_command(server_spec):
-    """ Build SSH command.
+def _build_endpoint_command(server_spec):
+    """ Build endpoint command.
+
+    The endpoint command is either a local or remote command depending on the
+    server spec.
 
     Arguments:
         server_spec (dict): Server spec.
@@ -250,7 +263,7 @@ def _build_ssh_command(server_spec):
         https://linux.die.net/man/1/ssh
 
     Returns:
-        str: SSH command.
+        str: Endpoint command.
     """
     # Check whether the hostname is localhost
     if server_spec.get('hostname', None) == 'localhost':
@@ -292,7 +305,36 @@ def _build_local_command():
     return 'bash -c'
 
 
-def _build_outer_command(ssh_command, temp_files):
+def _build_remote_command(commands, envs={}):
+    # Initialize the outputs
+    remote_commands = []
+
+    # Build list of commands to set environment variables
+    for k, v in envs.items():
+        # Convert the value to string
+        v = str(v)
+
+        # Escape the value
+        escaped_v = escape_command(v)
+
+        # Build the command
+        export_command = 'export {}="{}"'.format(k, escaped_v)
+
+        # Add the command to the list
+        remote_commands.append(export_command)
+
+    # Append the other commands
+    remote_commands.extend(commands)
+
+    # Concatenate all commands by newlines and return
+    return '\n'.join(remote_commands)
+
+
+def _build_eval_command(expr):
+    return 'echo -n {}'.format(expr)
+
+
+def _build_outer_command(endpoint_command, temp_files):
     # Get temporary file paths
     stdin_path = temp_files['stdin_path']
     stdout_path = temp_files['stdout_path']
@@ -300,7 +342,31 @@ def _build_outer_command(ssh_command, temp_files):
 
     # Build the command
     outer_command = '{} \'bash -s\' < {} > {} 2> {}'.format(
-        ssh_command, stdin_path, stdout_path, stderr_path)
+        endpoint_command, stdin_path, stdout_path, stderr_path)
 
     # Return the final command
     return outer_command
+
+
+def get_error_message(results, debug_info):
+    message = ''
+
+    # Check errors caused by outer command
+    if len(results['outer_stderr']) > 0 or results['returncode'] != 0:
+        message += ('Error occurred when running the outer' +
+                    ' command->\n{}').format(debug_info['outer_command'])
+        message += '\nSTDOUT->\n{}'.format(results['outer_stdout'])
+        message += '\nSTDERR->\n{}'.format(results['outer_stderr'])
+        message += '\nRETURNCODE->\n{}'.format(results['returncode'])
+
+    # Check errors caused by inner commands
+    if len(results['inner_stderr']) > 0:
+        if len(message) > 0:
+            message += '\n'
+
+        message += ('Error occurred when running the inner' +
+                    ' commands->\n{}').format(debug_info['inner_commands'])
+        message += '\nSTDOUT->\n{}'.format(results['inner_stdout'])
+        message += '\nSTDERR->\n{}'.format(results['inner_stderr'])
+
+    return message
