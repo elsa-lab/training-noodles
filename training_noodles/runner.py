@@ -64,11 +64,8 @@ class Runner:
             undeployed_exps = self._filter_undeployed_experiments(undeployed)
 
             # Try to deploy each experiment to one of the satisfied servers
-            deployed = self._deploy_experiment_specs(undeployed_exps)
-
-            # Restore the original deployed indexes
-            undeployed_list = list(undeployed)
-            deployed = set([undeployed_list[i] for i in deployed])
+            deployed = self._deploy_experiment_specs(
+                undeployed, undeployed_exps)
 
             # Remove deployed indexes
             undeployed -= deployed
@@ -83,7 +80,7 @@ class Runner:
             round_idx += 1
 
         # Log the finish
-        logging.info('Successfully deployed main stage')
+        logging.info('Successfully deployed main stage "experiments"')
 
     def _deploy_side_experiments(self, stage):
         # Get the side experiment spec
@@ -91,6 +88,9 @@ class Runner:
 
         # Wrap the side experiment spec in list
         wrapped_spec = [side_exp_spec]
+
+        # Initialize a set of indexes of undeployed experiments
+        undeployed = set([0])
 
         # Initialize the deployed set
         deployed = set()
@@ -108,7 +108,8 @@ class Runner:
                 self._wait_for_next_round()
 
             # Try to deploy each experiment to one of the satisfied servers
-            deployed = self._deploy_experiment_specs(wrapped_spec, main=False)
+            deployed = self._deploy_experiment_specs(
+                undeployed, wrapped_spec, main=False)
 
             # Log the round time
             self._log_round_time(prev_round_time)
@@ -122,9 +123,15 @@ class Runner:
         # Log the finish
         logging.info('Successfully deployed side stage "{}"'.format(stage))
 
-    def _deploy_experiment_specs(self, exps_spec, main=True):
-        # Initialize set of indexes of deployed servers
-        deployed = set()
+    def _deploy_experiment_specs(self, exp_idxs, exps_spec, main=True):
+        # Initialize set of deployed experiment indexes
+        deployed_exps = set()
+
+        # Initialize set of deployed server indexes
+        deployed_servers = set()
+
+        # Convert experiment indexes to list
+        exp_idxs = list(exp_idxs)
 
         # Initialize the empty metrics
         metrics = {}
@@ -133,24 +140,38 @@ class Runner:
         servers_spec = self.user_spec.get('servers', [])
 
         # Iterate each experiment spec
-        for exp_idx, exp_spec in enumerate(exps_spec):
+        for filtered_exp_idx, exp_spec in enumerate(exps_spec):
             # Get the experiment name
             exp_name = exp_spec.get('name', '')
 
+            # Get the original experiment index
+            exp_idx = exp_idxs[filtered_exp_idx]
+
             # Log the experiment
             self._log_verbose('Try to deploy experiment "{}"'.format(exp_name))
+
+            # Check whether the experiment is empty
+            if self._check_empty_experiment(exp_spec):
+                # Log the skip
+                self._log_verbose('Experiment "{}" is empty, skip'.format(
+                    exp_name))
+
+                # Add the experiment index to the deployed experiment indexes
+                deployed_exps.add(exp_idx)
+
+                continue
 
             # Update metrics lazily
             self._update_metrics(exp_spec, metrics, main=main)
 
             # Find satisfied servers
             satisfied_servers = self._find_satisfied_servers(
-                exp_spec, metrics, deployed)
+                exp_spec, metrics, deployed_servers)
 
             # Check whether there are any satisfied servers
             if len(satisfied_servers) > 0:
                 # Wait for next deployment
-                if len(deployed) > 0:
+                if len(deployed_exps) > 0:
                     self._wait_for_next_deployment()
 
                 # Choose the first satisfied server
@@ -180,18 +201,21 @@ class Runner:
                 # Log the results
                 logging.info('Commands results->\n{}'.format(results))
 
-                # Add the index to the deployed servers
-                deployed.add(server_idx)
+                # Add the experiment index to the deployed experiment indexes
+                deployed_exps.add(exp_idx)
+
+                # Add the deployed server index to the deployed server indexes
+                deployed_servers.add(server_idx)
 
             # Check whether there are no available servers in this deployment
-            if len(deployed) >= len(servers_spec):
+            if len(deployed_servers) >= len(servers_spec):
                 # Log the break
                 self._log_verbose('No available servers, skip the deployment')
 
                 break
 
         # Return the deployed experiment indexes
-        return deployed
+        return deployed_exps
 
     def _check_server_metrics(self, req_id, envs):
         # Initialize the metric outputs
@@ -250,35 +274,47 @@ class Runner:
         server_spec = update_dict_with_missing(server_spec, global_server_spec)
 
         # Run the commands on remote
-        results, debug_info = run_commands_over_ssh(
+        results, debug_infos = run_commands_over_ssh(
             server_spec, commands, envs=envs)
 
         # Check errors
-        self._check_command_errors(results, debug_info)
+        self._check_command_errors(results, debug_infos)
 
-        # Return the STDOUT from inner command
-        return results['temp_stdout']
+        # Concatenate STDOUT from inner command
+        inner_stdout = ''.join(results['temp_stdouts'])
 
-    def _check_command_errors(self, results, debug_info):
+        # Return the STDOUT
+        return inner_stdout
+
+    def _check_command_errors(self, results, debug_infos):
         # Initialize empty message
         message = ''
 
         # Check error when running the outer command
-        if len(results['stderr']) > 0 or results['returncode'] != 0:
-            message += ('Error occurred when running the outer command:' +
-                        ' {}').format(debug_info['outer_command'])
-            message += '\nSTDOUT->\n{}\nSTDERR->\n{}\nReturn code: {}'.format(
-                results['stdout'], results['stderr'], results['returncode'])
+        zipped = zip(results['stdouts'], results['stderrs'],
+                     results['returncodes'], debug_infos['outer_commands'])
+
+        for stdout, stderr, returncode, outer_command in zipped:
+            if len(stderr) > 0 or returncode != 0:
+                message += ('Error occurred when running the outer command:' +
+                            ' {}').format(outer_command)
+                message += '\nSTDOUT->\n{}'.format(stdout)
+                message += '\nSTDERR->\n{}'.format(stderr)
+                message += '\nRETURNCODE->\n{}'.format(returncode)
 
         # Check error when running the inner command
-        if len(results['temp_stderr']) > 0:
-            if len(message) > 0:
-                message += '\n'
+        zipped = zip(results['temp_stdouts'], results['temp_stderrs'],
+                     debug_infos['inner_commands'])
 
-            message += ('Error occurred when running the inner command:' +
-                        ' {}').format(debug_info['inner_command'])
-            message += '\nSTDOUT->\n{}\nSTDERR->\n{}'.format(
-                results['temp_stdout'], results['temp_stderr'])
+        for temp_stdout, temp_stderr, inner_command in zipped:
+            if len(temp_stderr) > 0:
+                if len(message) > 0:
+                    message += '\n'
+
+                message += ('Error occurred when running the inner command:' +
+                            ' {}').format(inner_command)
+                message += '\nSTDOUT->\n{}'.format(temp_stdout)
+                message += '\nSTDERR->\n{}'.format(temp_stderr)
 
         # Check whether to handle the error
         if len(message) > 0:
@@ -442,7 +478,7 @@ class Runner:
                     return True
             else:
                 # Should not reach here
-                raise ValueError('Unknown scheme')
+                raise ValueError('Unknown scheme "{}"'.format(scheme))
         else:
             message = 'Unknown scheme "{}" in requirement ID "{}"'.format(
                 scheme, req_id)
@@ -541,15 +577,25 @@ class Runner:
 
             # Check whether to use default details from "each" experiment
             # details
-            if len(exp_details) <= 0:
+            if len(exp_details) <= 0 and len(each_exp_details) > 0:
                 # Log the use
-                if self.verbose:
-                    logging.info(('Use default "{}" from' +
-                                  ' "each_experiment"->\n').format(
-                        detail_name, json.dumps(each_exp_details)))
+                self._log_verbose(('Use default "{}" from' +
+                                   ' "each_experiment"->\n{}').format(
+                    detail_name, json.dumps(each_exp_details)))
 
                 # Use commands from "each" commands
                 exp_details = each_exp_details
+
+            # Log the merge
+            if len(before_each_exp_details) > 0:
+                self._log_verbose(('Merge "{}" from' +
+                                   ' "before_each_experiment"->\n{}').format(
+                    detail_name, json.dumps(before_each_exp_details)))
+
+            if len(after_each_exp_details) > 0:
+                self._log_verbose(('Merge "{}" from' +
+                                   ' "after_each_experiment"->\n{}').format(
+                    detail_name, json.dumps(after_each_exp_details)))
 
             # Merge with "before each" and "after each" commands then return
             return self._merge_experiment_details(
@@ -633,6 +679,16 @@ class Runner:
             message = 'Unknown detail name: {}'.format(detail_name)
             logging.error(message)
             raise ValueError(message)
+
+    def _check_empty_experiment(self, exp_spec):
+        # Get the commands
+        commands = exp_spec.get('commands', {})
+
+        # Get the corresponding type
+        details = commands.get(self.command_type, [])
+
+        # Check whether the details are empty
+        return len(details) <= 0
 
     def _raise_error_or_log(self, message):
         # Get error handling spec
