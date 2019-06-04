@@ -5,6 +5,19 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "error_handling (run)",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/training_noodles/noodles.py",
+            "console": "integratedTerminal",
+            "args": [
+                "run",
+                "examples/error_handling/spec.yml",
+                "--verbose",
+                "--debug"
+            ]
+        },
+        {
             "name": "file_transfer (run)",
             "type": "python",
             "request": "launch",

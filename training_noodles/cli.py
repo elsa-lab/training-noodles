@@ -50,7 +50,7 @@ def run_command(command, stdin=None, extra_envs=None, wait=True):
         return p_obj
     except subprocess.CalledProcessError as e:
         logging.exception('Could not run the command: {}'.format(command))
-        logging.error('RETURNCODE: {}'.format(e.returncode))
+        logging.error('RETURN_CODE: {}'.format(e.returncode))
         logging.error('STDOUT=>\n{}'.format(decode_output(e.stdout)))
         logging.error('STDERR=>\n{}'.format(decode_output(e.stderr)))
         raise

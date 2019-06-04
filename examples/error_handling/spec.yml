@@ -1,0 +1,66 @@
+# Name of the spec
+name: Error handling
+
+# Description of the spec
+description: Show the ability to handle various kinds of errors
+
+################################################################################
+# Experiments
+################################################################################
+
+experiments:
+- name: Experiment 1
+  description: Example experiment 1
+  commands:
+    run: "echo Running experiment 1"
+- name: Experiment 2
+  description: Example experiment 2
+  commands:
+    run: "echo Running experiment 2"
+- name: Experiment 3
+  description: Example experiment 3
+  commands:
+    run: "echo Running experiment 3"
+
+################################################################################
+# Servers
+################################################################################
+
+# Applies to the server spec if not specified
+each_server:
+  # Path to the private key on local
+  private_key_path: $HOME/.ssh/id_rsa
+  # Username on the server (e.g., 'user1')
+  username: $USER
+
+# All servers
+servers:
+- name: Server 1
+  # Hostname of the server (e.g., "server1.example.com", "123.123.123.123")
+  hostname: server1
+- name: Nonexistent server
+  # Hostname of the server (e.g., "server1.example.com", "123.123.123.123")
+  hostname: nonexistent.example.com
+
+################################################################################
+# Deployment
+################################################################################
+
+# The interval to run each deployment round
+round_interval: 0
+# The interval to deploy each experiment in each round
+deployment_interval: 0
+
+################################################################################
+# Error Handling
+################################################################################
+
+# Whether to check any nonzero return code and nonempty stderr and raise error
+check_any_errors: True
+
+# List of error handlers
+error_handlers:
+- name: Ignore SSH resolve hostname error
+  return_code: 255
+  stderr_pattern: "^ssh: Could not resolve hostname .+: Name or service not known\\s+$"
+  action: retry

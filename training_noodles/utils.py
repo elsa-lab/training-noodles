@@ -1,8 +1,30 @@
 import logging
+import re
 
 
 def convert_values_to_strs(d):
     return {k: str(v) for k, v in d.items()}
+
+
+def match_full(pattern, s):
+    # Check whether the pattern is valid
+    if not isinstance(pattern, str):
+        return False
+
+    # Convert the input to string
+    s = str(s)
+
+    # Find the matches
+    m = re.match(pattern, s)
+
+    # Check whether there are any matches
+    if m is not None:
+        # Check full match
+        if len(m.group()) == len(s):
+            return True
+
+    # otherwise, it's not a full match
+    return False
 
 
 def split_by_scheme(s, schemes):

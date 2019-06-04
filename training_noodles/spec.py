@@ -24,7 +24,8 @@ root_keys = [
     'requirements/*',
     'round_interval',
     'deployment_interval',
-    'check_errors',
+    'check_any_errors',
+    'error_handlers',
 ]
 
 # Set server spec keys

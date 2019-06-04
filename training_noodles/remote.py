@@ -78,7 +78,7 @@ def _run_commands_on_endpoint(endpoint_command, inner_commands, envs={}):
     p_obj = run_command(outer_command, extra_envs=envs)
 
     # Read the command results
-    stdout, stderr, returncode = read_command_results(p_obj)
+    stdout, stderr, return_code = read_command_results(p_obj)
 
     # Read stdout and stderr from temporary files
     temp_stdout, temp_stderr = _read_stdout_and_stderr(temp_files)
@@ -92,7 +92,7 @@ def _run_commands_on_endpoint(endpoint_command, inner_commands, envs={}):
         'inner_stderr': decode_output(temp_stderr),
         'outer_stdout': decode_output(stdout),
         'outer_stderr': decode_output(stderr),
-        'returncode': returncode,
+        'return_code': return_code,
     }
 
     # Build debugging info
@@ -352,12 +352,12 @@ def get_error_message(results, debug_info):
     message = ''
 
     # Check errors caused by outer command
-    if len(results['outer_stderr']) > 0 or results['returncode'] != 0:
+    if len(results['outer_stderr']) > 0 or results['return_code'] != 0:
         message += ('Error occurred when running the outer' +
                     ' command->\n{}').format(debug_info['outer_command'])
         message += '\nSTDOUT->\n{}'.format(results['outer_stdout'])
         message += '\nSTDERR->\n{}'.format(results['outer_stderr'])
-        message += '\nRETURNCODE->\n{}'.format(results['returncode'])
+        message += '\nRETURN_CODE->\n{}'.format(results['return_code'])
 
     # Check errors caused by inner commands
     if len(results['inner_stderr']) > 0:

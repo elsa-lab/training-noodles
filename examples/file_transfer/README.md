@@ -10,6 +10,10 @@ It uses the uploaded script on servers as a way to identify the which server to 
 
 You should prepare two servers to run this example. Please feel free to modify entries `each_server` and `servers` in the spec to specify your own servers. If you only have one server, please remove *server2* in the spec.
 
+## Prerequisites
+
+Please make sure `scp` is installed on the localhost.
+
 ## Run
 
 To run this example, use project root directory as working directory and execute the following:

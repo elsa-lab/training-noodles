@@ -4,8 +4,11 @@ import logging
 
 def init_logging(args):
     # Set logging formats
-    logging_config = dict(format='%(asctime)-15s %(name)-5s %(levelname)-8s %(message)s',
-                          datefmt='%Y-%m-%d %H:%M:%S')
+    logging_format = '%(asctime)-15s %(name)-5s %(levelname)-8s %(message)s'
+    date_format = '%Y-%m-%d %H:%M:%S'
+
+    # Create a logging config
+    logging_config = dict(format=logging_format, datefmt=date_format)
 
     # Set logging level
     if args.debug:

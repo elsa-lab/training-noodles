@@ -7,7 +7,7 @@ import time
 from training_noodles.remote import (
     eval_expression_on_local, run_commands_over_ssh, get_error_message)
 from training_noodles.utils import (
-    split_by_scheme, update_dict_with_missing, wrap_with_list)
+    match_full, split_by_scheme, update_dict_with_missing, wrap_with_list)
 
 
 class Runner:
@@ -159,69 +159,107 @@ class Runner:
                 # Add the experiment index to the deployed experiment indexes
                 deployed_exps.add(exp_idx)
 
-                continue
+            else:
+                # Update metrics lazily
+                self._update_metrics(exp_spec, metrics, main=main)
 
-            # Update metrics lazily
-            self._update_metrics(exp_spec, metrics, main=main)
+                # Find satisfied servers
+                satisfied_servers = self._find_satisfied_servers(
+                    exp_spec, metrics, deployed_servers, main=main)
 
-            # Find satisfied servers
-            satisfied_servers = self._find_satisfied_servers(
-                exp_spec, metrics, deployed_servers, main=main)
+                # Check whether there are any satisfied servers
+                if len(satisfied_servers) > 0:
+                    # Wait for next deployment
+                    if len(deployed_exps) > 0:
+                        self._wait_for_next_deployment()
 
-            # Check whether there are any satisfied servers
-            if len(satisfied_servers) > 0:
-                # Wait for next deployment
-                if len(deployed_exps) > 0:
-                    self._wait_for_next_deployment()
+                    # Choose the first satisfied server
+                    server_idx = next(iter(satisfied_servers))
 
-                # Choose the first satisfied server
-                server_idx = next(iter(satisfied_servers))
+                    # Get server spec
+                    server_spec = servers_spec[server_idx]
 
-                # Get server spec
-                server_spec = servers_spec[server_idx]
+                    # Get the server name
+                    server_name = server_spec.get('name', '')
 
-                # Get the server name
-                server_name = server_spec.get('name', '')
+                    # Log the deployment
+                    logging.info(
+                        'Deploy experiment "{}" to server "{}"'.format(
+                            exp_name, server_name))
 
-                # Log the deployment
-                logging.info('Deploy experiment "{}" to server "{}"'.format(
-                    exp_name, server_name))
+                    # Deploy the experiment to the server
+                    status = self._deploy_experiment_to_server(
+                        exp_spec, server_spec, main=main)
 
-                # Build experiment commands
-                commands = self._build_experiment_details(
-                    exp_spec, 'commands', main=main)
+                    # Update deployed indexes by status
+                    self._update_deployed_indexes_by_status(
+                        status, exp_idx, server_idx, deployed_exps,
+                        deployed_servers)
 
-                # Build experiment environment variables
-                envs = self._build_experiment_details(
-                    exp_spec, 'envs', main=main)
+                # Check whether there are no available servers in this
+                # deployment
+                if len(deployed_servers) >= len(servers_spec):
+                    # Log the break
+                    self._log_verbose(
+                        'No available servers, skip the deployment')
 
-                # Add environment variables of the satisfied server
-                server_envs = self._build_server_envs(server_spec, envs)
-
-                # Merge enviornment variables
-                envs = {**envs, **server_envs}
-
-                # Deploy the experiment to the server
-                results = self._run_commands(server_spec, commands, envs=envs)
-
-                # Log the results
-                logging.info('Commands results->\n{}'.format(results))
-
-                # Add the experiment index to the deployed experiment indexes
-                deployed_exps.add(exp_idx)
-
-                # Add the deployed server index to the deployed server indexes
-                deployed_servers.add(server_idx)
-
-            # Check whether there are no available servers in this deployment
-            if len(deployed_servers) >= len(servers_spec):
-                # Log the break
-                self._log_verbose('No available servers, skip the deployment')
-
-                break
+                    break
 
         # Return the deployed experiment indexes
         return deployed_exps
+
+    def _deploy_experiment_to_server(self, exp_spec, server_spec, main=True):
+        # Build experiment commands
+        commands = self._build_experiment_details(
+            exp_spec, 'commands', main=main)
+
+        # Build experiment environment variables
+        envs = self._build_experiment_details(
+            exp_spec, 'envs', main=main)
+
+        # Add environment variables of the satisfied server
+        server_envs = self._build_server_envs(server_spec, envs)
+
+        # Merge environment variables
+        envs = {**envs, **server_envs}
+
+        # Deploy the experiment to the server
+        status, results = self._run_commands(
+            server_spec, commands, envs=envs)
+
+        # Log the results
+        logging.info('Commands results->\n{}'.format(results))
+
+        # Return the status
+        return status
+
+    def _update_deployed_indexes_by_status(self, status, exp_idx, server_idx,
+                                           deployed_exps, deployed_servers):
+        # Take action according to the status
+        if status == 'success':
+            # Add the experiment index to the deployed experiment
+            # indexes
+            deployed_exps.add(exp_idx)
+
+            # Add the deployed server index to the deployed server
+            # indexes
+            deployed_servers.add(server_idx)
+
+        elif status == 'continue':
+            # Log the continue
+            logging.warning('Unsuccessful commands run, will continue')
+
+            # Give up this experiment by treating it as if it has been
+            # deployed
+            deployed_exps.add(exp_idx)
+
+        elif status == 'retry':
+            # Log the retry
+            logging.warning('Unsuccessful commands run, will retry')
+
+        else:
+            # Should not reach here
+            raise ValueError('Unknown status: {}'.format(status))
 
     def _check_server_metrics(self, req_id, envs):
         # Initialize the metric outputs
@@ -235,36 +273,57 @@ class Runner:
 
         # Iterate each server spec
         for server_spec in servers_spec:
-            # Get name of the server
-            name = server_spec['name']
+            # Run the command until success
+            status = None
 
-            # Log the server and requirement ID
-            self._log_verbose('Check requirement "{}" on server "{}"'.format(
-                req_id, name))
+            while status != 'success':
+                # Get name of the server
+                name = server_spec['name']
 
-            # Get the requirement commands
-            req_commands = reqs_spec.get(req_id, None)
+                # Log the server and requirement ID
+                self._log_verbose(('Check requirement "{}"' +
+                                   ' on server "{}"').format(req_id, name))
 
-            # Check whether the requirement command exists
-            if req_commands is None:
-                message = 'Requirement ID does not exist: {}'.format(req_id)
-                logging.error(message)
-                raise ValueError(message)
+                # Get the requirement commands
+                req_commands = reqs_spec.get(req_id, None)
 
-            # Run the remote command on server
-            results = self._run_commands(server_spec, req_commands, envs=envs)
+                # Check whether the requirement command exists
+                if req_commands is None:
+                    self._log_and_raise_error(
+                        'Requirement ID does not exist: {}'.format(req_id))
 
-            # Log the results
-            logging.debug('Metric results:->\n{}'.format(results))
+                # Run the remote command on server
+                status, results = self._run_commands(
+                    server_spec, req_commands, envs=envs)
 
-            # Try to calculate mean metric of results
-            metric = self._try_calc_mean(results)
+                # Take action according to the status
+                if status == 'success':
+                    # Log the results
+                    logging.debug('Metric results:->\n{}'.format(results))
 
-            # Log the metric
-            logging.debug('Metric: {}'.format(metric))
+                    # Try to calculate mean metric of results
+                    metric = self._try_calc_mean(results)
 
-            # Add the metric to the list
-            metrics.append(metric)
+                    # Log the processed metric
+                    logging.debug('Processed metric: {}'.format(metric))
+
+                    # Add the metric to the list
+                    metrics.append(metric)
+
+                elif status == 'continue':
+                    # Log the continue
+                    logging.warning('Unsuccessful commands run, will continue')
+
+                    # Continue to next server spec
+                    break
+
+                elif status == 'retry':
+                    # Log the retry
+                    logging.warning('Unsuccessful commands run, will retry')
+
+                else:
+                    # Should not reach here
+                    raise ValueError('Unknown status: {}'.format(status))
 
         # Return list of metrics for all servers
         return metrics
@@ -275,8 +334,13 @@ class Runner:
             server_spec, commands, envs=envs)
 
         # Check errors
+        status = None
         for results, debug_info in zip(all_results, debug_infos):
-            self._check_command_errors(results, debug_info)
+            status = self._handle_errors(results, debug_info)
+
+            # Break when it has error status
+            if status != 'success':
+                break
 
         # Get STDOUTs produced by inner commands
         inner_stdouts = map(lambda x: x['inner_stdout'], all_results)
@@ -284,16 +348,82 @@ class Runner:
         # Concatenate the STDOUTs
         inner_stdout = ''.join(inner_stdouts)
 
-        # Return the STDOUT
-        return inner_stdout
+        # Return the error status and STDOUT
+        return status, inner_stdout
 
-    def _check_command_errors(self, results, debug_info):
-        # Check errors
-        message = get_error_message(results, debug_info)
+    def _handle_errors(self, results, debug_info):
+        # Get error handling spec
+        check_any_errors = self.user_spec.get('check_any_errors', True)
 
-        # Check whether to handle the error
+        # Determine whether to check any errors
+        if check_any_errors:
+            # Get error message
+            message = get_error_message(results, debug_info)
+        else:
+            # Set empty error message
+            message = ''
+
+        # Check whether there is any error message
         if len(message) > 0:
-            self._raise_error_or_log(message)
+            # Get error handling action
+            action = self._check_error_handler_action(results)
+
+            # Take action
+            if action == 'continue':
+                self._log_verbose(message)
+            elif action == 'retry':
+                self._log_verbose(message)
+            elif action == 'abort':
+                self._log_and_raise_error(message)
+            else:
+                self._log_and_raise_error(
+                    'Unknown error action "{}"'.format(action))
+
+            # Return error handling action
+            return action
+        else:
+            # Indicate no action should be taken
+            return 'success'
+
+    def _check_error_handler_action(self, results):
+        # Get error handler specs
+        error_handlers = self.user_spec.get('error_handlers', [])
+
+        # Iterate each error handler
+        for error_handler in error_handlers:
+            # Get return code to ignore
+            return_code = error_handler.get('return_code', None)
+
+            # Get STDERR pattern to ignore
+            stderr_pattern = error_handler.get('stderr_pattern', None)
+
+            # Check the return code
+            if isinstance(return_code, str):
+                match_return_code = match_full(
+                    return_code, results['return_code'])
+            else:
+                match_return_code = (results['return_code'] == return_code)
+
+            # Check whether it's a full match
+            match_stderr = match_full(stderr_pattern, results['inner_stderr'])
+
+            # Return code and STDERR must all be matched
+            if match_return_code and match_stderr:
+                # Get the name of the filter
+                name = error_handler.get('name', '')
+
+                # Get the action
+                action = error_handler.get('action', 'abort')
+
+                # Log the match
+                self._log_verbose(('Found error handler match with name "{}"' +
+                                   ' and action "{}"').format(name, action))
+
+                # Return the action
+                return action
+
+        # All filters do not apply, abort the runner
+        return 'abort'
 
     def _count_experiments(self):
         # Get experiment specs
@@ -371,10 +501,8 @@ class Runner:
             servers_metrics = metrics.get(req_id, None)
 
             if servers_metrics is None:
-                message = 'Requirement ID "{}" should be in metrics'.format(
-                    req_id)
-                logging.error(message)
-                raise ValueError(message)
+                self._log_and_raise_error(
+                    'Requirement ID "{}" should be in metrics'.format(req_id))
 
             # Update the indexes of satisfied servers by comparing the server
             # metric to the requirement value
@@ -412,20 +540,42 @@ class Runner:
             # Convert to string
             expr = str(expr)
 
-            if expr != '':
-                # Check whether any environment variables exist
-                m = re.match(r'(\$.+)|(\${.+})', expr)
+            # Skip the evaluation when the expression is empty
+            if expr == '':
+                continue
 
-                if m is not None:
-                    # Evaluate expression on local
-                    results, debug_info = eval_expression_on_local(
-                        expr, envs=envs)
+            # Check whether any environment variables exist
+            m = re.match(r'(\$.+)|(\${.+})', expr)
 
-                    # Check command errors
-                    self._check_command_errors(results, debug_info)
+            if m is None:
+                continue
 
+            # Evaluate express until success
+            status = None
+
+            while status != 'success':
+                # Evaluate expression on local
+                results, debug_info = eval_expression_on_local(
+                    expr, envs=envs)
+
+                # Handle errors
+                status = self._handle_errors(results, debug_info)
+
+                # Take action according to the status
+                if status == 'success':
                     # Set evaluated values
                     server_envs[key] = results['inner_stdout']
+
+                elif status == 'continue':
+                    # Give up this evaluation
+                    break
+
+                elif status == 'retry':
+                    pass
+
+                else:
+                    # Should not reach here
+                    raise ValueError('Unknown status: {}'.format(status))
 
         # Return evaluated environment variables
         return server_envs
@@ -506,10 +656,9 @@ class Runner:
                 # Should not reach here
                 raise ValueError('Unknown scheme "{}"'.format(scheme))
         else:
-            message = 'Unknown scheme "{}" in requirement ID "{}"'.format(
-                scheme, req_id)
-            logging.error(message)
-            raise ValueError(message)
+            self._log_and_raise_error(
+                'Unknown scheme "{}" in requirement ID "{}"'.format(
+                    scheme, req_id))
 
     def _is_metric_satisfied(self, metric, operator, value):
         try:
@@ -526,14 +675,12 @@ class Runner:
             elif operator == '>=':
                 return metric >= value
             else:
-                message = 'Unknown operator: {}'.format(operator)
-                logging.error(message)
-                raise ValueError(message)
+                self._log_and_raise_error(
+                    'Unknown operator: {}'.format(operator))
         except:
-            message = 'Could not compare the values: "{}" "{}" "{}"'.format(
-                metric, operator, value)
-            logging.error(message)
-            raise ValueError(message)
+            self._log_and_raise_error(
+                'Could not compare the values: "{}" "{}" "{}"'.format(
+                    metric, operator, value))
 
     def _parse_requirement_expression(self, req_expr):
         # Remove whitespaces
@@ -544,10 +691,9 @@ class Runner:
 
         # Check whether the expression is valid
         if m is None:
-            message = 'Could not parse the requirement expression: {}'.format(
-                req_expr)
-            logging.error(message)
-            raise ValueError(message)
+            self._log_and_raise_error(
+                'Could not parse the requirement expression: {}'.format(
+                    req_expr))
         else:
             operator = m.group('operator')
             value = m.group('value')
@@ -639,10 +785,9 @@ class Runner:
             return update_dict_with_missing(before_each_exp_details,
                                             exp_details, after_each_exp_details)
         else:
-            message = 'Unknown type of experiment details: {}'.format(
-                type(exp_details))
-            logging.error(message)
-            raise ValueError(message)
+            self._log_and_raise_error(
+                'Unknown type of experiment details: {}'.format(
+                    type(exp_details)))
 
     def _get_side_experiments_spec(self, stage):
         # Return the side experiment
@@ -686,9 +831,8 @@ class Runner:
             # Return the corresponding type
             return details.get(self.command_type, {})
         else:
-            message = 'Unknown detail name: {}'.format(detail_name)
-            logging.error(message)
-            raise ValueError(message)
+            self._log_and_raise_error(
+                'Unknown detail name: {}'.format(detail_name))
 
     def _wrap_details(self, detail_name, details):
         if detail_name == 'envs':
@@ -701,9 +845,8 @@ class Runner:
             # Return the dict
             return details
         else:
-            message = 'Unknown detail name: {}'.format(detail_name)
-            logging.error(message)
-            raise ValueError(message)
+            self._log_and_raise_error(
+                'Unknown detail name: {}'.format(detail_name))
 
     def _check_empty_experiment(self, exp_spec, main=True):
         # Build the commands
@@ -713,23 +856,8 @@ class Runner:
         # Check whether the commands are empty
         return len(commands) <= 0
 
-    def _raise_error_or_log(self, message):
-        # Get error handling spec
-        check_errors = self.user_spec.get('check_errors', True)
-
-        # Check whether to raise or log the error
-        if check_errors:
-            logging.error(message)
-            raise ValueError(message)
-        else:
-            # Only log the error when verbose is on
-            if self.verbose:
-                logging.info(message)
-
     def _log_side_round(self, stage, round_idx):
-        if self.verbose:
-            # Log the round number
-            logging.info('Side round #{} ({})'.format(round_idx + 1, stage))
+        self._log_verbose('Side round #{} ({})'.format(round_idx + 1, stage))
 
     def _log_round(self, round_idx, undeployed):
         if self.verbose:
@@ -761,3 +889,7 @@ class Runner:
     def _log_verbose(self, message):
         if self.verbose:
             logging.info(message)
+
+    def _log_and_raise_error(self, message):
+        logging.error(message)
+        raise ValueError(message)

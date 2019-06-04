@@ -11,16 +11,18 @@ description: Clean the scripts produced by "run" experiments
 # Main experiments go here
 experiments:
 - name: Clean
-  description: Clean the scripts
+  description: Clean the scripts and logs
   # Specify environment variables only for this experiment
   envs:
     SCRIPT1: examples/local_tmux/script1.sh
     SCRIPT2: examples/local_tmux/script2.sh
+    OUTPUT: examples/local_tmux/output.log
   commands:
     clean:
-      - "echo Cleaning script files"
+      - "echo Cleaning script and log files"
       - "rm -f $SCRIPT1"
       - "rm -f $SCRIPT2"
+      - "rm -f $OUTPUT"
 
 ################################################################################
 # Servers

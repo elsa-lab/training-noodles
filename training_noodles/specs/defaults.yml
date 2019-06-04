@@ -102,5 +102,8 @@ deployment_interval: 0
 # Error Handling
 ################################################################################
 
-# Whether to check nonzero return code and nonempty stderr and raise error
-check_errors: True
+# Whether to check any nonzero return code and nonempty stderr and raise error
+check_any_errors: True
+
+# List of error handlers
+error_handlers: []
