@@ -21,6 +21,9 @@ experiments:
     SCRIPT: remote_experiment1.sh
   commands:
     run: "local:scp $LOCAL_DIR/$SCRIPT $NOODLES_SERVER_AUTHORITY:~/$SCRIPT"
+  requirements:
+    run:
+      get_random_number: "==1"
 - name: Upload experiment 2
   description: Upload simple script to a server
   envs:
@@ -92,6 +95,8 @@ servers:
 
 # Commands to run to check requirements on servers
 requirements:
+  # Get random number between integers 1 and 2 on server
+  get_random_number: "echo $(( ( RANDOM % 2 )  + 1 ))"
   # Count the number of output file. The result is 1 if the output file exists,
   # otherwise 0.
   find_experiment: "ls -al ~ | grep $SCRIPT | wc -l"
