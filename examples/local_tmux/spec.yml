@@ -2,7 +2,7 @@
 name: Two Tmux
 
 # Description of the spec
-description: Run two Tmux sessions with different delays on localhost
+description: Run two Tmux sessions with different delays on local machines
 
 ################################################################################
 # Experiments

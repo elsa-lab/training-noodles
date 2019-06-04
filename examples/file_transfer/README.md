@@ -12,7 +12,7 @@ You should prepare two servers to run this example. Please feel free to modify e
 
 ## Prerequisites
 
-Please make sure `scp` is installed on the localhost.
+Please make sure `scp` is installed on the local machine.
 
 ## Run
 

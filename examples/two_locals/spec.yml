@@ -2,7 +2,7 @@
 name: Two locals
 
 # Description of the spec
-description: Run commands on two servers which are actually localhost
+description: Run commands on two local machines
 
 ################################################################################
 # Experiments

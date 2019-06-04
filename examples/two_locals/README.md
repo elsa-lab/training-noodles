@@ -1,8 +1,8 @@
 # Example: Two Locals
 
-You can run this example without servers. Because we use `hostname: localhost` in the spec `spec.yml`, Noodles would run all the commands on localhost without SSH.
+You can run this example without servers. Because we use `hostname: localhost` in the spec `spec.yml`, Noodles would run all the commands on local machines without SSH.
 
-In the spec, *Experiment 1* would write a hello message into `examples/two_locals/exp1.log`, while *Experiment 2* and *Experiment 3* would write the time of execution into `exp2.log` and `exp3.log` under the directory `examples/two_locals/`. Moreover, *Experiment 3* requires the CPU usage to be greater than or equal to 0 (which is always true). Noodles would measure CPU usage on the servers (actually localhosts) and deploy the experiment to one of the satisfied servers.
+In the spec, *Experiment 1* would write a hello message into `examples/two_locals/exp1.log`, while *Experiment 2* and *Experiment 3* would write the time of execution into `exp2.log` and `exp3.log` under the directory `examples/two_locals/`. Moreover, *Experiment 3* requires the CPU usage to be greater than or equal to 0 (which is always true). Noodles would measure CPU usage on the servers (actually local machines) and deploy the experiment to one of the satisfied servers.
 
 ## Run
 
