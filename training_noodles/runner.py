@@ -31,7 +31,7 @@ class Runner:
         self._deploy_side_experiments('before_all_experiments')
 
         # Deploy main experiments
-        self._deploy_main_experiments()
+        num_success, total = self._deploy_main_experiments()
 
         # Deploy "after all" experiments
         self._deploy_side_experiments('after_all_experiments')
@@ -39,14 +39,26 @@ class Runner:
         # Calculate total elapsed time
         elapsed = time.time() - start_time
 
-        # Log the finish
+        # Log the elapsed time
         logging.info('Total elapsed time: {:.3f}s'.format(elapsed))
-        logging.info('Successfully deployed all "{}" experiments'.format(
-            self.command_type))
+
+        # Calculate ratio of successful deployments
+        percentage = float(num_success) / float(total) * 100.0
+
+        # Log the ratio of successful deployments
+        logging.info(
+            'Successfully deployed {:g}% ({}/{}) "{}" experiments'.format(
+                percentage, num_success, total, self.command_type))
 
     def _deploy_main_experiments(self):
+        # Initialize total number of successful deployments
+        total_num_success = 0
+
+        # Get number of experiments
+        num_exps = self._count_experiments()
+
         # Initialize a set of indexes of undeployed experiments
-        undeployed = set(range(self._count_experiments()))
+        undeployed = set(range(num_exps))
 
         # Deploy all remaining experiments until there are none
         round_idx = 0
@@ -64,11 +76,14 @@ class Runner:
             undeployed_exps = self._filter_undeployed_experiments(undeployed)
 
             # Try to deploy each experiment to one of the satisfied servers
-            deployed = self._deploy_experiment_specs(
+            deployed, num_success = self._deploy_experiment_specs(
                 undeployed, undeployed_exps)
 
             # Remove deployed indexes
             undeployed -= deployed
+
+            # Accumulate number of successful deployments
+            total_num_success += num_success
 
             # Log the round time
             self._log_round_time(prev_round_time)
@@ -80,7 +95,10 @@ class Runner:
             round_idx += 1
 
         # Log the finish
-        logging.info('Successfully deployed main stage "experiments"')
+        logging.info('Finished main stage "experiments"')
+
+        # Return the ratio of successful deployments
+        return total_num_success, num_exps
 
     def _deploy_side_experiments(self, stage):
         # Get the side experiment spec
@@ -108,7 +126,7 @@ class Runner:
                 self._wait_for_next_round()
 
             # Try to deploy each experiment to one of the satisfied servers
-            deployed = self._deploy_experiment_specs(
+            deployed, num_success = self._deploy_experiment_specs(
                 undeployed, wrapped_spec, main=False)
 
             # Log the round time
@@ -121,7 +139,10 @@ class Runner:
             round_idx += 1
 
         # Log the finish
-        logging.info('Successfully deployed side stage "{}"'.format(stage))
+        logging.info('Finished side stage "{}"'.format(stage))
+
+        # Return the ratio of successful deployments
+        return num_success, 1
 
     def _deploy_experiment_specs(self, exp_idxs, exps_spec, main=True):
         # Initialize set of deployed experiment indexes
@@ -129,6 +150,9 @@ class Runner:
 
         # Initialize set of deployed server indexes
         deployed_servers = set()
+
+        # Initialize the number of successful deployments
+        num_success = 0
 
         # Convert experiment indexes to list
         exp_idxs = list(exp_idxs)
@@ -196,6 +220,10 @@ class Runner:
                         status, exp_idx, server_idx, deployed_exps,
                         deployed_servers)
 
+                    # Increment the number of successful deployments
+                    if status == 'success':
+                        num_success += 1
+
                 # Check whether there are no available servers in this
                 # deployment
                 if len(deployed_servers) >= len(servers_spec):
@@ -205,8 +233,9 @@ class Runner:
 
                     break
 
-        # Return the deployed experiment indexes
-        return deployed_exps
+        # Return the deployed experiment indexes and number of successful
+        # deployments
+        return deployed_exps, num_success
 
     def _deploy_experiment_to_server(self, exp_spec, server_spec, main=True):
         # Build experiment commands
