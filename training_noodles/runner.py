@@ -18,8 +18,11 @@ class Runner:
         # Save the user spec
         self.user_spec = user_spec
 
-        # Save the logging variables
+        # Save the logging variable
         self.verbose = verbose
+
+        # Create a logger
+        self.logger = logging.getLogger(name='run')
 
     def run(self):
         """ Deploy all the experiments until finish.
@@ -40,13 +43,13 @@ class Runner:
         elapsed = time.time() - start_time
 
         # Log the elapsed time
-        logging.info('Total elapsed time: {:.3f}s'.format(elapsed))
+        self.logger.info('Total elapsed time: {:.3f}s'.format(elapsed))
 
         # Calculate ratio of successful deployments
         percentage = float(num_success) / float(total) * 100.0
 
         # Log the ratio of successful deployments
-        logging.info(
+        self.logger.info(
             'Successfully deployed {:g}% ({}/{}) "{}" experiments'.format(
                 percentage, num_success, total, self.command_type))
 
@@ -95,7 +98,7 @@ class Runner:
             round_idx += 1
 
         # Log the finish
-        logging.info('Finished main stage "experiments"')
+        self.logger.info('Finished main stage "experiments"')
 
         # Return the ratio of successful deployments
         return total_num_success, num_exps
@@ -139,7 +142,7 @@ class Runner:
             round_idx += 1
 
         # Log the finish
-        logging.info('Finished side stage "{}"'.format(stage))
+        self.logger.info('Finished side stage "{}"'.format(stage))
 
         # Return the ratio of successful deployments
         return num_success, 1
@@ -207,7 +210,7 @@ class Runner:
                     server_name = server_spec.get('name', '')
 
                     # Log the deployment
-                    logging.info(
+                    self.logger.info(
                         'Deploy experiment "{}" to server "{}"'.format(
                             exp_name, server_name))
 
@@ -257,7 +260,7 @@ class Runner:
             server_spec, commands, envs=envs)
 
         # Log the results
-        logging.info('Commands results->\n{}'.format(results))
+        self.logger.info('Commands results->\n{}'.format(results))
 
         # Return the status
         return status
@@ -276,7 +279,7 @@ class Runner:
 
         elif status == 'continue':
             # Log the continue
-            logging.warning('Unsuccessful commands run, will continue')
+            self.logger.warning('Unsuccessful commands run, will continue')
 
             # Give up this experiment by treating it as if it has been
             # deployed
@@ -284,7 +287,7 @@ class Runner:
 
         elif status == 'retry':
             # Log the retry
-            logging.warning('Unsuccessful commands run, will retry')
+            self.logger.warning('Unsuccessful commands run, will retry')
 
         else:
             # Should not reach here
@@ -328,27 +331,29 @@ class Runner:
                 # Take action according to the status
                 if status == 'success':
                     # Log the results
-                    logging.debug('Metric results:->\n{}'.format(results))
+                    self.logger.debug('Metric results:->\n{}'.format(results))
 
                     # Try to calculate mean metric of results
                     metric = self._try_calc_mean(results)
 
                     # Log the processed metric
-                    logging.debug('Processed metric: {}'.format(metric))
+                    self.logger.debug('Processed metric: {}'.format(metric))
 
                     # Add the metric to the list
                     metrics.append(metric)
 
                 elif status == 'continue':
                     # Log the continue
-                    logging.warning('Unsuccessful commands run, will continue')
+                    self.logger.warning(
+                        'Unsuccessful commands run, will continue')
 
                     # Continue to next server spec
                     break
 
                 elif status == 'retry':
                     # Log the retry
-                    logging.warning('Unsuccessful commands run, will retry')
+                    self.logger.warning(
+                        'Unsuccessful commands run, will retry')
 
                 else:
                     # Should not reach here
@@ -523,8 +528,8 @@ class Runner:
             operator, value = self._parse_requirement_expression(req_expr)
 
             # Log the requirement
-            logging.debug(('Requirement ID: "{}", Operator: "{}",' +
-                           ' Value: "{}"').format(req_id, operator, value))
+            self.logger.debug(('Requirement ID: "{}", Operator: "{}",' +
+                               ' Value: "{}"').format(req_id, operator, value))
 
             # Get the list of server metrics of the requirement
             servers_metrics = metrics.get(req_id, None)
@@ -545,7 +550,7 @@ class Runner:
         if self.verbose:
             server_names = [servers_spec[i].get('name', '')
                             for i in satisfied]
-            logging.info('Satisfied servers: {}'.format(
+            self.logger.info('Satisfied servers: {}'.format(
                 json.dumps(server_names)))
 
         # Return indexes of satisfied servers
@@ -811,8 +816,8 @@ class Runner:
             return (before_each_exp_details + exp_details +
                     after_each_exp_details)
         elif isinstance(exp_details, dict):
-            return update_dict_with_missing(before_each_exp_details,
-                                            exp_details, after_each_exp_details)
+            return update_dict_with_missing(
+                before_each_exp_details, exp_details, after_each_exp_details)
         else:
             self._log_and_raise_error(
                 'Unknown type of experiment details: {}'.format(
@@ -891,13 +896,13 @@ class Runner:
     def _log_round(self, round_idx, undeployed):
         if self.verbose:
             # Log the round number
-            logging.info('Main round #{}'.format(round_idx + 1))
+            self.logger.info('Main round #{}'.format(round_idx + 1))
 
             # Log the undeployed experiments
             exps_spec = self._get_experiments_spec()
             undeployed_names = [exps_spec[i].get('name', '#{}'.format(i))
                                 for i in undeployed]
-            logging.info('Undeployed experiments: {}'.format(
+            self.logger.info('Undeployed experiments: {}'.format(
                 json.dumps(undeployed_names)))
 
     def _log_round_time(self, prev_round_time):
@@ -906,19 +911,20 @@ class Runner:
             elapsed_time = time.time() - prev_round_time
 
             # Log the elapsed time
-            logging.info('Elapsed round time: {:.3f}s'.format(elapsed_time))
+            self.logger.info(
+                'Elapsed round time: {:.3f}s'.format(elapsed_time))
 
     def _log_requirement_ids(self, req_ids):
-        logging.debug('Collected requirement IDs: {}'.format(
+        self.logger.debug('Collected requirement IDs: {}'.format(
             json.dumps(req_ids)))
 
     def _log_metrics(self, metrics):
-        logging.debug('Server metrics: {}'.format(json.dumps(metrics)))
+        self.logger.debug('Server metrics: {}'.format(json.dumps(metrics)))
 
     def _log_verbose(self, message):
         if self.verbose:
-            logging.info(message)
+            self.logger.info(message)
 
     def _log_and_raise_error(self, message):
-        logging.error(message)
+        self.logger.error(message)
         raise ValueError(message)
