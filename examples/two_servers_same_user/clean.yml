@@ -1,0 +1,47 @@
+# Name of the spec
+name: Two servers and same user (Clean)
+
+# Description of the spec
+description: Clean the logs produced by "run" experiments
+
+################################################################################
+# Experiments
+################################################################################
+
+experiments:
+- name: Clean one of the server (1)
+  description: Clean the logs
+  commands:
+    clean:
+      - "echo Cleaning logs"
+      - "rm -f ~/exp1.log"
+      - "rm -f ~/exp2.log"
+      - "rm -f ~/exp3.log"
+- name: Clean one of the server (2)
+  description: Clean the logs
+  commands:
+    clean:
+      - "echo Cleaning logs"
+      - "rm -f ~/exp1.log"
+      - "rm -f ~/exp2.log"
+      - "rm -f ~/exp3.log"
+
+################################################################################
+# Servers
+################################################################################
+
+# Applies to the server spec if not specified
+each_server:
+  # Path to the private key on local
+  private_key_path: $HOME/.ssh/id_rsa
+  # Username on the server (e.g., 'user1')
+  username: $USER
+
+# All servers
+servers:
+- name: Server 1
+  # Hostname of the server (e.g., "server1.example.com", "123.123.123.123")
+  hostname: server1
+- name: Server 2
+  # Hostname of the server (e.g., "server1.example.com", "123.123.123.123")
+  hostname: server2

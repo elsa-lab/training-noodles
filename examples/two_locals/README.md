@@ -33,3 +33,11 @@ To understand how the commands are executed, specify extra arguments which turn 
 ```bash
 noodles run examples/two_locals/spec.yml --verbose --debug
 ```
+
+## Clean
+
+To remove all log files created by *run* commands, execute the following:
+
+```bash
+noodles clean examples/two_locals/clean.yml
+```

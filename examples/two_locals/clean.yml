@@ -1,0 +1,28 @@
+# Name of the spec
+name: Two locals (Clean)
+
+# Description of the spec
+description: Clean the logs produced by "run" experiments
+
+################################################################################
+# Experiments
+################################################################################
+
+experiments:
+- name: Clean
+  description: Clean the logs
+  commands:
+    clean:
+      - "echo Cleaning logs"
+      - "rm -f examples/two_locals/*.log"
+
+################################################################################
+# Servers
+################################################################################
+
+# All servers
+servers:
+- name: Localhost 1
+  hostname: localhost
+- name: Localhost 2
+  hostname: localhost

@@ -11,3 +11,11 @@ To run this example, use project root directory as working directory and execute
 ```bash
 noodles run examples/two_servers_same_user/spec.yml
 ```
+
+## Clean
+
+To remove all log files created by *run* commands, execute the following:
+
+```bash
+noodles clean examples/two_servers_same_user/clean.yml
+```
