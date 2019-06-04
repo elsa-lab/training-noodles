@@ -1,0 +1,308 @@
+# Name of the spec
+name: Train TensorFlow example
+
+# Description of the spec
+description: Train three TensorFlow examples on two servers and download the results
+
+################################################################################
+# Experiments
+################################################################################
+
+# Experiment 1: https://github.com/aymericdamien/TensorFlow-Examples/blob/master/examples/1_Introduction/basic_operations.py
+# Experiment 2: https://github.com/aymericdamien/TensorFlow-Examples/blob/master/examples/2_BasicModels/logistic_regression.py
+# Experiment 3: https://github.com/aymericdamien/TensorFlow-Examples/blob/master/examples/3_NeuralNetworks/neural_network.py
+
+experiments:
+### 1st Phase: Initialize Experiments ###
+
+- name: Initialize server for Experiment 1
+  description: Mark the server by a unique file name, download TensorFlow-Examples on the server, and create a new conda environment
+  envs:
+    LOCK_FILE_PATH: $HOME/noodles.lock
+    MARKER_PATH: $HOME/marker_exp1.txt
+    TF_EXAMPLE_URL: https://github.com/aymericdamien/TensorFlow-Examples.git
+    CONDA_DIR: $HOME/anaconda3
+    CONDA_ENV_NAME: noodles_test
+  commands:
+    run:
+    # Go to home directory
+    - "cd ~"
+    # Create a lock file
+    - "touch $LOCK_FILE_PATH"
+    # Create a marker file on this server
+    - "touch $MARKER_PATH"
+    # Clone TensorFlow-Examples
+    - "echo Cloning TensorFlow-Examples on $NOODLES_SERVER_NAME"
+    - "git clone $TF_EXAMPLE_URL"
+    # Create a new conda environment
+    - "echo Creating conda environment $CONDA_ENV_NAME on $NOODLES_SERVER_NAME"
+    - "$CONDA_DIR/bin/conda create -y -n $CONDA_ENV_NAME python=3.6"
+  requirements:
+    run:
+    - has_lock_file: "==No"
+
+- name: Initialize server for Experiment 2
+  description: Mark the server by a unique file name and download TensorFlow-Examples on the server
+  envs:
+    LOCK_FILE_PATH: $HOME/noodles.lock
+    MARKER_PATH: $HOME/marker_exp2.txt
+    TF_EXAMPLE_URL: https://github.com/aymericdamien/TensorFlow-Examples.git
+    CONDA_DIR: $HOME/anaconda3
+    CONDA_ENV_NAME: noodles_test
+  commands:
+    run:
+    # Go to home directory
+    - "cd ~"
+    # Create a lock file
+    - "touch $LOCK_FILE_PATH"
+    # Create a marker file on this server
+    - "touch $MARKER_PATH"
+    # Clone TensorFlow-Examples
+    - "echo Cloning TensorFlow-Examples on $NOODLES_SERVER_NAME"
+    - "git clone $TF_EXAMPLE_URL"
+    # Create a new conda environment
+    - "echo Creating conda environment $CONDA_ENV_NAME on $NOODLES_SERVER_NAME"
+    - "$CONDA_DIR/bin/conda create -y -n $CONDA_ENV_NAME python=3.6"
+  requirements:
+    run:
+    - has_lock_file: "==No"
+
+- name: Initialize server for Experiment 3
+  description: Mark the server by a unique file name and download TensorFlow-Examples on the server
+  envs:
+    LOCK_FILE_PATH: $HOME/noodles.lock
+    MARKER_PATH: $HOME/marker_exp3.txt
+    TF_EXAMPLE_URL: https://github.com/aymericdamien/TensorFlow-Examples.git
+    CONDA_DIR: $HOME/anaconda3
+    CONDA_ENV_NAME: noodles_test
+  commands:
+    run:
+    # Go to home directory
+    - "cd ~"
+    # Create a lock file
+    - "touch $LOCK_FILE_PATH"
+    # Create a marker file on this server
+    - "touch $MARKER_PATH"
+    # Clone TensorFlow-Examples
+    - "echo Cloning TensorFlow-Examples on $NOODLES_SERVER_NAME"
+    - "git clone $TF_EXAMPLE_URL"
+    # Create a new conda environment
+    - "echo Creating conda environment $CONDA_ENV_NAME on $NOODLES_SERVER_NAME"
+    - "$CONDA_DIR/bin/conda create -y -n $CONDA_ENV_NAME python=3.6"
+  requirements:
+    run:
+    - has_lock_file: "==No"
+
+### 2nd Phase: Run Experiments ###
+
+- name: Run experiment 1
+  description: Run experiment on server
+  envs:
+    MARKER_PATH: $HOME/marker_exp1.txt
+    CONDA_DIR: $HOME/anaconda3
+    CONDA_ENV_NAME: noodles_test
+    TMUX_SESSION_NAME: test/exp1
+    EXPERIMENT_PATH: $HOME/TensorFlow-Examples/examples/1_Introduction/basic_operations.py
+    STDOUT_PATH: $HOME/exp1.stdout.log
+    STDERR_PATH: $HOME/exp1.stderr.log
+  commands:
+    run:
+      # Activate the newly created conda environment
+      - "source $CONDA_DIR/bin/activate $CONDA_ENV_NAME"
+      # Install TensorFlow
+      - "echo Installing TensorFlow on $NOODLES_SERVER_NAME"
+      - "pip install tensorflow"
+      # Create a detached Tmux session to run the TensorFlow example
+      - "echo Running TensorFlow example on $NOODLES_SERVER_NAME"
+      - |-
+        tmux new -d -s "$TMUX_SESSION_NAME" "python $EXPERIMENT_PATH > $STDOUT_PATH 2> $STDERR_PATH"
+  requirements:
+    run:
+    - has_lock_file: "==Yes"
+    - has_marker_file: "==Yes"
+
+- name: Run experiment 2
+  description: Run experiment on server
+  envs:
+    MARKER_PATH: $HOME/marker_exp2.txt
+    CONDA_DIR: $HOME/anaconda3
+    CONDA_ENV_NAME: noodles_test
+    TMUX_SESSION_NAME: test/exp2
+    EXPERIMENT_PATH: $HOME/TensorFlow-Examples/examples/2_BasicModels/logistic_regression.py
+    STDOUT_PATH: $HOME/exp2.stdout.log
+    STDERR_PATH: $HOME/exp2.stderr.log
+  commands:
+    run:
+      # Activate the newly created conda environment
+      - "source $CONDA_DIR/bin/activate $CONDA_ENV_NAME"
+      # Install TensorFlow
+      - "echo Installing TensorFlow on $NOODLES_SERVER_NAME"
+      - "pip install tensorflow"
+      # Create a detached Tmux session to run the TensorFlow example
+      - "echo Running TensorFlow example on $NOODLES_SERVER_NAME"
+      - |-
+        tmux new -d -s "$TMUX_SESSION_NAME" "python $EXPERIMENT_PATH > $STDOUT_PATH 2> $STDERR_PATH"
+  requirements:
+    run:
+    - has_lock_file: "==Yes"
+    - has_marker_file: "==Yes"
+
+- name: Run experiment 3
+  description: Run experiment on server
+  envs:
+    MARKER_PATH: $HOME/marker_exp3.txt
+    CONDA_DIR: $HOME/anaconda3
+    CONDA_ENV_NAME: noodles_test
+    TMUX_SESSION_NAME: test/exp3
+    EXPERIMENT_PATH: $HOME/TensorFlow-Examples/examples/3_NeuralNetworks/neural_network.py
+    STDOUT_PATH: $HOME/exp3.stdout.log
+    STDERR_PATH: $HOME/exp3.stderr.log
+  commands:
+    run:
+      # Activate the newly created conda environment
+      - "source $CONDA_DIR/bin/activate $CONDA_ENV_NAME"
+      # Install TensorFlow
+      - "echo Installing TensorFlow on $NOODLES_SERVER_NAME"
+      - "pip install tensorflow"
+      # Create a detached Tmux session to run the TensorFlow example
+      - "echo Running TensorFlow example on $NOODLES_SERVER_NAME"
+      - |-
+        tmux new -d -s "$TMUX_SESSION_NAME" "python $EXPERIMENT_PATH > $STDOUT_PATH 2> $STDERR_PATH"
+  requirements:
+    run:
+    - has_lock_file: "==Yes"
+    - has_marker_file: "==Yes"
+
+### 3rd Phase: Download Experimental Results ###
+
+- name: Download experimental results 1
+  description: Download experimental results from server
+  envs:
+    MARKER_PATH: $HOME/marker_exp1.txt
+    TMUX_SESSION_NAME: test/exp1
+    LOCAL_DIR: examples/train_tensorflow_examples/
+    # "$" sign is escaped here to make sure "$HOME" is interpreted on server rather than on local
+    STDOUT_PATH: \$HOME/exp1.stdout.log
+    STDERR_PATH: \$HOME/exp1.stderr.log
+    LOCK_FILE_PATH: $HOME/noodles.lock
+  commands:
+    run:
+    # Run scp on local to download STDOUT and STDERR files to the local example directory
+    - "echo Downloading experimental results from $NOODLES_SERVER_NAME"
+    - >
+      local:scp $NOODLES_SERVER_AUTHORITY:"$STDOUT_PATH $STDERR_PATH" $LOCAL_DIR
+    # Remove the lock file
+    - "rm -f $LOCK_FILE_PATH"
+  requirements:
+    run:
+    - has_lock_file: "==Yes"
+    - has_marker_file: "==Yes"
+    - tmux_count: "<=0"
+
+- name: Download experimental results 2
+  description: Download experimental results from server
+  envs:
+    MARKER_PATH: $HOME/marker_exp2.txt
+    TMUX_SESSION_NAME: test/exp2
+    LOCAL_DIR: examples/train_tensorflow_examples/
+    # "$" sign is escaped here to make sure "$HOME" is interpreted on server rather than on local
+    STDOUT_PATH: \$HOME/exp2.stdout.log
+    STDERR_PATH: \$HOME/exp2.stderr.log
+    LOCK_FILE_PATH: $HOME/noodles.lock
+  commands:
+    run:
+    # Run scp on local to download STDOUT and STDERR files to the local example directory
+    - "echo Downloading experimental results from $NOODLES_SERVER_NAME"
+    - >
+      local:scp $NOODLES_SERVER_AUTHORITY:"$STDOUT_PATH $STDERR_PATH" $LOCAL_DIR
+    # Remove the lock file
+    - "rm -f $LOCK_FILE_PATH"
+  requirements:
+    run:
+    - has_lock_file: "==Yes"
+    - has_marker_file: "==Yes"
+    - tmux_count: "<=0"
+
+- name: Download experimental results 3
+  description: Download experimental results from server
+  envs:
+    MARKER_PATH: $HOME/marker_exp3.txt
+    TMUX_SESSION_NAME: test/exp3
+    LOCAL_DIR: examples/train_tensorflow_examples/
+    # "$" sign is escaped here to make sure "$HOME" is interpreted on server rather than on local
+    STDOUT_PATH: \$HOME/exp3.stdout.log
+    STDERR_PATH: \$HOME/exp3.stderr.log
+    LOCK_FILE_PATH: $HOME/noodles.lock
+  commands:
+    run:
+    # Run scp on local to download STDOUT and STDERR files to the local example directory
+    - "echo Downloading experimental results from $NOODLES_SERVER_NAME"
+    - >
+      local:scp $NOODLES_SERVER_AUTHORITY:"$STDOUT_PATH $STDERR_PATH" $LOCAL_DIR
+    # Remove the lock file
+    - "rm -f $LOCK_FILE_PATH"
+  requirements:
+    run:
+    - has_lock_file: "==Yes"
+    - has_marker_file: "==Yes"
+    - tmux_count: "<=0"
+
+################################################################################
+# Servers
+################################################################################
+
+# The default properties for each server
+server_default:
+  # Path to the private key on local
+  private_key_path: $HOME/.ssh/id_rsa
+  # Username on the server (e.g., 'user1')
+  username: $USER
+
+# All servers
+servers:
+- name: Server 1
+  # Hostname of the server (e.g., "server1.example.com", "123.123.123.123")
+  hostname: server1
+- name: Server 2
+  # Hostname of the server (e.g., "server1.example.com", "123.123.123.123")
+  hostname: server2
+
+################################################################################
+# Requirements
+################################################################################
+
+# Commands to run to check requirements on servers
+requirements:
+  # Check whether the lock file "$LOCK_FILE_PATH" exists
+  has_lock_file: "[ -f $LOCK_FILE_PATH ] && echo -n Yes || echo -n No"
+  # Check whether the marker file "$MARKER_PATH" exists
+  has_marker_file: "[ -f $MARKER_PATH ] && echo -n Yes || echo -n No"
+  # Count the Tmux session of the name "$TMUX_SESSION_NAME"
+  tmux_count: "tmux ls 2>/dev/null | grep $TMUX_SESSION_NAME | wc -l"
+
+################################################################################
+# Deployment
+################################################################################
+
+# The interval to run each deployment round
+round_interval: 10
+# The interval to deploy each experiment in each round
+deployment_interval: 0
+
+################################################################################
+# Error Handling
+################################################################################
+
+# Whether to check any nonzero return code and nonempty stderr and raise error
+check_any_errors: True
+
+# List of error handlers
+error_handlers:
+- name: Ignore git cloning message
+  return_code: 0
+  stderr_pattern: "^Cloning into 'TensorFlow-Examples'\\.\\.\\.\\s+$"
+  action: continue
+- name: Ignore git clone already exists error
+  return_code: 0
+  stderr_pattern: "^fatal: destination path 'TensorFlow-Examples' already exists and is not an empty directory.\\s+$"
+  action: continue

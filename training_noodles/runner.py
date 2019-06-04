@@ -5,7 +5,7 @@ import re
 import time
 
 from training_noodles.remote import (
-    eval_expression_on_local, run_commands_over_ssh, get_error_message)
+    eval_expression_on_local, run_commands, get_error_message)
 from training_noodles.utils import (
     match_full, split_by_scheme, update_dict_with_missing, wrap_with_list)
 
@@ -183,7 +183,7 @@ class Runner:
                     deployed_servers)
 
                 # Increment the number of successful deployments
-                if status == 'success':
+                if status == 'success' or status == 'continue':
                     num_success += 1
 
             # Check whether there are no available servers in this
@@ -319,8 +319,8 @@ class Runner:
         return metrics
 
     def _run_commands(self, server_spec, commands, envs={}):
-        # Run the commands on remote
-        all_results, debug_infos = run_commands_over_ssh(
+        # Run the commands
+        all_results, debug_infos = run_commands(
             server_spec, commands, envs=envs)
 
         # Check errors
@@ -469,7 +469,8 @@ class Runner:
             self._update_metrics(metrics, req_group, envs)
 
             # Filter indexes of satisfied servers based on cached metrics
-            self._filter_satisfied_servers(satisfied, req_group, metrics)
+            satisfied = self._filter_satisfied_servers(
+                satisfied, req_group, metrics)
 
         # Remove indexes of deployed servers
         satisfied = set(satisfied) - deployed
@@ -526,7 +527,7 @@ class Runner:
                 servers_metrics[i], operator, value), satisfied)
 
         # Return the filtered indexes
-        return satisfied
+        return set(satisfied)
 
     def _build_server_envs(self, server_spec, envs):
         # Build environment variables
@@ -692,7 +693,7 @@ class Runner:
         req_expr = req_expr.strip()
 
         # Parse the expression
-        m = re.match(r'^(?P<operator>[<>=]+)(?P<value>[\d.]+)$', req_expr)
+        m = re.match(r'^(?P<operator>[<>=]+)(?P<value>.+)$', req_expr)
 
         # Check whether the expression is valid
         if m is None:
@@ -714,20 +715,18 @@ class Runner:
 
     def _try_calc_mean(self, results):
         # Split the results by newlines
-        results = results.split('\n')
+        lines = results.split('\n')
 
         # Remove empty contents in results
-        results = filter(lambda s: len(s.strip()) > 0, results)
+        lines = filter(lambda s: len(s.strip()) > 0, lines)
 
         try:
             # Parse the results
-            results = list(map(ast.literal_eval, results))
+            parsed_lines = list(map(ast.literal_eval, lines))
 
             # Calculate the mean
-            result = sum(results) / len(results)
+            result = sum(parsed_lines) / len(parsed_lines)
         except:
-            pass
-
             # Use original results
             result = results
 

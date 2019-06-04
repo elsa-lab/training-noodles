@@ -1,6 +1,8 @@
 # Example: Error Handling
 
-This example specifies an nonexistent server in the spec purposely to test whether Noodles can handle errors properly. The error handler *Ignore SSH resolve hostname error* in the spec would ignore any error which causes the `ssh` to return error code 255 and produces the STDERR error matching the regular expression.
+This example specifies an nonexistent server in the spec purposely to test whether Noodles can handle errors properly.
+
+The error handler *Ignore SSH resolve hostname error* in the spec would ignore any error which causes the `ssh` to return error code 255 and produces the STDERR error matching the regular expression.
 
 You should prepare a server to run this example. Please feel free to modify entries `server_default` and `servers` in the spec to specify your own servers.
 

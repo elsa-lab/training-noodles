@@ -70,6 +70,45 @@
             ]
         },
         {
+            "name": "local_tmux (clean)",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/training_noodles/noodles.py",
+            "console": "integratedTerminal",
+            "args": [
+                "clean",
+                "examples/local_tmux/clean.yml",
+                "--verbose",
+                "--debug"
+            ]
+        },
+        {
+            "name": "train_tensorflow_examples (run)",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/training_noodles/noodles.py",
+            "console": "integratedTerminal",
+            "args": [
+                "run",
+                "examples/train_tensorflow_examples/spec.yml",
+                "--verbose",
+                "--debug"
+            ]
+        },
+        {
+            "name": "train_tensorflow_examples (clean)",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/training_noodles/noodles.py",
+            "console": "integratedTerminal",
+            "args": [
+                "clean",
+                "examples/train_tensorflow_examples/clean.yml",
+                "--verbose",
+                "--debug"
+            ]
+        },
+        {
             "name": "two_locals (run)",
             "type": "python",
             "request": "launch",
@@ -83,6 +122,19 @@
             ]
         },
         {
+            "name": "two_locals (clean)",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/training_noodles/noodles.py",
+            "console": "integratedTerminal",
+            "args": [
+                "clean",
+                "examples/two_locals/clean.yml",
+                "--verbose",
+                "--debug"
+            ]
+        },
+        {
             "name": "two_servers_same_user (run)",
             "type": "python",
             "request": "launch",
@@ -91,6 +143,19 @@
             "args": [
                 "run",
                 "examples/two_servers_same_user/spec.yml",
+                "--verbose",
+                "--debug"
+            ]
+        },
+        {
+            "name": "two_servers_same_user (clean)",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/training_noodles/noodles.py",
+            "console": "integratedTerminal",
+            "args": [
+                "clean",
+                "examples/two_servers_same_user/clean.yml",
                 "--verbose",
                 "--debug"
             ]

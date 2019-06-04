@@ -19,8 +19,8 @@ def eval_expression_on_local(expr, envs={}):
     return _run_commands_on_endpoint(endpoint_command, inner_command, envs=envs)
 
 
-def run_commands_over_ssh(server_spec, commands, envs={}):
-    """ Run commands over SSH.
+def run_commands(server_spec, commands, envs={}):
+    """ Run commands on either local or remotem machine.
 
     The "commands" will be written into the temporary file. The final command
     would use bash to execute these "commands" from the temporary file and write
@@ -126,6 +126,9 @@ def _group_commands_by_endpoints(server_spec, commands):
 
         # Check whether there is unknown scheme
         if success:
+            # Set default scheme to "remote"
+            scheme = scheme or 'remote'
+
             if scheme == prev_scheme or prev_scheme is None:
                 # Append the command to the current group of commands
                 cur_group.append(follow_command)

@@ -1,0 +1,111 @@
+# Name of the spec
+name: Train TensorFlow example (Clean)
+
+# Description of the spec
+description: Clean everything done by "run" commands
+
+################################################################################
+# Experiments
+################################################################################
+
+experiment_default:
+  description: Clean everything done by "run" commands
+  commands:
+    clean:
+      - "echo Removing conda environment"
+      - "$CONDA_DIR/bin/conda remove -y -n $CONDA_ENV_NAME --quiet --all 2> /dev/null"
+      - "echo Removing cloned Git repository"
+      - "rm -rf $GIT_REPO_DIR"
+      - "echo Removing remote experimental results"
+      - "rm -f $STDOUT_PATH"
+      - "rm -f $STDERR_PATH"
+      - "echo Removing marker file"
+      - "rm -f $MARKER_PATH"
+      - "echo Removing lock file"
+      - "rm -f $LOCK_FILE_PATH"
+      - "local:echo Removing local experimental results"
+      - "local:rm -f $LOCAL_DIR/*.log"
+  requirements:
+    clean:
+    - has_lock_file: "==No"
+    - has_marker_file: "==Yes"
+    - tmux_count: "<=0"
+
+experiments:
+- name: Clean stuff of experiment 1
+  envs:
+    TMUX_SESSION_NAME: test/exp1
+    LOCK_FILE_PATH: $HOME/noodles.lock
+    MARKER_PATH: $HOME/marker_exp1.txt
+    CONDA_DIR: $HOME/anaconda3
+    CONDA_ENV_NAME: noodles_test
+    GIT_REPO_DIR: $HOME/TensorFlow-Examples
+    STDOUT_PATH: $HOME/exp1.stdout.log
+    STDERR_PATH: $HOME/exp1.stderr.log
+    LOCAL_DIR: examples/train_tensorflow_examples/
+
+- name: Clean stuff of experiment 2
+  envs:
+    TMUX_SESSION_NAME: test/exp2
+    LOCK_FILE_PATH: $HOME/noodles.lock
+    MARKER_PATH: $HOME/marker_exp2.txt
+    CONDA_DIR: $HOME/anaconda3
+    CONDA_ENV_NAME: noodles_test
+    GIT_REPO_DIR: $HOME/TensorFlow-Examples
+    STDOUT_PATH: $HOME/exp2.stdout.log
+    STDERR_PATH: $HOME/exp2.stderr.log
+    LOCAL_DIR: examples/train_tensorflow_examples/
+
+- name: Clean stuff of experiment 3
+  envs:
+    TMUX_SESSION_NAME: test/exp3
+    LOCK_FILE_PATH: $HOME/noodles.lock
+    MARKER_PATH: $HOME/marker_exp3.txt
+    CONDA_DIR: $HOME/anaconda3
+    CONDA_ENV_NAME: noodles_test
+    GIT_REPO_DIR: $HOME/TensorFlow-Examples
+    STDOUT_PATH: $HOME/exp3.stdout.log
+    STDERR_PATH: $HOME/exp3.stderr.log
+    LOCAL_DIR: examples/train_tensorflow_examples/
+
+################################################################################
+# Servers
+################################################################################
+
+# The default properties for each server
+server_default:
+  # Path to the private key on local
+  private_key_path: $HOME/.ssh/id_rsa
+  # Username on the server (e.g., 'user1')
+  username: $USER
+
+# All servers
+servers:
+- name: Server 1
+  # Hostname of the server (e.g., "server1.example.com", "123.123.123.123")
+  hostname: server1
+- name: Server 2
+  # Hostname of the server (e.g., "server1.example.com", "123.123.123.123")
+  hostname: server2
+
+################################################################################
+# Requirements
+################################################################################
+
+# Commands to run to check requirements on servers
+requirements:
+  # Check whether the lock file "$LOCK_FILE_PATH" exists
+  has_lock_file: "[ -f $LOCK_FILE_PATH ] && echo -n Yes || echo -n No"
+  # Check whether the marker file "$MARKER_PATH" exists
+  has_marker_file: "[ -f $MARKER_PATH ] && echo -n Yes || echo -n No"
+  # Count the Tmux session of the name "$TMUX_SESSION_NAME"
+  tmux_count: "tmux ls 2>/dev/null | grep $TMUX_SESSION_NAME | wc -l"
+
+################################################################################
+# Deployment
+################################################################################
+
+# The interval to run each deployment round
+round_interval: 0
+# The interval to deploy each experiment in each round
+deployment_interval: 0

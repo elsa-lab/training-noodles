@@ -1,6 +1,8 @@
 # Example: Local Tmux
 
-This example runs a short Tmux session and a long Tmux session on local. The short Tmux session would delay for 10 seconds and write the current time into `examples/local_tmux/output.log`. The long Tmux session would wait for the short Tmux session to finish, wait for 30 seconds, and delete the previous output file.
+This example runs a short Tmux session and a long Tmux session on local.
+
+The short Tmux session would delay for 10 seconds and write the current time into `examples/local_tmux/output.log`. The long Tmux session would wait for the short Tmux session to finish, wait for 30 seconds, and delete the previous output file.
 
 ## Prerequisites
 
