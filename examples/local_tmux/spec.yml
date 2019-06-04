@@ -48,6 +48,7 @@ experiments:
       echo "sleep $DELAY" > $SCRIPT
     - |-
       echo "echo $(date) > $OUTPUT" >> $SCRIPT
+
 - name: Long Tmux
   description: After "Short Tmux" has finished, delay for 30 seconds, and delete the output produced by "Short Tmux"
   # Specify environment variables only for this experiment
@@ -67,7 +68,7 @@ experiments:
     # We require that the short Tmux session is not present when running this
     # experiment
     run:
-      other_tmux_count: "==0"
+    - other_tmux_count: "==0"
 
 after_each_experiment:
   commands:
@@ -100,6 +101,6 @@ requirements:
 ################################################################################
 
 # The interval to run each deployment round
-round_interval: 10
+round_interval: 5
 # The interval to deploy each experiment in each round
 deployment_interval: 0

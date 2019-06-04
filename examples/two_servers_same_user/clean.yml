@@ -17,6 +17,7 @@ experiments:
       - "rm -f ~/exp1.log"
       - "rm -f ~/exp2.log"
       - "rm -f ~/exp3.log"
+
 - name: Clean one of the server (2)
   description: Clean the logs
   commands:

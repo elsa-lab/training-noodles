@@ -25,7 +25,7 @@ experiments:
     LOG: exp1_result.log
   requirements:
     clean:
-      find_experiment: "==1"
+    - find_experiment: "==1"
 - name: Clean experiment 2
   description: Clean the script and log on server
   envs:
@@ -33,7 +33,7 @@ experiments:
     LOG: exp2_result.log
   requirements:
     clean:
-      find_experiment: "==1"
+    - find_experiment: "==1"
 - name: Clean local results
   description: Clean downloaded log files
   envs:

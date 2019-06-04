@@ -13,6 +13,7 @@ experiments:
   description: Example experiment 1
   commands:
     run: "echo Running experiment 1 && echo Hello $(hostname) > ~/exp1.log"
+
 - name: Experiment 2
   description: Example experiment 2
   commands:
@@ -21,6 +22,7 @@ experiments:
     - "date > ~/exp2.log"
     - "echo The hostname is $(hostname)"
     - "echo The time now is $(date)"
+
 - name: Experiment 3
   description: Example experiment 3
   commands:
@@ -32,7 +34,7 @@ experiments:
     - "echo The time now is $(date)"
   requirements:
     run:
-      cpu_usage: ">=0"
+    - cpu_usage: ">=0"
 
 ################################################################################
 # Servers

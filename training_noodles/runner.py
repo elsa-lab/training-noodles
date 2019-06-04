@@ -186,55 +186,53 @@ class Runner:
                 # Add the experiment index to the deployed experiment indexes
                 deployed_exps.add(exp_idx)
 
-            else:
-                # Update metrics lazily
-                self._update_metrics(exp_spec, metrics, main=main)
+                # Continue to next experiment
+                continue
 
-                # Find satisfied servers
-                satisfied_servers = self._find_satisfied_servers(
-                    exp_spec, metrics, deployed_servers, main=main)
+            # Find satisfied servers and update metrics lazily
+            satisfied_servers = self._update_metrics_and_find_servers(
+                exp_spec, metrics, deployed_servers, main=main)
 
-                # Check whether there are any satisfied servers
-                if len(satisfied_servers) > 0:
-                    # Wait for next deployment
-                    if len(deployed_exps) > 0:
-                        self._wait_for_next_deployment()
+            # Check whether there are any satisfied servers
+            if len(satisfied_servers) > 0:
+                # Wait for next deployment
+                if len(deployed_exps) > 0:
+                    self._wait_for_next_deployment()
 
-                    # Choose the first satisfied server
-                    server_idx = next(iter(satisfied_servers))
+                # Choose the first satisfied server
+                server_idx = next(iter(satisfied_servers))
 
-                    # Get server spec
-                    server_spec = servers_spec[server_idx]
+                # Get server spec
+                server_spec = servers_spec[server_idx]
 
-                    # Get the server name
-                    server_name = server_spec.get('name', '')
+                # Get the server name
+                server_name = server_spec.get('name', '')
 
-                    # Log the deployment
-                    self.logger.info(
-                        'Deploy experiment "{}" to server "{}"'.format(
-                            exp_name, server_name))
+                # Log the deployment
+                self.logger.info(
+                    'Deploy experiment "{}" to server "{}"'.format(
+                        exp_name, server_name))
 
-                    # Deploy the experiment to the server
-                    status = self._deploy_experiment_to_server(
-                        exp_spec, server_spec, main=main)
+                # Deploy the experiment to the server
+                status = self._deploy_experiment_to_server(
+                    exp_spec, server_spec, main=main)
 
-                    # Update deployed indexes by status
-                    self._update_deployed_indexes_by_status(
-                        status, exp_idx, server_idx, deployed_exps,
-                        deployed_servers)
+                # Update deployed indexes by status
+                self._update_deployed_indexes_by_status(
+                    status, exp_idx, server_idx, deployed_exps,
+                    deployed_servers)
 
-                    # Increment the number of successful deployments
-                    if status == 'success':
-                        num_success += 1
+                # Increment the number of successful deployments
+                if status == 'success':
+                    num_success += 1
 
-                # Check whether there are no available servers in this
-                # deployment
-                if len(deployed_servers) >= len(servers_spec):
-                    # Log the break
-                    self._log_verbose(
-                        'No available servers, skip the deployment')
+            # Check whether there are no available servers in this
+            # deployment
+            if len(deployed_servers) >= len(servers_spec):
+                # Log the break
+                self._log_verbose('No available servers, skip the deployment')
 
-                    break
+                break
 
         # Return the deployed experiment indexes and number of successful
         # deployments
@@ -321,7 +319,7 @@ class Runner:
 
                 # Check whether the requirement command exists
                 if req_commands is None:
-                    self._log_and_raise_error(
+                    self._raise_error(
                         'Requirement ID does not exist: {}'.format(req_id))
 
                 # Run the remote command on server
@@ -408,10 +406,9 @@ class Runner:
             elif action == 'retry':
                 self._log_verbose(message)
             elif action == 'abort':
-                self._log_and_raise_error(message)
+                self._raise_error(message)
             else:
-                self._log_and_raise_error(
-                    'Unknown error action "{}"'.format(action))
+                self._raise_error('Unknown error action "{}"'.format(action))
 
             # Return error handling action
             return action
@@ -484,31 +481,8 @@ class Runner:
         # Return the undeployed experiments
         return undeployed_exps
 
-    def _update_metrics(self, exp_spec, metrics, main=True):
-        # Build experiment environment variables
-        envs = self._build_experiment_details(exp_spec, 'envs', main=main)
-
-        # Build experiment requirements
-        reqs_spec = self._build_experiment_details(
-            exp_spec, 'requirements', main=main)
-
-        # Log the update
-        self._log_verbose('Update metrics')
-
-        # Iterate each requirement
-        for req_id in reqs_spec.keys():
-            # Check whether we should update the metric
-            if self._should_update_metric(req_id, metrics):
-                # Log the check
-                self._log_verbose(('Check requirement ID: {}').format(req_id))
-
-                # Check server metrics
-                server_metrics = self._check_server_metrics(req_id, envs)
-
-                # Update the metrics
-                metrics[req_id] = server_metrics
-
-    def _find_satisfied_servers(self, exp_spec, metrics, deployed, main=True):
+    def _update_metrics_and_find_servers(self, exp_spec, metrics, deployed,
+                                         main=True):
         # Get servers spec
         servers_spec = self.user_spec.get('servers', [])
 
@@ -519,29 +493,23 @@ class Runner:
         reqs_spec = self._build_experiment_details(
             exp_spec, 'requirements', main=main)
 
-        # Log the find
+        # Build experiment environment variables
+        envs = self._build_experiment_details(exp_spec, 'envs', main=main)
+
+        # Log the search
         self._log_verbose('Find satisfied servers')
 
-        # Iterate each requirement
-        for req_id, req_expr in reqs_spec.items():
-            # Parse the requirement expression
-            operator, value = self._parse_requirement_expression(req_expr)
+        # Iterate each requirement group
+        for req_group in reqs_spec:
+            # Stop the search when there are no any satisfied servers left
+            if len(satisfied) <= 0:
+                break
 
-            # Log the requirement
-            self.logger.debug(('Requirement ID: "{}", Operator: "{}",' +
-                               ' Value: "{}"').format(req_id, operator, value))
+            # Update metrics lazily
+            self._update_metrics(metrics, req_group, envs)
 
-            # Get the list of server metrics of the requirement
-            servers_metrics = metrics.get(req_id, None)
-
-            if servers_metrics is None:
-                self._log_and_raise_error(
-                    'Requirement ID "{}" should be in metrics'.format(req_id))
-
-            # Update the indexes of satisfied servers by comparing the server
-            # metric to the requirement value
-            satisfied = filter(lambda i: self._is_metric_satisfied(
-                servers_metrics[i], operator, value), satisfied)
+            # Filter indexes of satisfied servers based on cached metrics
+            self._filter_satisfied_servers(satisfied, req_group, metrics)
 
         # Remove indexes of deployed servers
         satisfied = set(satisfied) - deployed
@@ -554,6 +522,50 @@ class Runner:
                 json.dumps(server_names)))
 
         # Return indexes of satisfied servers
+        return satisfied
+
+    def _update_metrics(self, metrics, req_group, envs):
+        # Iterate each requirement ID
+        for req_id in req_group.keys():
+            # Check whether we should update the metric
+            if self._should_update_metric(req_id, metrics):
+                # Log the check
+                self._log_verbose(('Check requirement ID: {}').format(req_id))
+
+                # Check server metrics
+                server_metrics = self._check_server_metrics(req_id, envs)
+
+                # Update the metrics
+                metrics[req_id] = server_metrics
+
+    def _filter_satisfied_servers(self, satisfied, req_group, metrics):
+        # Iterate each requirement
+        for req_id, req_expr in req_group.items():
+            # Stop the search when there are no any satisfied servers left
+            if len(satisfied) <= 0:
+                break
+
+            # Parse the requirement expression
+            operator, value = self._parse_requirement_expression(req_expr)
+
+            # Log the requirement
+            self.logger.debug(('Requirement ID: "{}", Operator: "{}",' +
+                                ' Value: "{}"').format(
+                                    req_id, operator, value))
+
+            # Get the list of server metrics of the requirement
+            servers_metrics = metrics.get(req_id, None)
+
+            if servers_metrics is None:
+                self._raise_error(('Requirement ID "{}" should' +
+                                    ' be in metrics').format(req_id))
+
+            # Update the indexes of satisfied servers by comparing the
+            # server metric to the requirement value
+            satisfied = filter(lambda i: self._is_metric_satisfied(
+                servers_metrics[i], operator, value), satisfied)
+
+        # Return the filtered indexes
         return satisfied
 
     def _build_server_envs(self, server_spec, envs):
@@ -690,7 +702,7 @@ class Runner:
                 # Should not reach here
                 raise ValueError('Unknown scheme "{}"'.format(scheme))
         else:
-            self._log_and_raise_error(
+            self._raise_error(
                 'Unknown scheme "{}" in requirement ID "{}"'.format(
                     scheme, req_id))
 
@@ -709,10 +721,9 @@ class Runner:
             elif operator == '>=':
                 return metric >= value
             else:
-                self._log_and_raise_error(
-                    'Unknown operator: {}'.format(operator))
+                self._raise_error('Unknown operator: {}'.format(operator))
         except:
-            self._log_and_raise_error(
+            self._raise_error(
                 'Could not compare the values: "{}" "{}" "{}"'.format(
                     metric, operator, value))
 
@@ -725,7 +736,7 @@ class Runner:
 
         # Check whether the expression is valid
         if m is None:
-            self._log_and_raise_error(
+            self._raise_error(
                 'Could not parse the requirement expression: {}'.format(
                     req_expr))
         else:
@@ -819,9 +830,8 @@ class Runner:
             return update_dict_with_missing(
                 before_each_exp_details, exp_details, after_each_exp_details)
         else:
-            self._log_and_raise_error(
-                'Unknown type of experiment details: {}'.format(
-                    type(exp_details)))
+            self._raise_error('Unknown type of experiment details: {}'.format(
+                type(exp_details)))
 
     def _get_side_experiments_spec(self, stage):
         # Return the side experiment
@@ -863,10 +873,9 @@ class Runner:
             return details.get(self.command_type, [])
         elif detail_name == 'requirements':
             # Return the corresponding type
-            return details.get(self.command_type, {})
+            return details.get(self.command_type, [])
         else:
-            self._log_and_raise_error(
-                'Unknown detail name: {}'.format(detail_name))
+            self._raise_error('Unknown detail name: {}'.format(detail_name))
 
     def _wrap_details(self, detail_name, details):
         if detail_name == 'envs':
@@ -877,10 +886,9 @@ class Runner:
             return wrap_with_list(details)
         elif detail_name == 'requirements':
             # Return the dict
-            return details
+            return wrap_with_list(details)
         else:
-            self._log_and_raise_error(
-                'Unknown detail name: {}'.format(detail_name))
+            self._raise_error('Unknown detail name: {}'.format(detail_name))
 
     def _check_empty_experiment(self, exp_spec, main=True):
         # Build the commands
@@ -925,6 +933,6 @@ class Runner:
         if self.verbose:
             self.logger.info(message)
 
-    def _log_and_raise_error(self, message):
+    def _raise_error(self, message):
         self.logger.error(message)
         raise ValueError(message)

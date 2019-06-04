@@ -15,6 +15,9 @@ before_each_experiment:
 
 # Main experiments go here
 experiments:
+
+### Upload Experiments ###
+
 - name: Upload experiment 1
   description: Upload simple script to a server
   envs:
@@ -23,13 +26,17 @@ experiments:
     run: "local:scp $LOCAL_DIR/$SCRIPT $NOODLES_SERVER_AUTHORITY:~/$SCRIPT"
   requirements:
     run:
-      get_random_number: "==1"
+    - get_random_number: "==1"
+
 - name: Upload experiment 2
   description: Upload simple script to a server
   envs:
     SCRIPT: remote_experiment2.sh
   commands:
     run: "local:scp $LOCAL_DIR/$SCRIPT $NOODLES_SERVER_AUTHORITY:~/$SCRIPT"
+
+### Run Experiments ###
+
 - name: Run experiment 1
   description: Run the simple script on server
   envs:
@@ -38,7 +45,8 @@ experiments:
     run: "remote:bash -s < ~/$SCRIPT"
   requirements:
     run:
-      find_experiment: "==1"
+    - find_experiment: "==1"
+
 - name: Run experiment 2
   description: Run the simple script on server
   envs:
@@ -47,7 +55,10 @@ experiments:
     run: "remote:bash -s < ~/$SCRIPT"
   requirements:
     run:
-      find_experiment: "==1"
+    - find_experiment: "==1"
+
+### Download Experimental Results ###
+
 - name: Download experimental result 1
   description: Download experimental result from the server
   envs:
@@ -57,7 +68,8 @@ experiments:
     run: "local:scp $NOODLES_SERVER_AUTHORITY:~/$LOG $LOCAL_DIR/$LOG"
   requirements:
     run:
-      find_experiment: "==1"
+    - find_experiment: "==1"
+
 - name: Download experimental result 2
   description: Download experimental result from the server
   envs:
@@ -67,7 +79,7 @@ experiments:
     run: "local:scp $NOODLES_SERVER_AUTHORITY:~/$LOG $LOCAL_DIR/$LOG"
   requirements:
     run:
-      find_experiment: "==1"
+    - find_experiment: "==1"
 
 ################################################################################
 # Servers
