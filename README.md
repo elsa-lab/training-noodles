@@ -47,8 +47,8 @@ You can also choose only some experiments:
 noodles run "my_training.yml:Experiment 1,Experiment 2"
 ```
 
-See the example in directory `examples/two_locals` to get started.
+See the example in directory [examples/two_locals](examples/two_locals/README.md) to get started.
 
 ## Default Spec
 
-Noodles will use properties from default spec if the user spec doesn't specify them. See `training_noodles/specs/defaults.yml` for the default settings.
+Noodles will use properties from default spec if the user spec doesn't specify them. See [training_noodles/specs/defaults.yml](training_noodles/specs/defaults.yml) for the default spec.

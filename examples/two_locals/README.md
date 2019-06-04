@@ -2,7 +2,9 @@
 
 You can run this example without servers. Because we use `hostname: localhost` in the spec `spec.yml`, Noodles would run all the commands on local machines without SSH.
 
-In the spec, *Experiment 1* would write a hello message into `examples/two_locals/exp1.log`, while *Experiment 2* and *Experiment 3* would write the time of execution into `exp2.log` and `exp3.log` under the directory `examples/two_locals/`. Moreover, *Experiment 3* requires the CPU usage to be greater than or equal to 0 (which is always true). Noodles would measure CPU usage on the servers (actually local machines) and deploy the experiment to one of the satisfied servers.
+In the spec, *Experiment 1* would write a hello message into `examples/two_locals/exp1.log`, while *Experiment 2* and *Experiment 3* would write the time of execution into `exp2.log` and `exp3.log` under the directory `examples/two_locals/`. Moreover, *Experiment 3* requires the CPU usage to be greater than or equal to 0 (which is always true). Noodles would measure CPU usage on the servers (which are local machines in this case) and deploy the experiment to one of the satisfied servers (i.e., local machines).
+
+You can easily switch the deployment targets to remote servers by changing the server info in the spec. See another example `examples/two_servers_same_user` for more information.
 
 ## Run
 
@@ -20,7 +22,7 @@ You would notice there is a 10 second delay between deployments of *Experiment 2
 
 ### Choose Only Some Experiments
 
-To run only *Experiment 2* and *Experiment 3*, specify them as the following
+To run only *Experiment 2* and *Experiment 3*, specify them as the following:
 
 ```bash
 noodles run "examples/two_locals/spec.yml:Experiment 2,Experiment 3"

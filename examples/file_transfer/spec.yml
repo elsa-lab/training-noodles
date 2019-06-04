@@ -8,12 +8,6 @@ description: Upload files to run on servers and download the results
 # Experiments
 ################################################################################
 
-before_each_experiment:
-  # Specify environment variables for all experiments
-  envs:
-    LOCAL_DIR: examples/file_transfer
-
-# Main experiments go here
 experiments:
 
 ### Upload Experiments ###
@@ -21,6 +15,7 @@ experiments:
 - name: Upload experiment 1
   description: Upload simple script to a server
   envs:
+    LOCAL_DIR: examples/file_transfer
     SCRIPT: remote_experiment1.sh
   commands:
     run: "local:scp $LOCAL_DIR/$SCRIPT $NOODLES_SERVER_AUTHORITY:~/$SCRIPT"
@@ -31,6 +26,7 @@ experiments:
 - name: Upload experiment 2
   description: Upload simple script to a server
   envs:
+    LOCAL_DIR: examples/file_transfer
     SCRIPT: remote_experiment2.sh
   commands:
     run: "local:scp $LOCAL_DIR/$SCRIPT $NOODLES_SERVER_AUTHORITY:~/$SCRIPT"
@@ -62,6 +58,7 @@ experiments:
 - name: Download experimental result 1
   description: Download experimental result from the server
   envs:
+    LOCAL_DIR: examples/file_transfer
     SCRIPT: remote_experiment1.sh
     LOG: exp1_result.log
   commands:
@@ -73,6 +70,7 @@ experiments:
 - name: Download experimental result 2
   description: Download experimental result from the server
   envs:
+    LOCAL_DIR: examples/file_transfer
     SCRIPT: remote_experiment2.sh
     LOG: exp2_result.log
   commands:
@@ -85,8 +83,8 @@ experiments:
 # Servers
 ################################################################################
 
-# Applies to the server spec if not specified
-each_server:
+# The default properties for each server
+server_default:
   # Path to the private key on local
   private_key_path: $HOME/.ssh/id_rsa
   # Username on the server (e.g., 'user1')

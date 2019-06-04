@@ -31,13 +31,13 @@ class Runner:
         start_time = time.time()
 
         # Deploy "before all" experiments
-        self._deploy_side_experiments('before_all_experiments')
+        self._deploy_stage('before_all_experiments')
 
         # Deploy main experiments
-        num_success, total = self._deploy_main_experiments()
+        num_success, total = self._deploy_stage('experiments')
 
         # Deploy "after all" experiments
-        self._deploy_side_experiments('after_all_experiments')
+        self._deploy_stage('after_all_experiments')
 
         # Calculate total elapsed time
         elapsed = time.time() - start_time
@@ -53,15 +53,18 @@ class Runner:
             'Successfully deployed {:g}% ({}/{}) "{}" experiments'.format(
                 percentage, num_success, total, self.command_type))
 
-    def _deploy_main_experiments(self):
-        # Initialize total number of successful deployments
+    def _deploy_stage(self, stage):
+       # Initialize total number of successful deployments
         total_num_success = 0
 
-        # Get number of experiments
-        num_exps = self._count_experiments()
+        # Get number of experiments in the stage
+        num_exps = self._count_experiments(stage)
 
         # Initialize a set of indexes of undeployed experiments
         undeployed = set(range(num_exps))
+
+        # Log the start
+        self.logger.info('Start stage "{}"'.format(stage))
 
         # Deploy all remaining experiments until there are none
         round_idx = 0
@@ -69,14 +72,15 @@ class Runner:
 
         while len(undeployed) > 0:
             # Log the deployment round
-            self._log_round(round_idx, undeployed)
+            self._log_round(round_idx, stage, undeployed)
 
             # Wait for next round
             if round_idx > 0:
                 self._wait_for_next_round()
 
             # Create undeployed experiments
-            undeployed_exps = self._filter_undeployed_experiments(undeployed)
+            undeployed_exps = self._filter_undeployed_experiments(
+                stage, undeployed)
 
             # Try to deploy each experiment to one of the satisfied servers
             deployed, num_success = self._deploy_experiment_specs(
@@ -98,56 +102,12 @@ class Runner:
             round_idx += 1
 
         # Log the finish
-        self.logger.info('Finished main stage "experiments"')
+        self.logger.info('Finished stage "{}"'.format(stage))
 
         # Return the ratio of successful deployments
         return total_num_success, num_exps
 
-    def _deploy_side_experiments(self, stage):
-        # Get the side experiment spec
-        side_exp_spec = self._get_side_experiments_spec(stage)
-
-        # Wrap the side experiment spec in list
-        wrapped_spec = [side_exp_spec]
-
-        # Initialize a set of indexes of undeployed experiments
-        undeployed = set([0])
-
-        # Initialize the deployed set
-        deployed = set()
-
-        # Deploy all remaining experiments until there are none
-        round_idx = 0
-        prev_round_time = time.time()
-
-        while len(deployed) <= 0:
-            # Log the deployment round
-            self._log_side_round(stage, round_idx)
-
-            # Wait for next round
-            if round_idx > 0:
-                self._wait_for_next_round()
-
-            # Try to deploy each experiment to one of the satisfied servers
-            deployed, num_success = self._deploy_experiment_specs(
-                undeployed, wrapped_spec, main=False)
-
-            # Log the round time
-            self._log_round_time(prev_round_time)
-
-            # Update previous round time
-            prev_round_time = time.time()
-
-            # Increment round index
-            round_idx += 1
-
-        # Log the finish
-        self.logger.info('Finished side stage "{}"'.format(stage))
-
-        # Return the ratio of successful deployments
-        return num_success, 1
-
-    def _deploy_experiment_specs(self, exp_idxs, exps_spec, main=True):
+    def _deploy_experiment_specs(self, exp_idxs, exps_spec):
         # Initialize set of deployed experiment indexes
         deployed_exps = set()
 
@@ -163,8 +123,8 @@ class Runner:
         # Initialize the empty metrics
         metrics = {}
 
-        # Get servers spec
-        servers_spec = self.user_spec.get('servers', [])
+        # Get server specs
+        servers_spec = self._get_server_specs()
 
         # Iterate each experiment spec
         for filtered_exp_idx, exp_spec in enumerate(exps_spec):
@@ -178,7 +138,7 @@ class Runner:
             self._log_verbose('Try to deploy experiment "{}"'.format(exp_name))
 
             # Check whether the experiment is empty
-            if self._check_empty_experiment(exp_spec, main=main):
+            if self._check_empty_experiment(exp_spec):
                 # Log the skip
                 self._log_verbose('Experiment "{}" is empty, skip'.format(
                     exp_name))
@@ -191,7 +151,7 @@ class Runner:
 
             # Find satisfied servers and update metrics lazily
             satisfied_servers = self._update_metrics_and_find_servers(
-                exp_spec, metrics, deployed_servers, main=main)
+                exp_spec, metrics, deployed_servers)
 
             # Check whether there are any satisfied servers
             if len(satisfied_servers) > 0:
@@ -215,7 +175,7 @@ class Runner:
 
                 # Deploy the experiment to the server
                 status = self._deploy_experiment_to_server(
-                    exp_spec, server_spec, main=main)
+                    exp_spec, server_spec)
 
                 # Update deployed indexes by status
                 self._update_deployed_indexes_by_status(
@@ -238,14 +198,12 @@ class Runner:
         # deployments
         return deployed_exps, num_success
 
-    def _deploy_experiment_to_server(self, exp_spec, server_spec, main=True):
+    def _deploy_experiment_to_server(self, exp_spec, server_spec):
         # Build experiment commands
-        commands = self._build_experiment_details(
-            exp_spec, 'commands', main=main)
+        commands = self._build_experiment_details(exp_spec, 'commands')
 
         # Build experiment environment variables
-        envs = self._build_experiment_details(
-            exp_spec, 'envs', main=main)
+        envs = self._build_experiment_details(exp_spec, 'envs')
 
         # Add environment variables of the satisfied server
         server_envs = self._build_server_envs(server_spec, envs)
@@ -277,7 +235,7 @@ class Runner:
 
         elif status == 'continue':
             # Log the continue
-            self.logger.warning('Unsuccessful commands run, will continue')
+            self.logger.warning('Unsuccessful deployment, will continue')
 
             # Give up this experiment by treating it as if it has been
             # deployed
@@ -285,7 +243,7 @@ class Runner:
 
         elif status == 'retry':
             # Log the retry
-            self.logger.warning('Unsuccessful commands run, will retry')
+            self.logger.warning('Unsuccessful deployment, will retry')
 
         else:
             # Should not reach here
@@ -295,11 +253,11 @@ class Runner:
         # Initialize the metric outputs
         metrics = []
 
-        # Get requirements spec
-        reqs_spec = self.user_spec.get('requirements', {})
+        # Get requirement specs
+        reqs_spec = self._get_requirement_specs()
 
         # Get server specs
-        servers_spec = self.user_spec.get('servers', [])
+        servers_spec = self._get_server_specs()
 
         # Iterate each server spec
         for server_spec in servers_spec:
@@ -343,7 +301,7 @@ class Runner:
                 elif status == 'continue':
                     # Log the continue
                     self.logger.warning(
-                        'Unsuccessful commands run, will continue')
+                        'Unsuccessful commands execution, will continue')
 
                     # Continue to next server spec
                     break
@@ -351,7 +309,7 @@ class Runner:
                 elif status == 'retry':
                     # Log the retry
                     self.logger.warning(
-                        'Unsuccessful commands run, will retry')
+                        'Unsuccessful commands execution, will retry')
 
                 else:
                     # Should not reach here
@@ -456,19 +414,19 @@ class Runner:
         # All filters do not apply, abort the runner
         return 'abort'
 
-    def _count_experiments(self):
+    def _count_experiments(self, stage):
         # Get experiment specs
-        exps_spec = self._get_experiments_spec()
+        exps_spec = self._get_experiment_specs(stage)
 
         # Return the count
         return len(exps_spec)
 
-    def _filter_undeployed_experiments(self, undeployed):
+    def _filter_undeployed_experiments(self, stage, undeployed):
         # Initialize the list of undeployed experiments
         undeployed_exps = []
 
         # Get experiments
-        exps_spec = self._get_experiments_spec()
+        exps_spec = self._get_experiment_specs(stage)
 
         # Add each undeployed experiment to the list
         for exp_idx in undeployed:
@@ -481,29 +439,31 @@ class Runner:
         # Return the undeployed experiments
         return undeployed_exps
 
-    def _update_metrics_and_find_servers(self, exp_spec, metrics, deployed,
-                                         main=True):
-        # Get servers spec
-        servers_spec = self.user_spec.get('servers', [])
+    def _update_metrics_and_find_servers(self, exp_spec, metrics, deployed):
+        # Get server specs
+        servers_spec = self._get_server_specs()
 
         # Initialize all indexes of servers
         satisfied = set(range(len(servers_spec)))
 
         # Build experiment requirements
-        reqs_spec = self._build_experiment_details(
-            exp_spec, 'requirements', main=main)
+        reqs_spec = self._build_experiment_details(exp_spec, 'requirements')
 
         # Build experiment environment variables
-        envs = self._build_experiment_details(exp_spec, 'envs', main=main)
+        envs = self._build_experiment_details(exp_spec, 'envs')
 
         # Log the search
         self._log_verbose('Find satisfied servers')
 
         # Iterate each requirement group
-        for req_group in reqs_spec:
+        for group_idx, req_group in enumerate(reqs_spec):
             # Stop the search when there are no any satisfied servers left
             if len(satisfied) <= 0:
                 break
+
+            # Log the group index
+            self._log_verbose('Check requirement group #{}'.format(
+                group_idx + 1))
 
             # Update metrics lazily
             self._update_metrics(metrics, req_group, envs)
@@ -550,15 +510,15 @@ class Runner:
 
             # Log the requirement
             self.logger.debug(('Requirement ID: "{}", Operator: "{}",' +
-                                ' Value: "{}"').format(
-                                    req_id, operator, value))
+                               ' Value: "{}"').format(
+                req_id, operator, value))
 
             # Get the list of server metrics of the requirement
             servers_metrics = metrics.get(req_id, None)
 
             if servers_metrics is None:
                 self._raise_error(('Requirement ID "{}" should' +
-                                    ' be in metrics').format(req_id))
+                                   ' be in metrics').format(req_id))
 
             # Update the indexes of satisfied servers by comparing the
             # server metric to the requirement value
@@ -773,73 +733,27 @@ class Runner:
 
         return result
 
-    def _build_experiment_details(self, exp_spec, detail_name, main=True):
+    def _build_experiment_details(self, exp_spec, detail_name):
         # Get details in the experiment
         exp_details = self._get_experiment_details(exp_spec, detail_name)
 
-        # Check whether to merge specs from "before each", "each" and
-        # "after each"
-        if main:
-            # Get "before each" experiment details
-            before_each_exp_details = self._get_side_experiment_details(
-                'before_each_experiment', detail_name)
+        # Get "each" experiment details
+        each_exp_details = self._get_stage_experiment_details(
+            'experiment_default', detail_name)
 
-            # Get "each" experiment details
-            each_exp_details = self._get_side_experiment_details(
-                'each_experiment', detail_name)
+        # Check whether to use default details from "each" experiment
+        # details
+        if len(exp_details) <= 0 and len(each_exp_details) > 0:
+            # Log the use
+            self._log_verbose(('Use default "{}" from' +
+                               ' "experiment_default"->\n{}').format(
+                detail_name, json.dumps(each_exp_details)))
 
-            # Get "after each" experiment details
-            after_each_exp_details = self._get_side_experiment_details(
-                'after_each_experiment', detail_name)
+            # Use commands from "each" commands
+            exp_details = each_exp_details
 
-            # Check whether to use default details from "each" experiment
-            # details
-            if len(exp_details) <= 0 and len(each_exp_details) > 0:
-                # Log the use
-                self._log_verbose(('Use default "{}" from' +
-                                   ' "each_experiment"->\n{}').format(
-                    detail_name, json.dumps(each_exp_details)))
-
-                # Use commands from "each" commands
-                exp_details = each_exp_details
-
-            # Log the merge
-            if len(before_each_exp_details) > 0:
-                self._log_verbose(('Merge "{}" from' +
-                                   ' "before_each_experiment"->\n{}').format(
-                    detail_name, json.dumps(before_each_exp_details)))
-
-            if len(after_each_exp_details) > 0:
-                self._log_verbose(('Merge "{}" from' +
-                                   ' "after_each_experiment"->\n{}').format(
-                    detail_name, json.dumps(after_each_exp_details)))
-
-            # Merge with "before each" and "after each" commands then return
-            return self._merge_experiment_details(
-                before_each_exp_details, exp_details, after_each_exp_details)
-
-        else:
-            return exp_details
-
-    def _merge_experiment_details(self, before_each_exp_details, exp_details,
-                                  after_each_exp_details):
-        if isinstance(exp_details, list):
-            return (before_each_exp_details + exp_details +
-                    after_each_exp_details)
-        elif isinstance(exp_details, dict):
-            return update_dict_with_missing(
-                before_each_exp_details, exp_details, after_each_exp_details)
-        else:
-            self._raise_error('Unknown type of experiment details: {}'.format(
-                type(exp_details)))
-
-    def _get_side_experiments_spec(self, stage):
-        # Return the side experiment
-        return self.user_spec.get(stage, {})
-
-    def _get_experiments_spec(self):
-        # Return all experiments
-        return self.user_spec.get('experiments', {})
+        # Return the the experiment details
+        return exp_details
 
     def _get_experiment_details(self, exp_spec, detail_name):
         # Get the details
@@ -851,9 +765,9 @@ class Runner:
         # Wrap the details and return
         return self._wrap_details(detail_name, details)
 
-    def _get_side_experiment_details(self, stage, detail_name):
+    def _get_stage_experiment_details(self, stage, detail_name):
         # Get the spec
-        stage_spec = self.user_spec.get(stage, {})
+        stage_spec = self._get_experiment_specs(stage)
 
         # Get the details
         details = stage_spec.get(detail_name, {})
@@ -890,24 +804,36 @@ class Runner:
         else:
             self._raise_error('Unknown detail name: {}'.format(detail_name))
 
-    def _check_empty_experiment(self, exp_spec, main=True):
+    def _check_empty_experiment(self, exp_spec):
         # Build the commands
-        commands = self._build_experiment_details(
-            exp_spec, 'commands', main=main)
+        commands = self._build_experiment_details(exp_spec, 'commands')
 
         # Check whether the commands are empty
         return len(commands) <= 0
 
-    def _log_side_round(self, stage, round_idx):
-        self._log_verbose('Side round #{} ({})'.format(round_idx + 1, stage))
+    def _get_experiment_specs(self, stage):
+        # Check whether the stage is in allowed list
+        allowed_stages = ['before_all_experiments', 'experiment_default',
+                          'experiments', 'after_all_experiments']
 
-    def _log_round(self, round_idx, undeployed):
+        if stage not in allowed_stages:
+            self._raise_error('Unexpected stage: {}'.format(stage))
+
+        return self.user_spec.get(stage, {})
+
+    def _get_server_specs(self):
+        return self.user_spec.get('servers', [])
+
+    def _get_requirement_specs(self):
+        return self.user_spec.get('requirements', {})
+
+    def _log_round(self, round_idx, stage, undeployed):
         if self.verbose:
             # Log the round number
-            self.logger.info('Main round #{}'.format(round_idx + 1))
+            self.logger.info('Round #{}'.format(round_idx + 1))
 
             # Log the undeployed experiments
-            exps_spec = self._get_experiments_spec()
+            exps_spec = self._get_experiment_specs(stage)
             undeployed_names = [exps_spec[i].get('name', '#{}'.format(i))
                                 for i in undeployed]
             self.logger.info('Undeployed experiments: {}'.format(

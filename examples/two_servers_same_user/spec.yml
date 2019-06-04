@@ -17,6 +17,7 @@ experiments:
 - name: Experiment 2
   description: Example experiment 2
   commands:
+    # Execute the commands in order
     run:
     - "echo Running experiment 2"
     - "date > ~/exp2.log"
@@ -26,6 +27,7 @@ experiments:
 - name: Experiment 3
   description: Example experiment 3
   commands:
+    # Execute the commands in order
     run:
     - "echo Running experiment 3"
     - "cd ~"
@@ -34,14 +36,16 @@ experiments:
     - "echo The time now is $(date)"
   requirements:
     run:
+    # Requires CPU usage on the server to be >= 0 (The default requirement
+    # command is in training_noodles/specs/defaults.yml)
     - cpu_usage: ">=0"
 
 ################################################################################
 # Servers
 ################################################################################
 
-# Applies to the server spec if not specified
-each_server:
+# The default properties for each server
+server_default:
   # Path to the private key on local
   private_key_path: $HOME/.ssh/id_rsa
   # Username on the server (e.g., 'user1')

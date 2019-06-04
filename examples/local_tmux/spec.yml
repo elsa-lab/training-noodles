@@ -9,72 +9,68 @@ description: Run two Tmux sessions with different delays on local machines
 ################################################################################
 
 before_all_experiments:
-  # These environment variables only apply to this stage (before all)
+- name: Kill short and long Tmux sessions
+  description: Kill short and long Tmux sessions before the main experiments start
   envs:
-    TMUX_PREFIX: test
+    TMUX_SESSION_PREFIX: test
   commands:
-    # Kill short and long Tmux sessions before the main experiments start
     run:
     - |-
-      tmux kill-ses -t "$TMUX_PREFIX/short_tmux" 2> /dev/null || true
+      tmux kill-ses -t "$TMUX_SESSION_PREFIX/short_tmux" 2> /dev/null || true
     - |-
-      tmux kill-ses -t "$TMUX_PREFIX/long_tmux" 2> /dev/null || true
-
-before_each_experiment:
-  # Specify common environment variables for all main experiments
-  envs:
-    TMUX_PREFIX: test
-    OUTPUT: examples/local_tmux/output.log
-
-each_experiment:
-  commands:
-    # Stop the Tmux session corresponding to the experiment
-    stop: |-
-      tmux kill-ses -t "$TMUX_PREFIX/$NAME" 2> /dev/null || true
+      tmux kill-ses -t "$TMUX_SESSION_PREFIX/long_tmux" 2> /dev/null || true
 
 # Main experiments go here
 experiments:
 - name: Short Tmux
   description: Run tmux session, delay for 10 seconds, and write current time to output
-  # Specify environment variables only for this experiment
   envs:
+    TMUX_SESSION_PREFIX: test
     NAME: short_tmux
-    SCRIPT: examples/local_tmux/script1.sh
+    SCRIPT_PATH: examples/local_tmux/script1.sh
+    OUTPUT_PATH: examples/local_tmux/output.log
     DELAY: 10
   commands:
-    # Write the scripts into the file
     run:
+    # Write the commands into the script
     - |-
-      echo "sleep $DELAY" > $SCRIPT
+      echo "sleep $DELAY" > $SCRIPT_PATH
     - |-
-      echo "echo $(date) > $OUTPUT" >> $SCRIPT
+      echo "echo $(date) > $OUTPUT_PATH" >> $SCRIPT_PATH
+    # Run the script in a detached Tmux session
+    - |-
+      tmux new -d -s "$TMUX_SESSION_PREFIX/$NAME" "bash -s < $SCRIPT_PATH"
+    # Stop the Tmux session
+    stop: |-
+      tmux kill-ses -t "$TMUX_SESSION_PREFIX/$NAME" 2> /dev/null || true
 
 - name: Long Tmux
   description: After "Short Tmux" has finished, delay for 30 seconds, and delete the output produced by "Short Tmux"
-  # Specify environment variables only for this experiment
   envs:
+    TMUX_SESSION_PREFIX: test
     NAME: long_tmux
     OTHER_NAME: short_tmux
-    SCRIPT: examples/local_tmux/script2.sh
+    SCRIPT_PATH: examples/local_tmux/script2.sh
+    OUTPUT_PATH: examples/local_tmux/output.log
     DELAY: 30
   commands:
-    # Write the scripts into the file
     run:
+    # Write the commands into the script
     - |-
-      echo "sleep $DELAY" > $SCRIPT
+      echo "sleep $DELAY" > $SCRIPT_PATH
     - |-
-      echo "rm $OUTPUT" >> $SCRIPT
+      echo "rm $OUTPUT_PATH" >> $SCRIPT_PATH
+    # Run the script in a detached Tmux session
+    - |-
+      tmux new -d -s "$TMUX_SESSION_PREFIX/$NAME" "bash -s < $SCRIPT_PATH"
+    # Stop the Tmux session
+    stop: |-
+      tmux kill-ses -t "$TMUX_SESSION_PREFIX/$NAME" 2> /dev/null || true
   requirements:
     # We require that the short Tmux session is not present when running this
     # experiment
     run:
     - other_tmux_count: "==0"
-
-after_each_experiment:
-  commands:
-    # This command would be appended after the commands in main experiments
-    run: |-
-      tmux new -d -s "$TMUX_PREFIX/$NAME" "bash -s < $SCRIPT"
 
 ################################################################################
 # Servers
@@ -94,7 +90,7 @@ requirements:
   # Count the number of lines of Tmux session list which contains the name
   # "test/short_tmux". If the output is 1, it means the short Tmux session is
   # still running, otherwise it would be 0
-  other_tmux_count: "tmux ls 2>/dev/null | grep $TMUX_PREFIX/$OTHER_NAME | wc -l"
+  other_tmux_count: "tmux ls 2>/dev/null | grep $TMUX_SESSION_PREFIX/$OTHER_NAME | wc -l"
 
 ################################################################################
 # Deployment

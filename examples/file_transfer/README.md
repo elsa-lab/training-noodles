@@ -8,7 +8,7 @@ This example executes two experiments on servers. Each server runs one experimen
 
 The requirement `get_random_number` makes Noodles deploy experiment *Upload experiment 1* to a randomly chosen server. To let `scp` know where to upload the script, Noodles provides the environment variable `NOODLES_SERVER_AUTHORITY` which has the form `<username>@<hostname>`. It then uses the uploaded script on servers as a way to identify which server to run and download.
 
-You should prepare two servers to run this example. Please feel free to modify entries `each_server` and `servers` in the spec to specify your own servers. If you only have one server, please remove *server2* in the spec.
+You should prepare two servers to run this example. Please feel free to modify entries `server_default` and `servers` in the spec to specify your own servers. If you only have one server, please remove *server2* in the spec.
 
 ## Prerequisites
 
@@ -36,4 +36,4 @@ To remove the scripts and log files on servers as well as the log files on local
 noodles clean examples/file_transfer/clean.yml
 ```
 
-Note that it would hang if there are no uploaded scripts on servers (e.g., If you haven't *run* the `spec.yml`) because it would keep finding the scripts on servers due to `find_experiment` requirement in `spec.yml`.
+Note that it would hang if there are no uploaded scripts on servers (e.g., If you haven't *run* the `spec.yml`) because it would keep finding the scripts on servers due to `find_experiment` requirement in the spec.

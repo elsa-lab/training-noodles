@@ -18,13 +18,13 @@ You would notice that `examples/local_tmux/output.log` is created after 10 secon
 
 ## Stop
 
-There are actually two Tmux sessions responsible for creation and deletion of the file. To interrupt the second long Tmux session, open another terminal and execute the following immediately when the output file is created:
+There are actually two Tmux sessions responsible for creation and deletion of the file. To kill the long Tmux session, open another terminal and execute the following immediately when the output file is created:
 
 ```bash
-noodles stop examples/local_tmux/spec.yml
+noodles stop "examples/local_tmux/spec.yml:Long Tmux"
 ```
 
-Then the output file would never be deleted because the Tmux sessions are killed after running the above command. To see the list of running Tmux sessions, execute the following:
+Then the output file would never be deleted because the long Tmux session is killed after running the above command. To see the list of running Tmux sessions, execute the following:
 
 ```bash
 tmux ls

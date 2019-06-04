@@ -8,11 +8,9 @@ description: Clean the scripts produced by "run" experiments
 # Experiments
 ################################################################################
 
-# Main experiments go here
 experiments:
 - name: Clean
   description: Clean the scripts and logs
-  # Specify environment variables only for this experiment
   envs:
     SCRIPT1: examples/local_tmux/script1.sh
     SCRIPT2: examples/local_tmux/script2.sh

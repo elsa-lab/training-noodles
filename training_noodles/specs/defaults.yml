@@ -3,31 +3,19 @@ name: Default spec
 
 # Description of the spec
 description: |-
-  All default settings are in this spec, which would override the settings in
-  user's spec if user doesn't specify them.
+  All default settings are in this spec. Properties in user specs would inherit
+  from these settings if user doesn't specify them.
 
 ################################################################################
 # Experiments
 ################################################################################
 
 # Runs before the start of main experiments
-before_all_experiments:
-  name: <before all>
-  envs: {}
-  commands: {}
-  requirements: {}
+before_all_experiments: []
 
-# Runs before each main experiment
-before_each_experiment:
-  name: <before each>
-  envs: {}
-  commands: {}
-  requirements: {}
-
-# The properties in "each_experiment" would override the properties in each main
-# experiment if the main experiment doesn't specify them
-each_experiment:
-  name: <each>
+# The default properties for each experiment
+experiment_default:
+  name: <default>
   envs: {}
   commands: {}
   requirements: {}
@@ -35,26 +23,15 @@ each_experiment:
 # The main experiments
 experiments: []
 
-# Runs after each main experiment
-after_each_experiment:
-  name: <after each>
-  envs: {}
-  commands: {}
-  requirements: {}
-
 # Runs after the main experiments have finished
-after_all_experiments:
-  name: <after all>
-  envs: {}
-  commands: {}
-  requirements: {}
+after_all_experiments: []
 
 ################################################################################
 # Servers
 ################################################################################
 
-# Applies to the server spec if not specified
-each_server:
+# The default properties for each server
+server_default:
   # Path to the private key on local
   private_key_path: $HOME/.ssh/id_rsa
   # Port to connect
@@ -73,20 +50,21 @@ servers: []
 
 # Commands to run to check requirements on servers
 requirements:
-  # Get average CPU usage over 3 seconds (0-100%) (Reference: https://askubuntu.com/a/941997)
+  # Get average CPU usage over 3 seconds (Output: Three floats between 0-100 (%)) (Reference: https://askubuntu.com/a/941997)
+  # If there are multiple outputs in each line, Noodles would try to calculate the average
   cpu_usage:
   - "(grep 'cpu ' /proc/stat;sleep 0.1;grep 'cpu ' /proc/stat) | awk -v RS='' '{print ($13-$2+$15-$4)*100/($13-$2+$15-$4+$16-$5)}'"
   - "sleep 1.5"
   - "(grep 'cpu ' /proc/stat;sleep 0.1;grep 'cpu ' /proc/stat) | awk -v RS='' '{print ($13-$2+$15-$4)*100/($13-$2+$15-$4+$16-$5)}'"
   - "sleep 1.5"
   - "(grep 'cpu ' /proc/stat;sleep 0.1;grep 'cpu ' /proc/stat) | awk -v RS='' '{print ($13-$2+$15-$4)*100/($13-$2+$15-$4+$16-$5)}'"
-  # Get memory usage (0-100%) (Reference: https://askubuntu.com/a/941997)
+  # Get memory usage (Output: A float between 0-100 (%)) (Reference: https://askubuntu.com/a/941997)
   memory_usage: awk '/MemTotal/{t=$2}/MemAvailable/{a=$2}END{print 100-100*a/t}' /proc/meminfo
-  # Get disk usage (0-100%) (Reference: https://askubuntu.com/a/941997)
+  # Get disk usage (Output: A float between 0-100 (%)) (Reference: https://askubuntu.com/a/941997)
   disk_usage: df | awk '/ \/$/{print substr($5, 1, length($5)-1)}'
-  # Get CUDA GPU utilization (0-100%) (Reference: https://gist.github.com/jonatw/9322244)
+  # Get CUDA GPU utilization (Output: A float between 0-100 (%)) (Reference: https://gist.github.com/jonatw/9322244)
   cuda_gpu_utilization: nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits | awk '{s+=$1; n++} END {print s/n}'
-  # Get CUDA memory utilization (0-100%) (Reference: https://gist.github.com/jonatw/9322244)
+  # Get CUDA memory utilization (Output: A float between 0-100 (%)) (Reference: https://gist.github.com/jonatw/9322244)
   cuda_memory_utilization: nvidia-smi --query-gpu=utilization.memory --format=csv,noheader,nounits | awk '{s+=$1; n++} END {print s/n}'
 
 ################################################################################

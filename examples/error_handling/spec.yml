@@ -26,8 +26,8 @@ experiments:
 # Servers
 ################################################################################
 
-# Applies to the server spec if not specified
-each_server:
+# The default properties for each server
+server_default:
   # Path to the private key on local
   private_key_path: $HOME/.ssh/id_rsa
   # Username on the server (e.g., 'user1')

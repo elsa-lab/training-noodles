@@ -13,13 +13,11 @@ default_spec_path = 'training_noodles/specs/defaults.yml'
 root_keys = [
     'name',
     'description',
-    'before_all_experiments/*',
-    'before_each_experiment/*',
-    'each_experiment/*',
+    'before_all_experiments',
+    'experiment_default/*',
     'experiments',
-    'after_each_experiment/*',
-    'after_all_experiments/*',
-    'each_server/*',
+    'after_all_experiments',
+    'server_default/*',
     'servers',
     'requirements/*',
     'round_interval',
@@ -98,8 +96,8 @@ def _split_path_and_experiments(spec_path):
 
 
 def _fill_missing_in_server_specs(user_spec):
-    # Get "each server" spec
-    each_server_spec = user_spec.get('each_server', {})
+    # Get default server spec
+    default_server_spec = user_spec.get('server_default', {})
 
     # Get server specs
     servers_spec = user_spec.get('servers', [])
@@ -108,7 +106,7 @@ def _fill_missing_in_server_specs(user_spec):
     for server_spec in servers_spec:
         # Fill missing values
         _fill_missing_with_defaults(
-            each_server_spec, server_spec, server_spec_keys)
+            default_server_spec, server_spec, server_spec_keys)
 
 
 def _fill_missing_with_defaults(default_spec, user_spec, keys):
