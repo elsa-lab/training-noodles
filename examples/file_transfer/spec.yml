@@ -37,6 +37,9 @@ experiments:
   description: Run the simple script on server
   envs:
     SCRIPT: remote_experiment1.sh
+  depends_on:
+    run:
+    - Upload experiment 1
   commands:
     run: "remote:bash -s < ~/$SCRIPT"
   requirements:
@@ -47,6 +50,9 @@ experiments:
   description: Run the simple script on server
   envs:
     SCRIPT: remote_experiment2.sh
+  depends_on:
+    run:
+    - Upload experiment 2
   commands:
     run: "remote:bash -s < ~/$SCRIPT"
   requirements:
@@ -61,6 +67,9 @@ experiments:
     LOCAL_DIR: examples/file_transfer
     SCRIPT: remote_experiment1.sh
     LOG: exp1_result.log
+  depends_on:
+    run:
+    - Run experiment 1
   commands:
     run: "local:scp $NOODLES_SERVER_AUTHORITY:~/$LOG $LOCAL_DIR/$LOG"
   requirements:
@@ -73,6 +82,9 @@ experiments:
     LOCAL_DIR: examples/file_transfer
     SCRIPT: remote_experiment2.sh
     LOG: exp2_result.log
+  depends_on:
+    run:
+    - Run experiment 2
   commands:
     run: "local:scp $NOODLES_SERVER_AUTHORITY:~/$LOG $LOCAL_DIR/$LOG"
   requirements:

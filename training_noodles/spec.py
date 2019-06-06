@@ -26,9 +26,14 @@ root_keys = [
     'error_handlers',
 ]
 
+# Set experiment spec keys
+exp_spec_keys = [
+    '*',
+]
+
 # Set server spec keys
 server_spec_keys = [
-    '*'
+    '*',
 ]
 
 
@@ -47,6 +52,9 @@ def read_user_spec(args):
 
     # Fill missing values with default values
     _fill_missing_with_defaults(default_spec, user_spec, root_keys)
+
+    # Fill missing values in experiment specs
+    _fill_missing_in_experiment_specs(user_spec)
 
     # Fill missing values in server specs
     _fill_missing_in_server_specs(user_spec)
@@ -93,6 +101,19 @@ def _split_path_and_experiments(spec_path):
 
     # Return spec path and experiments spec
     return path, experiments
+
+
+def _fill_missing_in_experiment_specs(user_spec):
+    # Get default experiment spec
+    default_exp_spec = user_spec.get('experiment_default', {})
+
+    # Get experiment specs
+    exps_spec = user_spec.get('experiments', [])
+
+    # Iterate each experiment spec
+    for exp_spec in exps_spec:
+        # Fill missing values
+        _fill_missing_with_defaults(default_exp_spec, exp_spec, exp_spec_keys)
 
 
 def _fill_missing_in_server_specs(user_spec):

@@ -17,6 +17,7 @@ before_all_experiments: []
 experiment_default:
   name: <default>
   envs: {}
+  depends_on: {}
   commands: {}
   requirements: {}
 

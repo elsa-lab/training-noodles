@@ -105,6 +105,9 @@ experiments:
     EXPERIMENT_PATH: $HOME/TensorFlow-Examples/examples/1_Introduction/basic_operations.py
     STDOUT_PATH: $HOME/exp1.stdout.log
     STDERR_PATH: $HOME/exp1.stderr.log
+  depends_on:
+    run:
+    - Initialize server for Experiment 1
   commands:
     run:
       # Activate the newly created conda environment
@@ -131,6 +134,9 @@ experiments:
     EXPERIMENT_PATH: $HOME/TensorFlow-Examples/examples/2_BasicModels/logistic_regression.py
     STDOUT_PATH: $HOME/exp2.stdout.log
     STDERR_PATH: $HOME/exp2.stderr.log
+  depends_on:
+    run:
+    - Initialize server for Experiment 2
   commands:
     run:
       # Activate the newly created conda environment
@@ -157,6 +163,9 @@ experiments:
     EXPERIMENT_PATH: $HOME/TensorFlow-Examples/examples/3_NeuralNetworks/neural_network.py
     STDOUT_PATH: $HOME/exp3.stdout.log
     STDERR_PATH: $HOME/exp3.stderr.log
+  depends_on:
+    run:
+    - Initialize server for Experiment 3
   commands:
     run:
       # Activate the newly created conda environment
@@ -185,6 +194,9 @@ experiments:
     STDOUT_PATH: \$HOME/exp1.stdout.log
     STDERR_PATH: \$HOME/exp1.stderr.log
     LOCK_FILE_PATH: $HOME/noodles.lock
+  depends_on:
+    run:
+    - Run experiment 1
   commands:
     run:
     # Run scp on local to download STDOUT and STDERR files to the local example directory
@@ -209,6 +221,9 @@ experiments:
     STDOUT_PATH: \$HOME/exp2.stdout.log
     STDERR_PATH: \$HOME/exp2.stderr.log
     LOCK_FILE_PATH: $HOME/noodles.lock
+  depends_on:
+    run:
+    - Run experiment 2
   commands:
     run:
     # Run scp on local to download STDOUT and STDERR files to the local example directory
@@ -233,6 +248,9 @@ experiments:
     STDOUT_PATH: \$HOME/exp3.stdout.log
     STDERR_PATH: \$HOME/exp3.stderr.log
     LOCK_FILE_PATH: $HOME/noodles.lock
+  depends_on:
+    run:
+    - Run experiment 3
   commands:
     run:
     # Run scp on local to download STDOUT and STDERR files to the local example directory

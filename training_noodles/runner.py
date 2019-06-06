@@ -79,12 +79,16 @@ class Runner:
                 self._wait_for_next_round()
 
             # Create undeployed experiments
-            undeployed_exps = self._filter_undeployed_experiments(
+            filtered_exps = self._filter_undeployed_experiments(
                 stage, undeployed)
 
             # Try to deploy each experiment to one of the satisfied servers
-            deployed, num_success = self._deploy_experiment_specs(
-                undeployed, undeployed_exps)
+            filtered_deployed, num_success = self._deploy_experiment_specs(
+                filtered_exps)
+
+            # Restore unfiltered indexes
+            deployed = self._restore_unfiltered_indexes(
+                undeployed, filtered_deployed)
 
             # Remove deployed indexes
             undeployed -= deployed
@@ -107,7 +111,7 @@ class Runner:
         # Return the ratio of successful deployments
         return total_num_success, num_exps
 
-    def _deploy_experiment_specs(self, exp_idxs, exps_spec):
+    def _deploy_experiment_specs(self, exps_spec):
         # Initialize set of deployed experiment indexes
         deployed_exps = set()
 
@@ -117,22 +121,19 @@ class Runner:
         # Initialize the number of successful deployments
         num_success = 0
 
-        # Convert experiment indexes to list
-        exp_idxs = list(exp_idxs)
-
-        # Initialize the empty metrics
-        metrics = {}
+        # Get experiment names
+        exp_names = self._get_experiment_names(exps_spec)
 
         # Get server specs
         servers_spec = self._get_server_specs()
 
+        # Initialize the empty metrics
+        metrics = {}
+
         # Iterate each experiment spec
-        for filtered_exp_idx, exp_spec in enumerate(exps_spec):
+        for exp_idx, exp_spec in enumerate(exps_spec):
             # Get the experiment name
             exp_name = exp_spec.get('name', '')
-
-            # Get the original experiment index
-            exp_idx = exp_idxs[filtered_exp_idx]
 
             # Log the experiment
             self._log_verbose('Try to deploy experiment "{}"'.format(exp_name))
@@ -145,6 +146,20 @@ class Runner:
 
                 # Add the experiment index to the deployed experiment indexes
                 deployed_exps.add(exp_idx)
+
+                # Continue to next experiment
+                continue
+
+            # Get the undeployed experiment dependencies
+            undeployed_deps = self._get_undeployed_experiment_dependencies(
+                exp_names, exp_spec, deployed_exps)
+
+            # Check whether there are still some undeployed dependencies
+            if len(undeployed_deps) > 0:
+                # Log the skip
+                self._log_verbose(('Experiment "{}" depends on experiments' +
+                                   ' which are still undeployed: {}').format(
+                                       exp_name, json.dumps(undeployed_deps)))
 
                 # Continue to next experiment
                 continue
@@ -165,13 +180,8 @@ class Runner:
                 # Get server spec
                 server_spec = servers_spec[server_idx]
 
-                # Get the server name
-                server_name = server_spec.get('name', '')
-
                 # Log the deployment
-                self.logger.info(
-                    'Deploy experiment "{}" to server "{}"'.format(
-                        exp_name, server_name))
+                self._log_deployment_to_server(exp_name, server_spec)
 
                 # Deploy the experiment to the server
                 status = self._deploy_experiment_to_server(
@@ -199,11 +209,11 @@ class Runner:
         return deployed_exps, num_success
 
     def _deploy_experiment_to_server(self, exp_spec, server_spec):
-        # Build experiment commands
-        commands = self._build_experiment_details(exp_spec, 'commands')
+        # Get experiment commands
+        commands = self._get_experiment_details(exp_spec, 'commands')
 
-        # Build experiment environment variables
-        envs = self._build_experiment_details(exp_spec, 'envs')
+        # Get experiment environment variables
+        envs = self._get_experiment_details(exp_spec, 'envs')
 
         # Add environment variables of the satisfied server
         server_envs = self._build_server_envs(server_spec, envs)
@@ -293,7 +303,7 @@ class Runner:
                     metric = self._try_calc_mean(results)
 
                     # Log the processed metric
-                    self.logger.debug('Processed metric: {}'.format(metric))
+                    self.logger.debug('Processed metric->\n{}'.format(metric))
 
                     # Add the metric to the list
                     metrics.append(metric)
@@ -439,6 +449,13 @@ class Runner:
         # Return the undeployed experiments
         return undeployed_exps
 
+    def _restore_unfiltered_indexes(self, undeployed, filtered_deployed):
+        # Convert the set of undeployed indexes to list
+        undeployed = list(undeployed)
+
+        # Map the filtered deployed indexes to original undeployed indexes
+        return set(map(lambda i: undeployed[i], filtered_deployed))
+
     def _update_metrics_and_find_servers(self, exp_spec, metrics, deployed):
         # Get server specs
         servers_spec = self._get_server_specs()
@@ -446,11 +463,11 @@ class Runner:
         # Initialize all indexes of servers
         satisfied = set(range(len(servers_spec)))
 
-        # Build experiment requirements
-        reqs_spec = self._build_experiment_details(exp_spec, 'requirements')
+        # Get experiment requirements
+        reqs_spec = self._get_experiment_details(exp_spec, 'requirements')
 
-        # Build experiment environment variables
-        envs = self._build_experiment_details(exp_spec, 'envs')
+        # Get experiment environment variables
+        envs = self._get_experiment_details(exp_spec, 'envs')
 
         # Log the search
         self._log_verbose('Find satisfied servers')
@@ -732,28 +749,6 @@ class Runner:
 
         return result
 
-    def _build_experiment_details(self, exp_spec, detail_name):
-        # Get details in the experiment
-        exp_details = self._get_experiment_details(exp_spec, detail_name)
-
-        # Get "each" experiment details
-        each_exp_details = self._get_stage_experiment_details(
-            'experiment_default', detail_name)
-
-        # Check whether to use default details from "each" experiment
-        # details
-        if len(exp_details) <= 0 and len(each_exp_details) > 0:
-            # Log the use
-            self._log_verbose(('Use default "{}" from' +
-                               ' "experiment_default"->\n{}').format(
-                detail_name, json.dumps(each_exp_details)))
-
-            # Use commands from "each" commands
-            exp_details = each_exp_details
-
-        # Return the the experiment details
-        return exp_details
-
     def _get_experiment_details(self, exp_spec, detail_name):
         # Get the details
         details = exp_spec.get(detail_name, {})
@@ -768,8 +763,11 @@ class Runner:
         # Get the spec
         stage_spec = self._get_experiment_specs(stage)
 
+        # Get default details
+        default_details = self._get_default_details(detail_name)
+
         # Get the details
-        details = stage_spec.get(detail_name, {})
+        details = stage_spec.get(detail_name, default_details)
 
         # Get the corresponding details
         details = self._get_corresponding_details(detail_name, details)
@@ -777,8 +775,23 @@ class Runner:
         # Wrap the details and return
         return self._wrap_details(detail_name, details)
 
+    def _get_default_details(self, detail_name):
+        if detail_name == 'depends_on':
+            return {}
+        elif detail_name == 'envs':
+            return {}
+        elif detail_name == 'commands':
+            return {}
+        elif detail_name == 'requirements':
+            return {}
+        else:
+            self._raise_error('Unknown detail name: {}'.format(detail_name))
+
     def _get_corresponding_details(self, detail_name, details):
-        if detail_name == 'envs':
+        if detail_name == 'depends_on':
+            # Return the original details
+            return details.get(self.command_type, [])
+        elif detail_name == 'envs':
             # Return the original details
             return details
         elif detail_name == 'commands':
@@ -791,24 +804,50 @@ class Runner:
             self._raise_error('Unknown detail name: {}'.format(detail_name))
 
     def _wrap_details(self, detail_name, details):
-        if detail_name == 'envs':
+        if detail_name == 'depends_on':
+            # Wrap the details in list and return
+            return wrap_with_list(details)
+        elif detail_name == 'envs':
             # Return the dict
             return details
         elif detail_name == 'commands':
             # Wrap the details in list and return
             return wrap_with_list(details)
         elif detail_name == 'requirements':
-            # Return the dict
+            # Wrap the details in list and return
             return wrap_with_list(details)
         else:
             self._raise_error('Unknown detail name: {}'.format(detail_name))
 
+    def _get_experiment_names(self, exps_spec):
+        return [exp_spec.get('name', '') for exp_spec in exps_spec]
+
     def _check_empty_experiment(self, exp_spec):
-        # Build the commands
-        commands = self._build_experiment_details(exp_spec, 'commands')
+        # Get the commands
+        commands = self._get_experiment_details(exp_spec, 'commands')
 
         # Check whether the commands are empty
         return len(commands) <= 0
+
+    def _get_undeployed_experiment_dependencies(self, exp_names, exp_spec,
+                                                deployed):
+        # Get experiment dependencies
+        depends_on = self._get_experiment_details(exp_spec, 'depends_on')
+
+        # Convert the dependencies to set
+        depends_on = set(depends_on)
+
+        # Build a set of deployed experiment names
+        deployed_names = set(map(lambda i: exp_names[i], deployed))
+
+        # Calculate undeployed experiment names
+        undeployed_names = set(exp_names) - deployed_names
+
+        # Calculate the intersection of dependencies and undeployed names
+        undeployed_deps = depends_on.intersection(undeployed_names)
+
+        # Return the undeployed dependency names
+        return list(undeployed_deps)
 
     def _get_experiment_specs(self, stage):
         # Check whether the stage is in allowed list
@@ -853,6 +892,14 @@ class Runner:
 
     def _log_metrics(self, metrics):
         self.logger.debug('Server metrics: {}'.format(json.dumps(metrics)))
+
+    def _log_deployment_to_server(self, exp_name, server_spec):
+        # Get the server name
+        server_name = server_spec.get('name', '')
+
+        # Log the deployment
+        self.logger.info('Deploy experiment "{}" to server "{}"'.format(
+            exp_name, server_name))
 
     def _log_verbose(self, message):
         if self.verbose:
