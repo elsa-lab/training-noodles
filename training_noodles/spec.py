@@ -197,7 +197,7 @@ def _fill_missing_with_defaults(default_spec, user_spec, keys):
             user_value = user_parent.get(part, None)
 
             # Assign the default value if user value is not specified
-            if not user_value:
+            if user_value is None:
                 user_parent[part] = default_value
 
 
