@@ -12,18 +12,36 @@ description: Train three TensorFlow examples on two servers and download the res
 # Experiment 2: https://github.com/aymericdamien/TensorFlow-Examples/blob/master/examples/2_BasicModels/logistic_regression.py
 # Experiment 3: https://github.com/aymericdamien/TensorFlow-Examples/blob/master/examples/3_NeuralNetworks/neural_network.py
 
+# The default properties for each experiment
+experiment_default:
+  envs:
+    CONDA_DIR: $HOME/anaconda3
+    CONDA_ENV_NAME: noodles_test
+    # "$" sign is escaped here to make sure "$HOME" is interpreted on server rather than on local
+    ESCAPED_STDERR_PATH: \$HOME/tensorflow_results.$EXPERIMENT.stderr.log
+    ESCAPED_STDOUT_PATH: \$HOME/tensorflow_results.$EXPERIMENT.stdout.log
+    LOCAL_DIR: examples/train_tensorflow_examples/
+    LOCK_FILE_PATH: $HOME/noodles.lock
+    MARKER_PATH: $HOME/marker_$EXPERIMENT.txt
+    STDERR_PATH: $HOME/tensorflow_results.$EXPERIMENT.stderr.log
+    STDOUT_PATH: $HOME/tensorflow_results.$EXPERIMENT.stdout.log
+    TF_EXAMPLE_URL: https://github.com/aymericdamien/TensorFlow-Examples.git
+    TMUX_SESSION_PREFIX: test
+  write_outputs:
+    run:
+      # $NOODLES_EXPERIMENT_NAME is the current experiment name
+      stdout_to: '$LOCAL_DIR/commands_results.$NOODLES_EXPERIMENT_NAME.stdout.log'
+      stderr_to: '$LOCAL_DIR/commands_results.$NOODLES_EXPERIMENT_NAME.stderr.log'
+
+# The main experiments
 experiments:
+
 ### 1st Phase: Initialize Experiments ###
 
 - name: Initialize server for Experiment 1
   description: Mark the server by a unique file name, download TensorFlow-Examples on the server, and create a new conda environment
   envs:
-    LOCK_FILE_PATH: $HOME/noodles.lock
-    MARKER_PATH: $HOME/marker_exp1.txt
-    TF_EXAMPLE_URL: https://github.com/aymericdamien/TensorFlow-Examples.git
-    CONDA_DIR: $HOME/anaconda3
-    CONDA_ENV_NAME: noodles_test
-    LOCAL_DIR: examples/train_tensorflow_examples/
+    EXPERIMENT: exp1
   requirements:
     run:
     - has_lock_file: "==No"
@@ -41,20 +59,11 @@ experiments:
     # Create a new conda environment
     - "echo Creating conda environment $CONDA_ENV_NAME on $NOODLES_SERVER_NAME"
     - "$CONDA_DIR/bin/conda create -y -n $CONDA_ENV_NAME python=3.6"
-  write_outputs:
-    run:
-      stdout_to: '$LOCAL_DIR/phase1_exp1.stdout.log'
-      stderr_to: '$LOCAL_DIR/phase1_exp1.stderr.log'
 
 - name: Initialize server for Experiment 2
   description: Mark the server by a unique file name and download TensorFlow-Examples on the server
   envs:
-    LOCK_FILE_PATH: $HOME/noodles.lock
-    MARKER_PATH: $HOME/marker_exp2.txt
-    TF_EXAMPLE_URL: https://github.com/aymericdamien/TensorFlow-Examples.git
-    CONDA_DIR: $HOME/anaconda3
-    CONDA_ENV_NAME: noodles_test
-    LOCAL_DIR: examples/train_tensorflow_examples/
+    EXPERIMENT: exp2
   requirements:
     run:
     - has_lock_file: "==No"
@@ -72,20 +81,11 @@ experiments:
     # Create a new conda environment
     - "echo Creating conda environment $CONDA_ENV_NAME on $NOODLES_SERVER_NAME"
     - "$CONDA_DIR/bin/conda create -y -n $CONDA_ENV_NAME python=3.6"
-  write_outputs:
-    run:
-      stdout_to: '$LOCAL_DIR/phase1_exp2.stdout.log'
-      stderr_to: '$LOCAL_DIR/phase1_exp2.stderr.log'
 
 - name: Initialize server for Experiment 3
   description: Mark the server by a unique file name and download TensorFlow-Examples on the server
   envs:
-    LOCK_FILE_PATH: $HOME/noodles.lock
-    MARKER_PATH: $HOME/marker_exp3.txt
-    TF_EXAMPLE_URL: https://github.com/aymericdamien/TensorFlow-Examples.git
-    CONDA_DIR: $HOME/anaconda3
-    CONDA_ENV_NAME: noodles_test
-    LOCAL_DIR: examples/train_tensorflow_examples/
+    EXPERIMENT: exp3
   requirements:
     run:
     - has_lock_file: "==No"
@@ -103,24 +103,14 @@ experiments:
     # Create a new conda environment
     - "echo Creating conda environment $CONDA_ENV_NAME on $NOODLES_SERVER_NAME"
     - "$CONDA_DIR/bin/conda create -y -n $CONDA_ENV_NAME python=3.6"
-  write_outputs:
-    run:
-      stdout_to: '$LOCAL_DIR/phase1_exp3.stdout.log'
-      stderr_to: '$LOCAL_DIR/phase1_exp3.stderr.log'
 
 ### 2nd Phase: Run Experiments ###
 
 - name: Run experiment 1
   description: Run experiment on server
   envs:
-    MARKER_PATH: $HOME/marker_exp1.txt
-    CONDA_DIR: $HOME/anaconda3
-    CONDA_ENV_NAME: noodles_test
-    TMUX_SESSION_NAME: test/exp1
+    EXPERIMENT: exp1
     EXPERIMENT_PATH: $HOME/TensorFlow-Examples/examples/1_Introduction/basic_operations.py
-    STDOUT_PATH: $HOME/exp1.stdout.log
-    STDERR_PATH: $HOME/exp1.stderr.log
-    LOCAL_DIR: examples/train_tensorflow_examples/
   depends_on:
     run:
     - Initialize server for Experiment 1
@@ -138,23 +128,13 @@ experiments:
       # Create a detached Tmux session to run the TensorFlow example
       - "echo Running TensorFlow example on $NOODLES_SERVER_NAME"
       - |-
-        tmux new -d -s "$TMUX_SESSION_NAME" "python $EXPERIMENT_PATH > $STDOUT_PATH 2> $STDERR_PATH"
-  write_outputs:
-    run:
-      stdout_to: '$LOCAL_DIR/phase2_exp1.stdout.log'
-      stderr_to: '$LOCAL_DIR/phase2_exp1.stderr.log'
+        tmux new -d -s "$TMUX_SESSION_PREFIX/$EXPERIMENT" "python $EXPERIMENT_PATH > $STDOUT_PATH 2> $STDERR_PATH"
 
 - name: Run experiment 2
   description: Run experiment on server
   envs:
-    MARKER_PATH: $HOME/marker_exp2.txt
-    CONDA_DIR: $HOME/anaconda3
-    CONDA_ENV_NAME: noodles_test
-    TMUX_SESSION_NAME: test/exp2
+    EXPERIMENT: exp2
     EXPERIMENT_PATH: $HOME/TensorFlow-Examples/examples/2_BasicModels/logistic_regression.py
-    STDOUT_PATH: $HOME/exp2.stdout.log
-    STDERR_PATH: $HOME/exp2.stderr.log
-    LOCAL_DIR: examples/train_tensorflow_examples/
   depends_on:
     run:
     - Initialize server for Experiment 2
@@ -172,23 +152,13 @@ experiments:
       # Create a detached Tmux session to run the TensorFlow example
       - "echo Running TensorFlow example on $NOODLES_SERVER_NAME"
       - |-
-        tmux new -d -s "$TMUX_SESSION_NAME" "python $EXPERIMENT_PATH > $STDOUT_PATH 2> $STDERR_PATH"
-  write_outputs:
-    run:
-      stdout_to: '$LOCAL_DIR/phase2_exp2.stdout.log'
-      stderr_to: '$LOCAL_DIR/phase2_exp2.stderr.log'
+        tmux new -d -s "$TMUX_SESSION_PREFIX/$EXPERIMENT" "python $EXPERIMENT_PATH > $STDOUT_PATH 2> $STDERR_PATH"
 
 - name: Run experiment 3
   description: Run experiment on server
   envs:
-    MARKER_PATH: $HOME/marker_exp3.txt
-    CONDA_DIR: $HOME/anaconda3
-    CONDA_ENV_NAME: noodles_test
-    TMUX_SESSION_NAME: test/exp3
+    EXPERIMENT: exp3
     EXPERIMENT_PATH: $HOME/TensorFlow-Examples/examples/3_NeuralNetworks/neural_network.py
-    STDOUT_PATH: $HOME/exp3.stdout.log
-    STDERR_PATH: $HOME/exp3.stderr.log
-    LOCAL_DIR: examples/train_tensorflow_examples/
   depends_on:
     run:
     - Initialize server for Experiment 3
@@ -206,24 +176,14 @@ experiments:
       # Create a detached Tmux session to run the TensorFlow example
       - "echo Running TensorFlow example on $NOODLES_SERVER_NAME"
       - |-
-        tmux new -d -s "$TMUX_SESSION_NAME" "python $EXPERIMENT_PATH > $STDOUT_PATH 2> $STDERR_PATH"
-  write_outputs:
-    run:
-      stdout_to: '$LOCAL_DIR/phase2_exp3.stdout.log'
-      stderr_to: '$LOCAL_DIR/phase2_exp3.stderr.log'
+        tmux new -d -s "$TMUX_SESSION_PREFIX/$EXPERIMENT" "python $EXPERIMENT_PATH > $STDOUT_PATH 2> $STDERR_PATH"
 
 ### 3rd Phase: Download Experimental Results ###
 
 - name: Download experimental results 1
   description: Download experimental results from server
   envs:
-    MARKER_PATH: $HOME/marker_exp1.txt
-    TMUX_SESSION_NAME: test/exp1
-    LOCAL_DIR: examples/train_tensorflow_examples/
-    # "$" sign is escaped here to make sure "$HOME" is interpreted on server rather than on local
-    STDOUT_PATH: \$HOME/exp1.stdout.log
-    STDERR_PATH: \$HOME/exp1.stderr.log
-    LOCK_FILE_PATH: $HOME/noodles.lock
+    EXPERIMENT: exp1
   depends_on:
     run:
     - Run experiment 1
@@ -237,24 +197,16 @@ experiments:
     # Run scp on local to download STDOUT and STDERR files to the local example directory
     - "echo Downloading experimental results from $NOODLES_SERVER_NAME"
     - >
-      local:scp $NOODLES_SERVER_AUTHORITY:"$STDOUT_PATH $STDERR_PATH" $LOCAL_DIR
+      local:scp $NOODLES_SERVER_AUTHORITY:$ESCAPED_STDOUT_PATH $LOCAL_DIR
+    - >
+      local:scp $NOODLES_SERVER_AUTHORITY:$ESCAPED_STDERR_PATH $LOCAL_DIR
     # Remove the lock file
     - "rm -f $LOCK_FILE_PATH"
-  write_outputs:
-    run:
-      stdout_to: '$LOCAL_DIR/phase3_exp1.stdout.log'
-      stderr_to: '$LOCAL_DIR/phase3_exp1.stderr.log'
 
 - name: Download experimental results 2
   description: Download experimental results from server
   envs:
-    MARKER_PATH: $HOME/marker_exp2.txt
-    TMUX_SESSION_NAME: test/exp2
-    LOCAL_DIR: examples/train_tensorflow_examples/
-    # "$" sign is escaped here to make sure "$HOME" is interpreted on server rather than on local
-    STDOUT_PATH: \$HOME/exp2.stdout.log
-    STDERR_PATH: \$HOME/exp2.stderr.log
-    LOCK_FILE_PATH: $HOME/noodles.lock
+    EXPERIMENT: exp2
   depends_on:
     run:
     - Run experiment 2
@@ -268,24 +220,16 @@ experiments:
     # Run scp on local to download STDOUT and STDERR files to the local example directory
     - "echo Downloading experimental results from $NOODLES_SERVER_NAME"
     - >
-      local:scp $NOODLES_SERVER_AUTHORITY:"$STDOUT_PATH $STDERR_PATH" $LOCAL_DIR
+      local:scp $NOODLES_SERVER_AUTHORITY:$ESCAPED_STDOUT_PATH $LOCAL_DIR
+    - >
+      local:scp $NOODLES_SERVER_AUTHORITY:$ESCAPED_STDERR_PATH $LOCAL_DIR
     # Remove the lock file
     - "rm -f $LOCK_FILE_PATH"
-  write_outputs:
-    run:
-      stdout_to: '$LOCAL_DIR/phase3_exp2.stdout.log'
-      stderr_to: '$LOCAL_DIR/phase3_exp2.stderr.log'
 
 - name: Download experimental results 3
   description: Download experimental results from server
   envs:
-    MARKER_PATH: $HOME/marker_exp3.txt
-    TMUX_SESSION_NAME: test/exp3
-    LOCAL_DIR: examples/train_tensorflow_examples/
-    # "$" sign is escaped here to make sure "$HOME" is interpreted on server rather than on local
-    STDOUT_PATH: \$HOME/exp3.stdout.log
-    STDERR_PATH: \$HOME/exp3.stderr.log
-    LOCK_FILE_PATH: $HOME/noodles.lock
+    EXPERIMENT: exp3
   depends_on:
     run:
     - Run experiment 3
@@ -299,13 +243,11 @@ experiments:
     # Run scp on local to download STDOUT and STDERR files to the local example directory
     - "echo Downloading experimental results from $NOODLES_SERVER_NAME"
     - >
-      local:scp $NOODLES_SERVER_AUTHORITY:"$STDOUT_PATH $STDERR_PATH" $LOCAL_DIR
+      local:scp $NOODLES_SERVER_AUTHORITY:$ESCAPED_STDOUT_PATH $LOCAL_DIR
+    - >
+      local:scp $NOODLES_SERVER_AUTHORITY:$ESCAPED_STDERR_PATH $LOCAL_DIR
     # Remove the lock file
     - "rm -f $LOCK_FILE_PATH"
-  write_outputs:
-    run:
-      stdout_to: '$LOCAL_DIR/phase3_exp3.stdout.log'
-      stderr_to: '$LOCAL_DIR/phase3_exp3.stderr.log'
 
 ################################################################################
 # Servers
@@ -337,8 +279,8 @@ requirements:
   has_lock_file: "[ -f $LOCK_FILE_PATH ] && echo -n Yes || echo -n No"
   # Check whether the marker file "$MARKER_PATH" exists
   has_marker_file: "[ -f $MARKER_PATH ] && echo -n Yes || echo -n No"
-  # Count the Tmux session of the name "$TMUX_SESSION_NAME"
-  tmux_count: "tmux ls 2>/dev/null | grep $TMUX_SESSION_NAME | wc -l"
+  # Count the Tmux session of the name "$TMUX_SESSION_PREFIX/$EXPERIMENT"
+  tmux_count: "tmux ls 2>/dev/null | grep $TMUX_SESSION_PREFIX/$EXPERIMENT | wc -l"
 
 ################################################################################
 # Deployment

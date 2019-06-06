@@ -26,8 +26,6 @@ Two log files `exp1_result.log` and `exp2_result.log` would be downloaded from s
 
 `exp1_result.log` would be the CPU information of *server1* (or *server2*) and `exp2_result.log` would be the memory information of *server2* (or *server1*) at the time of execution of experiments *Run experiment 1* and *Run experiment 2* respectively.
 
-Note that you should *clean* the experimental results (See subsection [Clean](#clean)) before you *run* this example again.
-
 ## Clean
 
 To remove the scripts and log files on servers as well as the log files on local, execute the following:

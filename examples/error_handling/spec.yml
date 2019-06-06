@@ -8,6 +8,7 @@ description: Show the ability to handle various kinds of errors
 # Experiments
 ################################################################################
 
+# The main experiments
 experiments:
 - name: Experiment 1
   description: Example experiment 1

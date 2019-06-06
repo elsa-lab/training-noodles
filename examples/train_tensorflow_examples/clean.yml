@@ -8,8 +8,18 @@ description: Clean everything done by "run" commands
 # Experiments
 ################################################################################
 
+# The default properties for each experiment
 experiment_default:
   description: Clean everything done by "run" commands
+  envs:
+    CONDA_DIR: $HOME/anaconda3
+    CONDA_ENV_NAME: noodles_test
+    GIT_REPO_DIR: $HOME/TensorFlow-Examples/
+    LOCAL_DIR: examples/train_tensorflow_examples/
+    LOCK_FILE_PATH: $HOME/noodles.lock
+    MARKER_PATH: $HOME/marker_$EXPERIMENT.txt
+    STDERR_PATH: $HOME/tensorflow_results.$EXPERIMENT.stderr.log
+    STDOUT_PATH: $HOME/tensorflow_results.$EXPERIMENT.stdout.log
   requirements:
     clean:
     - has_lock_file: "==No"
@@ -28,45 +38,29 @@ experiment_default:
       - "rm -f $MARKER_PATH"
       - "echo Removing lock file"
       - "rm -f $LOCK_FILE_PATH"
-      - "local:echo Removing local experimental results"
-      - "local:rm -f $LOCAL_DIR/*.log"
 
+# The main experiments
 experiments:
 - name: Clean stuff of experiment 1
   envs:
-    TMUX_SESSION_NAME: test/exp1
-    LOCK_FILE_PATH: $HOME/noodles.lock
-    MARKER_PATH: $HOME/marker_exp1.txt
-    CONDA_DIR: $HOME/anaconda3
-    CONDA_ENV_NAME: noodles_test
-    GIT_REPO_DIR: $HOME/TensorFlow-Examples
-    STDOUT_PATH: $HOME/exp1.stdout.log
-    STDERR_PATH: $HOME/exp1.stderr.log
-    LOCAL_DIR: examples/train_tensorflow_examples/
-
+    EXPERIMENT: exp1
 - name: Clean stuff of experiment 2
   envs:
-    TMUX_SESSION_NAME: test/exp2
-    LOCK_FILE_PATH: $HOME/noodles.lock
-    MARKER_PATH: $HOME/marker_exp2.txt
-    CONDA_DIR: $HOME/anaconda3
-    CONDA_ENV_NAME: noodles_test
-    GIT_REPO_DIR: $HOME/TensorFlow-Examples
-    STDOUT_PATH: $HOME/exp2.stdout.log
-    STDERR_PATH: $HOME/exp2.stderr.log
-    LOCAL_DIR: examples/train_tensorflow_examples/
-
+    EXPERIMENT: exp2
 - name: Clean stuff of experiment 3
   envs:
-    TMUX_SESSION_NAME: test/exp3
-    LOCK_FILE_PATH: $HOME/noodles.lock
-    MARKER_PATH: $HOME/marker_exp3.txt
-    CONDA_DIR: $HOME/anaconda3
-    CONDA_ENV_NAME: noodles_test
-    GIT_REPO_DIR: $HOME/TensorFlow-Examples
-    STDOUT_PATH: $HOME/exp3.stdout.log
-    STDERR_PATH: $HOME/exp3.stderr.log
-    LOCAL_DIR: examples/train_tensorflow_examples/
+    EXPERIMENT: exp3
+
+# Runs after the main experiments have finished
+after_all_experiments:
+- name: Clean local
+  description: Clean local experimental results
+  # Override the default requirements
+  requirements: {}
+  commands:
+    clean:
+    - "local:echo Removing local experimental results"
+    - "local:rm -f $LOCAL_DIR/*.log"
 
 ################################################################################
 # Servers

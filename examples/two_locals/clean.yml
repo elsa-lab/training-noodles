@@ -8,6 +8,7 @@ description: Clean the logs produced by "run" experiments
 # Experiments
 ################################################################################
 
+# The main experiments
 experiments:
 - name: Clean
   description: Clean the logs

@@ -8,11 +8,16 @@ description: Run two Tmux sessions with different delays on local machines
 # Experiments
 ################################################################################
 
+# The default properties for each experiment
+experiment_default:
+  envs:
+    TMUX_SESSION_PREFIX: test
+    OUTPUT_PATH: examples/local_tmux/output.log
+
+# Runs before the start of main experiments
 before_all_experiments:
 - name: Kill short and long Tmux sessions
   description: Kill short and long Tmux sessions before the main experiments start
-  envs:
-    TMUX_SESSION_PREFIX: test
   commands:
     run:
     - |-
@@ -20,15 +25,13 @@ before_all_experiments:
     - |-
       tmux kill-ses -t "$TMUX_SESSION_PREFIX/long_tmux" 2> /dev/null || true
 
-# Main experiments go here
+# The main experiments
 experiments:
 - name: Short Tmux
   description: Run tmux session, delay for 10 seconds, and write current time to output
   envs:
-    TMUX_SESSION_PREFIX: test
     NAME: short_tmux
     SCRIPT_PATH: examples/local_tmux/script1.sh
-    OUTPUT_PATH: examples/local_tmux/output.log
     DELAY: 10
   commands:
     run:
@@ -47,11 +50,9 @@ experiments:
 - name: Long Tmux
   description: After "Short Tmux" has finished, delay for 30 seconds, and delete the output produced by "Short Tmux"
   envs:
-    TMUX_SESSION_PREFIX: test
     NAME: long_tmux
     OTHER_NAME: short_tmux
     SCRIPT_PATH: examples/local_tmux/script2.sh
-    OUTPUT_PATH: examples/local_tmux/output.log
     DELAY: 30
   requirements:
     # We require that the short Tmux session is not present when running this

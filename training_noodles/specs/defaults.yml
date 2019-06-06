@@ -10,9 +10,6 @@ description: |-
 # Experiments
 ################################################################################
 
-# Runs before the start of main experiments
-before_all_experiments: []
-
 # The default properties for each experiment
 experiment_default:
   name: <default>
@@ -21,6 +18,9 @@ experiment_default:
   requirements: {}
   commands: {}
   write_outputs: {}
+
+# Runs before the start of main experiments
+before_all_experiments: []
 
 # The main experiments
 experiments: []

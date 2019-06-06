@@ -8,6 +8,7 @@ description: Run commands on two local machines
 # Experiments
 ################################################################################
 
+# The main experiments
 experiments:
 - name: Experiment 1
   description: Example experiment 1

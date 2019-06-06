@@ -8,6 +8,7 @@ description: Clean the uploaded scripts and log files
 # Experiments
 ################################################################################
 
+# The main experiments
 experiments:
 - name: Clean experiment 1
   description: Clean the script and log on server
@@ -77,6 +78,6 @@ requirements:
 ################################################################################
 
 # The interval to run each deployment round
-round_interval: 10
+round_interval: 0
 # The interval to deploy each experiment in each round
 deployment_interval: 0

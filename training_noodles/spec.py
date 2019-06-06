@@ -9,8 +9,8 @@ from training_noodles.utils import update_dict_with_missing
 # Set the path to default spec
 default_spec_path = 'training_noodles/specs/defaults.yml'
 
-# Set root keys
-root_keys = [
+# Set keys to copy from default spec
+keys_to_copy = [
     'name',
     'description',
     'before_all_experiments',
@@ -24,16 +24,6 @@ root_keys = [
     'deployment_interval',
     'check_any_errors',
     'error_handlers',
-]
-
-# Set experiment spec keys
-exp_spec_keys = [
-    '*',
-]
-
-# Set server spec keys
-server_spec_keys = [
-    '*',
 ]
 
 
@@ -51,10 +41,10 @@ def read_user_spec(args):
     logging.debug('Original user spec->\n{}'.format(json.dumps(user_spec)))
 
     # Fill missing values with default values
-    _fill_missing_with_defaults(default_spec, user_spec, root_keys)
+    _fill_missing_with_defaults(default_spec, user_spec, keys_to_copy)
 
     # Fill missing values in experiment specs
-    _fill_missing_in_experiment_specs(user_spec)
+    _fill_missing_in_stage_specs(user_spec)
 
     # Fill missing values in server specs
     _fill_missing_in_server_specs(user_spec)
@@ -103,17 +93,32 @@ def _split_path_and_experiments(spec_path):
     return path, experiments
 
 
-def _fill_missing_in_experiment_specs(user_spec):
+def _fill_missing_in_stage_specs(user_spec):
+    # Set the stages as filling targets
+    stages = [
+        'before_all_experiments',
+        'experiments',
+        'after_all_experiments',
+    ]
+
     # Get default experiment spec
     default_exp_spec = user_spec.get('experiment_default', {})
 
-    # Get experiment specs
-    exps_spec = user_spec.get('experiments', [])
+    # Set keys to copy
+    keys = [
+        '*',
+        'envs/*',
+    ]
 
-    # Iterate each experiment spec
-    for exp_spec in exps_spec:
-        # Fill missing values
-        _fill_missing_with_defaults(default_exp_spec, exp_spec, exp_spec_keys)
+    # Iterate each stage
+    for stage in stages:
+        # Get experiment specs
+        exps_spec = user_spec.get(stage, [])
+
+        # Iterate each experiment spec
+        for exp_spec in exps_spec:
+            # Fill missing values
+            _fill_missing_with_defaults(default_exp_spec, exp_spec, keys)
 
 
 def _fill_missing_in_server_specs(user_spec):
@@ -123,11 +128,13 @@ def _fill_missing_in_server_specs(user_spec):
     # Get server specs
     servers_spec = user_spec.get('servers', [])
 
+    # Set keys to copy
+    keys = ['*']
+
     # Iterate each server spec
     for server_spec in servers_spec:
         # Fill missing values
-        _fill_missing_with_defaults(
-            default_server_spec, server_spec, server_spec_keys)
+        _fill_missing_with_defaults(default_server_spec, server_spec, keys)
 
 
 def _fill_missing_with_defaults(default_spec, user_spec, keys):

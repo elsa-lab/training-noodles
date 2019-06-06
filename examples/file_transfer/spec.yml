@@ -8,6 +8,12 @@ description: Upload files to run on servers and download the results
 # Experiments
 ################################################################################
 
+# The default properties for each experiment
+experiment_default:
+  envs:
+    LOCAL_DIR: examples/file_transfer
+
+# The main experiments
 experiments:
 
 ### Upload Experiments ###
@@ -15,21 +21,29 @@ experiments:
 - name: Upload experiment 1
   description: Upload simple script to a server
   envs:
-    LOCAL_DIR: examples/file_transfer
     SCRIPT: remote_experiment1.sh
   requirements:
     run:
     - get_random_number: "<=1"
   commands:
-    run: "local:scp $LOCAL_DIR/$SCRIPT $NOODLES_SERVER_AUTHORITY:~/$SCRIPT"
+    run:
+    # Remove old scripts on remote
+    - "remote:rm -f ~/remote_experiment1.sh"
+    - "remote:rm -f ~/remote_experiment2.sh"
+    # Copy script from local to remote
+    - "local:scp $LOCAL_DIR/$SCRIPT $NOODLES_SERVER_AUTHORITY:~/$SCRIPT"
 
 - name: Upload experiment 2
   description: Upload simple script to a server
   envs:
-    LOCAL_DIR: examples/file_transfer
     SCRIPT: remote_experiment2.sh
   commands:
-    run: "local:scp $LOCAL_DIR/$SCRIPT $NOODLES_SERVER_AUTHORITY:~/$SCRIPT"
+    run:
+    # Remove old scripts on remote
+    - "remote:rm -f ~/remote_experiment1.sh"
+    - "remote:rm -f ~/remote_experiment2.sh"
+    # Copy script from local to remote
+    - "local:scp $LOCAL_DIR/$SCRIPT $NOODLES_SERVER_AUTHORITY:~/$SCRIPT"
 
 ### Run Experiments ###
 
@@ -64,7 +78,6 @@ experiments:
 - name: Download experimental result 1
   description: Download experimental result from the server
   envs:
-    LOCAL_DIR: examples/file_transfer
     SCRIPT: remote_experiment1.sh
     LOG: exp1_result.log
   depends_on:
@@ -79,7 +92,6 @@ experiments:
 - name: Download experimental result 2
   description: Download experimental result from the server
   envs:
-    LOCAL_DIR: examples/file_transfer
     SCRIPT: remote_experiment2.sh
     LOG: exp2_result.log
   depends_on:

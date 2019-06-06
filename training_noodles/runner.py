@@ -643,14 +643,17 @@ class Runner:
         envs = self._get_experiment_details(exp_spec, 'envs')
 
         # Add environment variables of the satisfied server
-        server_envs = self._build_server_envs(server_spec, envs)
+        server_envs = self._build_extra_envs(exp_spec, server_spec, envs)
 
         # Merge environment variables and return
         return {**envs, **server_envs}
 
-    def _build_server_envs(self, server_spec, envs):
-        # Build environment variables
-        server_envs = {
+    def _build_extra_envs(self, exp_spec, server_spec, envs):
+        # Build extra environment variables
+        extra_envs = {
+            # Experiment
+            'NOODLES_EXPERIMENT_NAME': exp_spec.get('name', ''),
+            # Server
             'NOODLES_SERVER_NAME': server_spec.get('name', ''),
             'NOODLES_SERVER_PRIVATE_KEY_PATH':
                 server_spec.get('private_key_path', ''),
@@ -662,12 +665,12 @@ class Runner:
         }
 
         # Evaluate values in environment variables
-        for key, expr in server_envs.items():
+        for key, expr in extra_envs.items():
             # Set evaluated values
-            server_envs[key] = self._evaluate_expression(expr, envs=envs)
+            extra_envs[key] = self._evaluate_expression(expr, envs=envs)
 
         # Return evaluated environment variables
-        return server_envs
+        return extra_envs
 
     def _build_server_authority(self, server_spec):
         # Get username
