@@ -8,7 +8,7 @@ from training_noodles.cli import (
 from training_noodles.utils import split_by_scheme, wrap_with_list
 
 
-def eval_expression_on_local(expr, envs={}):
+def evaluate_expression_on_local(expr, envs={}):
     # Build endpoint command
     endpoint_command = _build_local_command()
 
@@ -249,6 +249,7 @@ def _delete_temp_files(temp_files):
         os.unlink(temp_files['stdout_path'])
         os.unlink(temp_files['stderr_path'])
     except:
+        # Only log the exception, don't raise it
         logging.exception(('Failed to delete temporary files,' +
                            ' ignore now: {}').format(temp_files))
 

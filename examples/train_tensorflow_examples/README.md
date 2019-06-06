@@ -41,7 +41,7 @@ To run this example, use project root directory as working directory and execute
 noodles run examples/train_tensorflow_examples/spec.yml
 ```
 
-It may take a while for each phase to complete. After a successful execution, you should find 6 logs downloaded in the directory `examples/train_tensorflow_examples`.
+It may take a while for each phase to complete. After a successful execution, you should find 6 log files downloaded in the directory `examples/train_tensorflow_examples`. STDOUT and STDERR outputs of all experiments are written into another 18 log files in the directory `examples/train_tensorflow_examples`.
 
 ## Automatically Clean
 

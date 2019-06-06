@@ -20,6 +20,7 @@ experiment_default:
   depends_on: {}
   requirements: {}
   commands: {}
+  write_outputs: {}
 
 # The main experiments
 experiments: []

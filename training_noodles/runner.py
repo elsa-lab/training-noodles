@@ -5,7 +5,7 @@ import re
 import time
 
 from training_noodles.remote import (
-    eval_expression_on_local, run_commands, get_error_message)
+    evaluate_expression_on_local, run_commands, get_error_message)
 from training_noodles.utils import (
     match_full, split_by_scheme, update_dict_with_missing, wrap_with_list)
 
@@ -23,6 +23,10 @@ class Runner:
 
         # Create a logger
         self.logger = logging.getLogger(name='run')
+
+    ############################################################################
+    # Deployment
+    ############################################################################
 
     def run(self):
         """ Deploy all the experiments until finish.
@@ -183,9 +187,16 @@ class Runner:
                 # Log the deployment
                 self._log_deployment_to_server(exp_name, server_spec)
 
+                # Build the enviornment variables
+                envs = self._build_experiment_envs(exp_spec, server_spec)
+
                 # Deploy the experiment to the server
-                status = self._deploy_experiment_to_server(
-                    exp_spec, server_spec)
+                status, stdout, stderr = self._deploy_experiment_to_server(
+                    exp_spec, server_spec, envs)
+
+                # Write outputs to either terminal or files
+                self._write_experiment_outputs(
+                    exp_spec, status, stdout, stderr, envs)
 
                 # Update deployed indexes by status
                 self._update_deployed_indexes_by_status(
@@ -208,28 +219,56 @@ class Runner:
         # deployments
         return deployed_exps, num_success
 
-    def _deploy_experiment_to_server(self, exp_spec, server_spec):
+    def _deploy_experiment_to_server(self, exp_spec, server_spec, envs):
         # Get experiment commands
         commands = self._get_experiment_details(exp_spec, 'commands')
 
-        # Get experiment environment variables
-        envs = self._get_experiment_details(exp_spec, 'envs')
-
-        # Add environment variables of the satisfied server
-        server_envs = self._build_server_envs(server_spec, envs)
-
-        # Merge environment variables
-        envs = {**envs, **server_envs}
-
         # Deploy the experiment to the server
-        status, results = self._run_commands(
+        status, stdout, stderr = self._run_commands(
             server_spec, commands, envs=envs)
 
-        # Log the results
-        self.logger.info('Commands results->\n{}'.format(results))
+        # Return the status and outputs
+        return status, stdout, stderr
 
-        # Return the status
-        return status
+    def _write_experiment_outputs(
+            self, exp_spec, status, stdout, stderr, envs):
+        # Get experiment outputs
+        write_outputs = self._get_experiment_details(exp_spec, 'write_outputs')
+
+        # Get STDOUT and STDERR output paths
+        stdout_path = write_outputs.get('stdout_to', None)
+        stderr_path = write_outputs.get('stderr_to', None)
+
+        # Check whether to write the STDOUT to the file
+        if stdout_path is None:
+            self.logger.info(
+                'Commands output from STDOUT->\n{}'.format(stdout))
+        else:
+            # Evaluate the path
+            stdout_path = self._evaluate_expression(stdout_path, envs=envs)
+
+            # Write the STDOUT to the file
+            self._write_to_file(stdout, stdout_path)
+
+            # Log the write
+            self.logger.info(
+                'STDOUT output is written to "{}"'.format(stdout_path))
+
+        # Check whether to write STDERR to the file
+        if stderr_path is None:
+            if len(stderr) > 0:
+                self.logger.warning(
+                    'Commands output from STDERR->\n{}'.format(stderr))
+        else:
+            # Evaluate the path
+            stderr_path = self._evaluate_expression(stderr_path, envs=envs)
+
+            # Write the STDERR to the file
+            self._write_to_file(stderr, stderr_path)
+
+            # Log the write
+            self.logger.info(
+                'STDERR output is written to "{}"'.format(stderr_path))
 
     def _update_deployed_indexes_by_status(
             self, status, deployed_exps, deployed_servers, exp_idx, server_idx,
@@ -262,182 +301,9 @@ class Runner:
             # Should not reach here
             raise ValueError('Unknown status: {}'.format(status))
 
-    def _check_server_metrics(self, req_id, envs):
-        # Initialize the metric outputs
-        metrics = []
-
-        # Get requirement specs
-        reqs_spec = self._get_requirement_specs()
-
-        # Get server specs
-        servers_spec = self._get_server_specs()
-
-        # Iterate each server spec
-        for server_spec in servers_spec:
-            # Run the command until success
-            status = None
-
-            while status != 'success':
-                # Get name of the server
-                server_name = server_spec['name']
-
-                # Log the server and requirement ID
-                self._log_verbose(
-                    'Check requirement "{}" on server "{}"'.format(
-                        req_id, server_name))
-
-                # Get the requirement commands
-                req_commands = reqs_spec.get(req_id, None)
-
-                # Check whether the requirement command exists
-                if req_commands is None:
-                    self._raise_error(
-                        'Requirement ID does not exist: {}'.format(req_id))
-
-                # Run the remote command on server
-                status, results = self._run_commands(
-                    server_spec, req_commands, envs=envs)
-
-                # Take action according to the status
-                if status == 'success':
-                    # Log the results
-                    self.logger.debug('Metric results:->\n{}'.format(results))
-
-                    # Try to calculate mean metric of results
-                    metric = self._try_calc_mean(results)
-
-                    # Log the processed metric
-                    self.logger.debug('Processed metric->\n{}'.format(metric))
-
-                    # Add the metric to the list
-                    metrics.append(metric)
-
-                elif status == 'continue':
-                    # Log the continue
-                    self.logger.warning(
-                        ('Unsuccessful commands execution on server "{}",' +
-                         ' will continue->\n{}').format(
-                            server_name, req_commands))
-
-                    # Continue to next server spec
-                    break
-
-                elif status == 'retry':
-                    # Log the retry
-                    self.logger.warning(
-                        ('Unsuccessful commands execution on server "{}",' +
-                         ' will retry->\n{}').format(
-                            server_name, req_commands))
-
-                else:
-                    # Should not reach here
-                    raise ValueError('Unknown status: {}'.format(status))
-
-        # Return list of metrics for all servers
-        return metrics
-
-    def _run_commands(self, server_spec, commands, envs={}):
-        # Run the commands
-        all_results, debug_infos = run_commands(
-            server_spec, commands, envs=envs)
-
-        # Check errors
-        status = None
-        for results, debug_info in zip(all_results, debug_infos):
-            status = self._handle_errors(results, debug_info)
-
-            # Break when it has error status
-            if status != 'success':
-                break
-
-        # Get STDOUTs produced by inner commands
-        inner_stdouts = map(lambda x: x['inner_stdout'], all_results)
-
-        # Concatenate the STDOUTs
-        inner_stdout = ''.join(inner_stdouts)
-
-        # Return the error status and STDOUT
-        return status, inner_stdout
-
-    def _handle_errors(self, results, debug_info):
-        # Get error handling spec
-        check_any_errors = self.user_spec.get('check_any_errors', True)
-
-        # Determine whether to check any errors
-        if check_any_errors:
-            # Get error message
-            message = get_error_message(results, debug_info)
-        else:
-            # Set empty error message
-            message = ''
-
-        # Check whether there is any error message
-        if len(message) > 0:
-            # Get error handling action
-            action = self._check_error_handler_action(results)
-
-            # Take action
-            if action == 'continue':
-                self._log_verbose(message)
-            elif action == 'retry':
-                self._log_verbose(message)
-            elif action == 'abort':
-                self._raise_error(message)
-            else:
-                self._raise_error('Unknown error action "{}"'.format(action))
-
-            # Return error handling action
-            return action
-        else:
-            # Indicate no action should be taken
-            return 'success'
-
-    def _check_error_handler_action(self, results):
-        # Get error handler specs
-        error_handlers = self.user_spec.get('error_handlers', [])
-
-        # Iterate each error handler
-        for error_handler in error_handlers:
-            # Get return code to ignore
-            return_code = error_handler.get('return_code', None)
-
-            # Get STDERR pattern to ignore
-            stderr_pattern = error_handler.get('stderr_pattern', None)
-
-            # Check the return code
-            if isinstance(return_code, str):
-                match_return_code = match_full(
-                    return_code, results['return_code'])
-            else:
-                match_return_code = (results['return_code'] == return_code)
-
-            # Check whether it's a full match
-            match_stderr = match_full(stderr_pattern, results['inner_stderr'])
-
-            # Return code and STDERR must all be matched
-            if match_return_code and match_stderr:
-                # Get the name of the filter
-                name = error_handler.get('name', '')
-
-                # Get the action
-                action = error_handler.get('action', 'abort')
-
-                # Log the match
-                self._log_verbose(('Found error handler match with name "{}"' +
-                                   ' and action "{}"').format(name, action))
-
-                # Return the action
-                return action
-
-        # All filters do not apply, abort the runner
-        return 'abort'
-
-    def _count_experiments(self, stage):
-        # Get experiment specs
-        exps_spec = self._get_experiment_specs(stage)
-
-        # Return the count
-        return len(exps_spec)
+    ############################################################################
+    # Stage Deployment Management
+    ############################################################################
 
     def _filter_undeployed_experiments(self, stage, undeployed):
         # Initialize the list of undeployed experiments
@@ -457,12 +323,66 @@ class Runner:
         # Return the undeployed experiments
         return undeployed_exps
 
+    def _filter_satisfied_servers(self, satisfied, req_group, metrics):
+        # Iterate each requirement
+        for req_id, req_expr in req_group.items():
+            # Stop the search when there are no any satisfied servers left
+            if len(satisfied) <= 0:
+                break
+
+            # Parse the requirement expression
+            operator, value = self._parse_requirement_expression(req_expr)
+
+            # Log the requirement
+            self.logger.debug(('Requirement ID: "{}", Operator: "{}",' +
+                               ' Value: "{}"').format(
+                req_id, operator, value))
+
+            # Get the list of server metrics of the requirement
+            servers_metrics = metrics.get(req_id, None)
+
+            if servers_metrics is None:
+                self._raise_error(('Requirement ID "{}" should' +
+                                   ' be in metrics').format(req_id))
+
+            # Update the indexes of satisfied servers by comparing the
+            # server metric to the requirement value
+            satisfied = filter(lambda i: self._is_metric_satisfied(
+                servers_metrics[i], operator, value), satisfied)
+
+        # Return the filtered indexes
+        return set(satisfied)
+
     def _restore_unfiltered_indexes(self, undeployed, filtered_deployed):
         # Convert the set of undeployed indexes to list
         undeployed = list(undeployed)
 
         # Map the filtered deployed indexes to original undeployed indexes
         return set(map(lambda i: undeployed[i], filtered_deployed))
+
+    ############################################################################
+    # Experiment Deployment Management
+    ############################################################################
+
+    def _get_undeployed_experiment_dependencies(self, exp_names, exp_spec,
+                                                deployed):
+        # Get experiment dependencies
+        depends_on = self._get_experiment_details(exp_spec, 'depends_on')
+
+        # Convert the dependencies to set
+        depends_on = set(depends_on)
+
+        # Build a set of deployed experiment names
+        deployed_names = set(map(lambda i: exp_names[i], deployed))
+
+        # Calculate undeployed experiment names
+        undeployed_names = set(exp_names) - deployed_names
+
+        # Calculate the intersection of dependencies and undeployed names
+        undeployed_deps = depends_on.intersection(undeployed_names)
+
+        # Return the undeployed dependency names
+        return list(undeployed_deps)
 
     def _update_metrics_and_find_servers(self, exp_spec, metrics, deployed):
         # Get server specs
@@ -524,137 +444,6 @@ class Runner:
                 # Update the metrics
                 metrics[req_id] = server_metrics
 
-    def _filter_satisfied_servers(self, satisfied, req_group, metrics):
-        # Iterate each requirement
-        for req_id, req_expr in req_group.items():
-            # Stop the search when there are no any satisfied servers left
-            if len(satisfied) <= 0:
-                break
-
-            # Parse the requirement expression
-            operator, value = self._parse_requirement_expression(req_expr)
-
-            # Log the requirement
-            self.logger.debug(('Requirement ID: "{}", Operator: "{}",' +
-                               ' Value: "{}"').format(
-                req_id, operator, value))
-
-            # Get the list of server metrics of the requirement
-            servers_metrics = metrics.get(req_id, None)
-
-            if servers_metrics is None:
-                self._raise_error(('Requirement ID "{}" should' +
-                                   ' be in metrics').format(req_id))
-
-            # Update the indexes of satisfied servers by comparing the
-            # server metric to the requirement value
-            satisfied = filter(lambda i: self._is_metric_satisfied(
-                servers_metrics[i], operator, value), satisfied)
-
-        # Return the filtered indexes
-        return set(satisfied)
-
-    def _build_server_envs(self, server_spec, envs):
-        # Build environment variables
-        server_envs = {
-            'NOODLES_SERVER_NAME': server_spec.get('name', ''),
-            'NOODLES_SERVER_PRIVATE_KEY_PATH':
-                server_spec.get('private_key_path', ''),
-            'NOODLES_SERVER_PORT': server_spec.get('port', ''),
-            'NOODLES_SERVER_USERNAME': server_spec.get('username', ''),
-            'NOODLES_SERVER_HOSTNAME': server_spec.get('hostname', ''),
-            'NOODLES_SERVER_AUTHORITY':
-                self._build_server_authority(server_spec),
-        }
-
-        # Evaluate values in environment variables
-        for key, expr in server_envs.items():
-            # Convert to string
-            expr = str(expr)
-
-            # Skip the evaluation when the expression is empty
-            if expr == '':
-                continue
-
-            # Check whether any environment variables exist
-            m = re.match(r'(\$.+)|(\${.+})', expr)
-
-            if m is None:
-                continue
-
-            # Evaluate express until success
-            status = None
-
-            while status != 'success':
-                # Evaluate expression on local
-                results, debug_info = eval_expression_on_local(
-                    expr, envs=envs)
-
-                # Handle errors
-                status = self._handle_errors(results, debug_info)
-
-                # Take action according to the status
-                if status == 'success':
-                    # Set evaluated values
-                    server_envs[key] = results['inner_stdout']
-
-                elif status == 'continue':
-                    # Log the continue
-                    self.logger.warning(
-                        ('Unsuccessful expression evaluation, will' +
-                         ' continue->\n{}').format(expr))
-
-                    # Give up this evaluation
-                    break
-
-                elif status == 'retry':
-                    # Log the retry
-                    self.logger.warning(
-                        ('Unsuccessful expression evaluation, will' +
-                         ' retry->\n{}').format(expr))
-
-                else:
-                    # Should not reach here
-                    raise ValueError('Unknown status: {}'.format(status))
-
-        # Return evaluated environment variables
-        return server_envs
-
-    def _build_server_authority(self, server_spec):
-        # Get username
-        username = server_spec.get('username', None)
-
-        # Get hostname
-        hostname = server_spec.get('hostname', '')
-
-        # Check whether to include username
-        if username is None:
-            return '{}'.format(hostname)
-        else:
-            return '{}@{}'.format(username, hostname)
-
-    def _wait_for_next_round(self):
-        # Get round interval
-        round_interval = self.user_spec.get('round_interval', 0)
-
-        # Log the wait
-        self._log_verbose('Wait for next round for {}s'.format(
-            round_interval))
-
-        # Wait for some time
-        time.sleep(round_interval)
-
-    def _wait_for_next_deployment(self):
-        # Get deployment interval
-        deployment_interval = self.user_spec.get('deployment_interval', 0)
-
-        # Log the wait
-        self._log_verbose('Wait for next deployment for {}s'.format(
-            deployment_interval))
-
-        # Wait for some time
-        time.sleep(deployment_interval)
-
     def _should_update_metric(self, req_id, metrics):
         # Check whether the requirement ID contains any scheme (e.g.,
         # "static:cpu_usage", "dynamic:cpu_usage")
@@ -700,6 +489,84 @@ class Runner:
                 'Unknown scheme "{}" in requirement ID "{}"'.format(
                     scheme, req_id))
 
+    def _check_server_metrics(self, req_id, envs):
+        # Initialize the metric outputs
+        metrics = []
+
+        # Get requirement specs
+        reqs_spec = self._get_requirement_specs()
+
+        # Get server specs
+        servers_spec = self._get_server_specs()
+
+        # Iterate each server spec
+        for server_spec in servers_spec:
+            # Run the command until success
+            status = None
+
+            while status != 'success':
+                # Get name of the server
+                server_name = server_spec['name']
+
+                # Log the server and requirement ID
+                self._log_verbose(
+                    'Check requirement "{}" on server "{}"'.format(
+                        req_id, server_name))
+
+                # Get the requirement commands
+                req_commands = reqs_spec.get(req_id, None)
+
+                # Check whether the requirement command exists
+                if req_commands is None:
+                    self._raise_error(
+                        'Requirement ID does not exist: {}'.format(req_id))
+
+                # Run the remote command on server
+                status, stdout, _ = self._run_commands(
+                    server_spec, req_commands, envs=envs)
+
+                # Take action according to the status
+                if status == 'success':
+                    # Log the results
+                    self.logger.debug('Metric results:->\n{}'.format(stdout))
+
+                    # Try to calculate mean metric of results
+                    metric = self._try_calc_mean(stdout)
+
+                    # Log the processed metric
+                    self.logger.debug('Processed metric->\n{}'.format(metric))
+
+                    # Add the metric to the list
+                    metrics.append(metric)
+
+                elif status == 'continue':
+                    # Log the continue
+                    self.logger.warning(
+                        ('Unsuccessful commands execution on server "{}",' +
+                         ' will continue->\n{}').format(
+                            server_name, req_commands))
+
+                    # Continue to next server spec
+                    break
+
+                elif status == 'retry':
+                    # Log the retry
+                    self.logger.warning(
+                        ('Unsuccessful commands execution on server "{}",' +
+                         ' will retry->\n{}').format(
+                            server_name, req_commands))
+
+                else:
+                    # Should not reach here
+                    raise ValueError('Unknown status: {}'.format(status))
+
+        # Return list of metrics for all servers
+        return metrics
+
+    ############################################################################
+    # Metric Checking
+    ############################################################################
+
     def _is_metric_satisfied(self, metric, operator, value):
         try:
             if operator == '==':
@@ -717,9 +584,10 @@ class Runner:
             else:
                 self._raise_error('Unknown operator: {}'.format(operator))
         except:
-            self._raise_error(
+            self.logger.exception(
                 'Could not compare the values: "{}" "{}" "{}"'.format(
                     metric, operator, value))
+            raise
 
     def _parse_requirement_expression(self, req_expr):
         # Remove whitespaces
@@ -741,6 +609,7 @@ class Runner:
             try:
                 value = ast.literal_eval(value)
             except:
+                # Ignore the exception
                 pass
 
         # Return operator and value
@@ -764,6 +633,213 @@ class Runner:
             result = results
 
         return result
+
+    ############################################################################
+    # Extra Environment Variables Provided by Noodles
+    ############################################################################
+
+    def _build_experiment_envs(self, exp_spec, server_spec):
+        # Get experiment environment variables
+        envs = self._get_experiment_details(exp_spec, 'envs')
+
+        # Add environment variables of the satisfied server
+        server_envs = self._build_server_envs(server_spec, envs)
+
+        # Merge environment variables and return
+        return {**envs, **server_envs}
+
+    def _build_server_envs(self, server_spec, envs):
+        # Build environment variables
+        server_envs = {
+            'NOODLES_SERVER_NAME': server_spec.get('name', ''),
+            'NOODLES_SERVER_PRIVATE_KEY_PATH':
+                server_spec.get('private_key_path', ''),
+            'NOODLES_SERVER_PORT': server_spec.get('port', ''),
+            'NOODLES_SERVER_USERNAME': server_spec.get('username', ''),
+            'NOODLES_SERVER_HOSTNAME': server_spec.get('hostname', ''),
+            'NOODLES_SERVER_AUTHORITY':
+                self._build_server_authority(server_spec),
+        }
+
+        # Evaluate values in environment variables
+        for key, expr in server_envs.items():
+            # Set evaluated values
+            server_envs[key] = self._evaluate_expression(expr, envs=envs)
+
+        # Return evaluated environment variables
+        return server_envs
+
+    def _build_server_authority(self, server_spec):
+        # Get username
+        username = server_spec.get('username', None)
+
+        # Get hostname
+        hostname = server_spec.get('hostname', '')
+
+        # Check whether to include username
+        if username is None:
+            return '{}'.format(hostname)
+        else:
+            return '{}@{}'.format(username, hostname)
+
+    ############################################################################
+    # Command Execution
+    ############################################################################
+
+    def _run_commands(self, server_spec, commands, envs={}):
+        # Run the commands
+        all_results, debug_infos = run_commands(
+            server_spec, commands, envs=envs)
+
+        # Check errors
+        status = None
+        for results, debug_info in zip(all_results, debug_infos):
+            status = self._handle_errors(results, debug_info)
+
+            # Break when it has error status
+            if status != 'success':
+                break
+
+        # Combine STDOUTs produced by inner commands
+        combined_stdout = self._combine_outputs(all_results, 'inner_stdout')
+
+        # Combine STDERRs produced by inner commands
+        combined_stderr = self._combine_outputs(all_results, 'inner_stderr')
+
+        # Return the error status, combined STDOUT and combined STDERR
+        return status, combined_stdout, combined_stderr
+
+    def _handle_errors(self, results, debug_info):
+        # Get error handling spec
+        check_any_errors = self._get_check_any_errors_spec()
+
+        # Determine whether to check any errors
+        if check_any_errors:
+            # Get error message
+            message = get_error_message(results, debug_info)
+        else:
+            # Set empty error message
+            message = ''
+
+        # Check whether there is any error message
+        if len(message) > 0:
+            # Get error handling action
+            action = self._check_error_handler_action(results)
+
+            # Take action
+            if action == 'continue':
+                self._log_verbose(message)
+            elif action == 'retry':
+                self._log_verbose(message)
+            elif action == 'abort':
+                self._raise_error(message)
+            else:
+                self._raise_error('Unknown error action "{}"'.format(action))
+
+            # Return error handling action
+            return action
+        else:
+            # Indicate no action should be taken
+            return 'success'
+
+    def _check_error_handler_action(self, results):
+        # Get error handler specs
+        error_handlers = self._get_error_handler_specs()
+
+        # Iterate each error handler
+        for error_handler in error_handlers:
+            # Get return code to ignore
+            return_code = error_handler.get('return_code', None)
+
+            # Get STDERR pattern to ignore
+            stderr_pattern = error_handler.get('stderr_pattern', None)
+
+            # Check the return code
+            if isinstance(return_code, str):
+                match_return_code = match_full(
+                    return_code, results['return_code'])
+            else:
+                match_return_code = (results['return_code'] == return_code)
+
+            # Check whether it's a full match
+            match_stderr = match_full(stderr_pattern, results['inner_stderr'])
+
+            # Return code and STDERR must all be matched
+            if match_return_code and match_stderr:
+                # Get the name of the filter
+                name = error_handler.get('name', '')
+
+                # Get the action
+                action = error_handler.get('action', 'abort')
+
+                # Log the match
+                self._log_verbose(('Found error handler match with name "{}"' +
+                                   ' and action "{}"').format(name, action))
+
+                # Return the action
+                return action
+
+        # All filters do not apply, abort the runner
+        return 'abort'
+
+    def _combine_outputs(self, all_results, output_type):
+        # Get outputs
+        outputs = map(lambda x: x[output_type], all_results)
+
+        # Concatenate the outputs and return
+        return ''.join(outputs)
+
+    def _evaluate_expression(self, expr, envs={}):
+        # Convert to string
+        expr = str(expr)
+
+        # Check whether any environment variables exist
+        m = re.match(r'(\$.+)|(\${.+})', expr)
+
+        # Return the original expression
+        if m is None:
+            return expr
+
+        # Evaluate express until success
+        status = None
+
+        while status != 'success':
+            # Evaluate expression on local
+            results, debug_info = evaluate_expression_on_local(expr, envs=envs)
+
+            # Handle errors
+            status = self._handle_errors(results, debug_info)
+
+            # Take action according to the status
+            if status == 'success':
+                # Return evaluated values
+                return results['inner_stdout']
+
+            elif status == 'continue':
+                # Log the continue
+                self.logger.warning(
+                    ('Unsuccessful expression evaluation, will' +
+                        ' continue->\n{}').format(expr))
+
+                # Give up this evaluation
+                break
+
+            elif status == 'retry':
+                # Log the retry
+                self.logger.warning(
+                    ('Unsuccessful expression evaluation, will' +
+                        ' retry->\n{}').format(expr))
+
+            else:
+                # Should not reach here
+                raise ValueError('Unknown status: {}'.format(status))
+
+        # Return the original expression
+        return expr
+
+    ############################################################################
+    # Experiment Spec Processing
+    ############################################################################
 
     def _get_experiment_details(self, exp_spec, detail_name):
         # Get the details
@@ -800,6 +876,8 @@ class Runner:
             return {}
         elif detail_name == 'commands':
             return {}
+        elif detail_name == 'write_outputs':
+            return {}
         else:
             self._raise_error('Unknown detail name: {}'.format(detail_name))
 
@@ -816,6 +894,9 @@ class Runner:
         elif detail_name == 'commands':
             # Return the corresponding type
             return details.get(self.command_type, [])
+        elif detail_name == 'write_outputs':
+            # Return the corresponding type
+            return details.get(self.command_type, {})
         else:
             self._raise_error('Unknown detail name: {}'.format(detail_name))
 
@@ -832,8 +913,28 @@ class Runner:
         elif detail_name == 'commands':
             # Wrap the details in list and return
             return wrap_with_list(details)
+        elif detail_name == 'write_outputs':
+            # Return the dict
+            return details
         else:
             self._raise_error('Unknown detail name: {}'.format(detail_name))
+
+    def _count_experiments(self, stage):
+        # Get experiment specs
+        exps_spec = self._get_experiment_specs(stage)
+
+        # Return the count
+        return len(exps_spec)
+
+    def _get_experiment_specs(self, stage):
+        # Check whether the stage is in allowed list
+        allowed_stages = ['before_all_experiments', 'experiment_default',
+                          'experiments', 'after_all_experiments']
+
+        if stage not in allowed_stages:
+            self._raise_error('Unexpected stage: {}'.format(stage))
+
+        return self._get_stage_specs(stage)
 
     def _get_experiment_names(self, exps_spec):
         return [exp_spec.get('name', '') for exp_spec in exps_spec]
@@ -845,34 +946,36 @@ class Runner:
         # Check whether the commands are empty
         return len(commands) <= 0
 
-    def _get_undeployed_experiment_dependencies(self, exp_names, exp_spec,
-                                                deployed):
-        # Get experiment dependencies
-        depends_on = self._get_experiment_details(exp_spec, 'depends_on')
+    ############################################################################
+    # Time Delays
+    ############################################################################
 
-        # Convert the dependencies to set
-        depends_on = set(depends_on)
+    def _wait_for_next_round(self):
+        # Get round interval
+        round_interval = self._get_round_interval_spec()
 
-        # Build a set of deployed experiment names
-        deployed_names = set(map(lambda i: exp_names[i], deployed))
+        # Log the wait
+        self._log_verbose('Wait for next round for {}s'.format(round_interval))
 
-        # Calculate undeployed experiment names
-        undeployed_names = set(exp_names) - deployed_names
+        # Wait for some time
+        time.sleep(round_interval)
 
-        # Calculate the intersection of dependencies and undeployed names
-        undeployed_deps = depends_on.intersection(undeployed_names)
+    def _wait_for_next_deployment(self):
+        # Get deployment interval
+        deployment_interval = self._get_deployment_interval_spec()
 
-        # Return the undeployed dependency names
-        return list(undeployed_deps)
+        # Log the wait
+        self._log_verbose('Wait for next deployment for {}s'.format(
+            deployment_interval))
 
-    def _get_experiment_specs(self, stage):
-        # Check whether the stage is in allowed list
-        allowed_stages = ['before_all_experiments', 'experiment_default',
-                          'experiments', 'after_all_experiments']
+        # Wait for some time
+        time.sleep(deployment_interval)
 
-        if stage not in allowed_stages:
-            self._raise_error('Unexpected stage: {}'.format(stage))
+    ############################################################################
+    # Getting Specs
+    ############################################################################
 
+    def _get_stage_specs(self, stage):
         return self.user_spec.get(stage, {})
 
     def _get_server_specs(self):
@@ -880,6 +983,35 @@ class Runner:
 
     def _get_requirement_specs(self):
         return self.user_spec.get('requirements', {})
+
+    def _get_round_interval_spec(self):
+        return self.user_spec.get('round_interval', 0)
+
+    def _get_deployment_interval_spec(self):
+        return self.user_spec.get('deployment_interval', 0)
+
+    def _get_check_any_errors_spec(self):
+        return self.user_spec.get('check_any_errors', True)
+
+    def _get_error_handler_specs(self):
+        return self.user_spec.get('error_handlers', [])
+
+    ############################################################################
+    # Writing to Files
+    ############################################################################
+
+    def _write_to_file(self, contents, path):
+        try:
+            with open(path, 'w') as fp:
+                fp.write(contents)
+        except:
+            self.logger.exception(
+                'Could not write contents to file "{}"'.format(path))
+            raise
+
+    ############################################################################
+    # Logging
+    ############################################################################
 
     def _log_round(self, round_idx, stage, undeployed):
         if self.verbose:
@@ -920,6 +1052,10 @@ class Runner:
     def _log_verbose(self, message):
         if self.verbose:
             self.logger.info(message)
+
+    ############################################################################
+    # Error Handling
+    ############################################################################
 
     def _raise_error(self, message):
         self.logger.error(message)
