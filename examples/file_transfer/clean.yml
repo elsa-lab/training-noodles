@@ -14,26 +14,26 @@ experiments:
   envs:
     SCRIPT: remote_experiment1.sh
     LOG: exp1_result.log
+  requirements:
+    clean:
+    - find_experiment: "==Yes"
   commands:
     clean:
     - "remote:rm -f ~/$LOG"
     - "remote:rm -f ~/$SCRIPT"
-  requirements:
-    clean:
-    - find_experiment: "==1"
 
 - name: Clean experiment 2
   description: Clean the script and log on server
   envs:
     SCRIPT: remote_experiment2.sh
     LOG: exp2_result.log
+  requirements:
+    clean:
+    - find_experiment: "==Yes"
   commands:
     clean:
     - "remote:rm -f ~/$LOG"
     - "remote:rm -f ~/$SCRIPT"
-  requirements:
-    clean:
-    - find_experiment: "==1"
 
 - name: Clean local results
   description: Clean downloaded log files
@@ -69,9 +69,8 @@ servers:
 
 # Commands to run to check requirements on servers
 requirements:
-  # Count the number of output file. The result is 1 if the output file exists,
-  # otherwise 0.
-  find_experiment: "ls -al ~ | grep $SCRIPT | wc -l"
+  # Check whether the script file exists
+  find_experiment: "[ -f $SCRIPT ] && echo -n Yes || echo -n No"
 
 ################################################################################
 # Deployment

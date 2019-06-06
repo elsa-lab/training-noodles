@@ -53,6 +53,11 @@ experiments:
     SCRIPT_PATH: examples/local_tmux/script2.sh
     OUTPUT_PATH: examples/local_tmux/output.log
     DELAY: 30
+  requirements:
+    # We require that the short Tmux session is not present when running this
+    # experiment
+    run:
+    - other_tmux_count: "<=0"
   commands:
     run:
     # Write the commands into the script
@@ -66,11 +71,6 @@ experiments:
     # Stop the Tmux session
     stop: |-
       tmux kill-ses -t "$TMUX_SESSION_PREFIX/$NAME" 2> /dev/null || true
-  requirements:
-    # We require that the short Tmux session is not present when running this
-    # experiment
-    run:
-    - other_tmux_count: "==0"
 
 ################################################################################
 # Servers

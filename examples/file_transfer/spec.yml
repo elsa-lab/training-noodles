@@ -17,11 +17,11 @@ experiments:
   envs:
     LOCAL_DIR: examples/file_transfer
     SCRIPT: remote_experiment1.sh
-  commands:
-    run: "local:scp $LOCAL_DIR/$SCRIPT $NOODLES_SERVER_AUTHORITY:~/$SCRIPT"
   requirements:
     run:
-    - get_random_number: "==1"
+    - get_random_number: "<=1"
+  commands:
+    run: "local:scp $LOCAL_DIR/$SCRIPT $NOODLES_SERVER_AUTHORITY:~/$SCRIPT"
 
 - name: Upload experiment 2
   description: Upload simple script to a server
@@ -40,11 +40,11 @@ experiments:
   depends_on:
     run:
     - Upload experiment 1
-  commands:
-    run: "remote:bash -s < ~/$SCRIPT"
   requirements:
     run:
-    - find_experiment: "==1"
+    - find_experiment: "==Yes"
+  commands:
+    run: "remote:bash -s < ~/$SCRIPT"
 
 - name: Run experiment 2
   description: Run the simple script on server
@@ -53,11 +53,11 @@ experiments:
   depends_on:
     run:
     - Upload experiment 2
-  commands:
-    run: "remote:bash -s < ~/$SCRIPT"
   requirements:
     run:
-    - find_experiment: "==1"
+    - find_experiment: "==Yes"
+  commands:
+    run: "remote:bash -s < ~/$SCRIPT"
 
 ### Download Experimental Results ###
 
@@ -70,11 +70,11 @@ experiments:
   depends_on:
     run:
     - Run experiment 1
-  commands:
-    run: "local:scp $NOODLES_SERVER_AUTHORITY:~/$LOG $LOCAL_DIR/$LOG"
   requirements:
     run:
-    - find_experiment: "==1"
+    - find_experiment: "==Yes"
+  commands:
+    run: "local:scp $NOODLES_SERVER_AUTHORITY:~/$LOG $LOCAL_DIR/$LOG"
 
 - name: Download experimental result 2
   description: Download experimental result from the server
@@ -85,11 +85,11 @@ experiments:
   depends_on:
     run:
     - Run experiment 2
-  commands:
-    run: "local:scp $NOODLES_SERVER_AUTHORITY:~/$LOG $LOCAL_DIR/$LOG"
   requirements:
     run:
-    - find_experiment: "==1"
+    - find_experiment: "==Yes"
+  commands:
+    run: "local:scp $NOODLES_SERVER_AUTHORITY:~/$LOG $LOCAL_DIR/$LOG"
 
 ################################################################################
 # Servers
@@ -119,9 +119,8 @@ servers:
 requirements:
   # Get random number between integers 1 and 2 on server
   get_random_number: "echo $(( ( RANDOM % 2 )  + 1 ))"
-  # Count the number of output file. The result is 1 if the output file exists,
-  # otherwise 0.
-  find_experiment: "ls -al ~ | grep $SCRIPT | wc -l"
+  # Check whether the script file exists
+  find_experiment: "[ -f $SCRIPT ] && echo -n Yes || echo -n No"
 
 ################################################################################
 # Deployment

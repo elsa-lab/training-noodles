@@ -189,8 +189,8 @@ class Runner:
 
                 # Update deployed indexes by status
                 self._update_deployed_indexes_by_status(
-                    status, exp_idx, server_idx, deployed_exps,
-                    deployed_servers)
+                    status, deployed_exps, deployed_servers, exp_idx,
+                    server_idx, exp_name)
 
                 # Increment the number of successful deployments
                 if status == 'success' or status == 'continue':
@@ -231,8 +231,9 @@ class Runner:
         # Return the status
         return status
 
-    def _update_deployed_indexes_by_status(self, status, exp_idx, server_idx,
-                                           deployed_exps, deployed_servers):
+    def _update_deployed_indexes_by_status(
+            self, status, deployed_exps, deployed_servers, exp_idx, server_idx,
+            exp_name):
         # Take action according to the status
         if status == 'success':
             # Add the experiment index to the deployed experiment
@@ -245,7 +246,8 @@ class Runner:
 
         elif status == 'continue':
             # Log the continue
-            self.logger.warning('Unsuccessful deployment, will continue')
+            self.logger.warning(('Unsuccessful deployment of experiment' +
+                                 ' "{}", will continue').format(exp_name))
 
             # Give up this experiment by treating it as if it has been
             # deployed
@@ -253,7 +255,8 @@ class Runner:
 
         elif status == 'retry':
             # Log the retry
-            self.logger.warning('Unsuccessful deployment, will retry')
+            self.logger.warning(('Unsuccessful deployment of experiment' +
+                                 ' "{}", will retry').format(exp_name))
 
         else:
             # Should not reach here
@@ -276,11 +279,12 @@ class Runner:
 
             while status != 'success':
                 # Get name of the server
-                name = server_spec['name']
+                server_name = server_spec['name']
 
                 # Log the server and requirement ID
-                self._log_verbose(('Check requirement "{}"' +
-                                   ' on server "{}"').format(req_id, name))
+                self._log_verbose(
+                    'Check requirement "{}" on server "{}"'.format(
+                        req_id, server_name))
 
                 # Get the requirement commands
                 req_commands = reqs_spec.get(req_id, None)
@@ -311,7 +315,9 @@ class Runner:
                 elif status == 'continue':
                     # Log the continue
                     self.logger.warning(
-                        'Unsuccessful commands execution, will continue')
+                        ('Unsuccessful commands execution on server "{}",' +
+                         ' will continue->\n{}').format(
+                            server_name, req_commands))
 
                     # Continue to next server spec
                     break
@@ -319,7 +325,9 @@ class Runner:
                 elif status == 'retry':
                     # Log the retry
                     self.logger.warning(
-                        'Unsuccessful commands execution, will retry')
+                        ('Unsuccessful commands execution on server "{}",' +
+                         ' will retry->\n{}').format(
+                            server_name, req_commands))
 
                 else:
                     # Should not reach here
@@ -463,11 +471,11 @@ class Runner:
         # Initialize all indexes of servers
         satisfied = set(range(len(servers_spec)))
 
-        # Get experiment requirements
-        reqs_spec = self._get_experiment_details(exp_spec, 'requirements')
-
         # Get experiment environment variables
         envs = self._get_experiment_details(exp_spec, 'envs')
+
+        # Get experiment requirements
+        reqs_spec = self._get_experiment_details(exp_spec, 'requirements')
 
         # Log the search
         self._log_verbose('Find satisfied servers')
@@ -591,11 +599,19 @@ class Runner:
                     server_envs[key] = results['inner_stdout']
 
                 elif status == 'continue':
+                    # Log the continue
+                    self.logger.warning(
+                        ('Unsuccessful expression evaluation, will' +
+                         ' continue->\n{}').format(expr))
+
                     # Give up this evaluation
                     break
 
                 elif status == 'retry':
-                    pass
+                    # Log the retry
+                    self.logger.warning(
+                        ('Unsuccessful expression evaluation, will' +
+                         ' retry->\n{}').format(expr))
 
                 else:
                     # Should not reach here
@@ -776,44 +792,44 @@ class Runner:
         return self._wrap_details(detail_name, details)
 
     def _get_default_details(self, detail_name):
-        if detail_name == 'depends_on':
+        if detail_name == 'envs':
             return {}
-        elif detail_name == 'envs':
-            return {}
-        elif detail_name == 'commands':
+        elif detail_name == 'depends_on':
             return {}
         elif detail_name == 'requirements':
+            return {}
+        elif detail_name == 'commands':
             return {}
         else:
             self._raise_error('Unknown detail name: {}'.format(detail_name))
 
     def _get_corresponding_details(self, detail_name, details):
-        if detail_name == 'depends_on':
-            # Return the original details
-            return details.get(self.command_type, [])
-        elif detail_name == 'envs':
+        if detail_name == 'envs':
             # Return the original details
             return details
-        elif detail_name == 'commands':
-            # Return the corresponding type
+        elif detail_name == 'depends_on':
+            # Return the original details
             return details.get(self.command_type, [])
         elif detail_name == 'requirements':
+            # Return the corresponding type
+            return details.get(self.command_type, [])
+        elif detail_name == 'commands':
             # Return the corresponding type
             return details.get(self.command_type, [])
         else:
             self._raise_error('Unknown detail name: {}'.format(detail_name))
 
     def _wrap_details(self, detail_name, details):
-        if detail_name == 'depends_on':
-            # Wrap the details in list and return
-            return wrap_with_list(details)
-        elif detail_name == 'envs':
+        if detail_name == 'envs':
             # Return the dict
             return details
-        elif detail_name == 'commands':
+        elif detail_name == 'depends_on':
             # Wrap the details in list and return
             return wrap_with_list(details)
         elif detail_name == 'requirements':
+            # Wrap the details in list and return
+            return wrap_with_list(details)
+        elif detail_name == 'commands':
             # Wrap the details in list and return
             return wrap_with_list(details)
         else:

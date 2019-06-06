@@ -23,6 +23,9 @@ experiments:
     TF_EXAMPLE_URL: https://github.com/aymericdamien/TensorFlow-Examples.git
     CONDA_DIR: $HOME/anaconda3
     CONDA_ENV_NAME: noodles_test
+  requirements:
+    run:
+    - has_lock_file: "==No"
   commands:
     run:
     # Go to home directory
@@ -37,9 +40,6 @@ experiments:
     # Create a new conda environment
     - "echo Creating conda environment $CONDA_ENV_NAME on $NOODLES_SERVER_NAME"
     - "$CONDA_DIR/bin/conda create -y -n $CONDA_ENV_NAME python=3.6"
-  requirements:
-    run:
-    - has_lock_file: "==No"
 
 - name: Initialize server for Experiment 2
   description: Mark the server by a unique file name and download TensorFlow-Examples on the server
@@ -49,6 +49,9 @@ experiments:
     TF_EXAMPLE_URL: https://github.com/aymericdamien/TensorFlow-Examples.git
     CONDA_DIR: $HOME/anaconda3
     CONDA_ENV_NAME: noodles_test
+  requirements:
+    run:
+    - has_lock_file: "==No"
   commands:
     run:
     # Go to home directory
@@ -63,9 +66,6 @@ experiments:
     # Create a new conda environment
     - "echo Creating conda environment $CONDA_ENV_NAME on $NOODLES_SERVER_NAME"
     - "$CONDA_DIR/bin/conda create -y -n $CONDA_ENV_NAME python=3.6"
-  requirements:
-    run:
-    - has_lock_file: "==No"
 
 - name: Initialize server for Experiment 3
   description: Mark the server by a unique file name and download TensorFlow-Examples on the server
@@ -75,6 +75,9 @@ experiments:
     TF_EXAMPLE_URL: https://github.com/aymericdamien/TensorFlow-Examples.git
     CONDA_DIR: $HOME/anaconda3
     CONDA_ENV_NAME: noodles_test
+  requirements:
+    run:
+    - has_lock_file: "==No"
   commands:
     run:
     # Go to home directory
@@ -89,9 +92,6 @@ experiments:
     # Create a new conda environment
     - "echo Creating conda environment $CONDA_ENV_NAME on $NOODLES_SERVER_NAME"
     - "$CONDA_DIR/bin/conda create -y -n $CONDA_ENV_NAME python=3.6"
-  requirements:
-    run:
-    - has_lock_file: "==No"
 
 ### 2nd Phase: Run Experiments ###
 
@@ -108,6 +108,10 @@ experiments:
   depends_on:
     run:
     - Initialize server for Experiment 1
+  requirements:
+    run:
+    - has_lock_file: "==Yes"
+    - has_marker_file: "==Yes"
   commands:
     run:
       # Activate the newly created conda environment
@@ -119,10 +123,6 @@ experiments:
       - "echo Running TensorFlow example on $NOODLES_SERVER_NAME"
       - |-
         tmux new -d -s "$TMUX_SESSION_NAME" "python $EXPERIMENT_PATH > $STDOUT_PATH 2> $STDERR_PATH"
-  requirements:
-    run:
-    - has_lock_file: "==Yes"
-    - has_marker_file: "==Yes"
 
 - name: Run experiment 2
   description: Run experiment on server
@@ -137,6 +137,10 @@ experiments:
   depends_on:
     run:
     - Initialize server for Experiment 2
+  requirements:
+    run:
+    - has_lock_file: "==Yes"
+    - has_marker_file: "==Yes"
   commands:
     run:
       # Activate the newly created conda environment
@@ -148,10 +152,6 @@ experiments:
       - "echo Running TensorFlow example on $NOODLES_SERVER_NAME"
       - |-
         tmux new -d -s "$TMUX_SESSION_NAME" "python $EXPERIMENT_PATH > $STDOUT_PATH 2> $STDERR_PATH"
-  requirements:
-    run:
-    - has_lock_file: "==Yes"
-    - has_marker_file: "==Yes"
 
 - name: Run experiment 3
   description: Run experiment on server
@@ -166,6 +166,10 @@ experiments:
   depends_on:
     run:
     - Initialize server for Experiment 3
+  requirements:
+    run:
+    - has_lock_file: "==Yes"
+    - has_marker_file: "==Yes"
   commands:
     run:
       # Activate the newly created conda environment
@@ -177,10 +181,6 @@ experiments:
       - "echo Running TensorFlow example on $NOODLES_SERVER_NAME"
       - |-
         tmux new -d -s "$TMUX_SESSION_NAME" "python $EXPERIMENT_PATH > $STDOUT_PATH 2> $STDERR_PATH"
-  requirements:
-    run:
-    - has_lock_file: "==Yes"
-    - has_marker_file: "==Yes"
 
 ### 3rd Phase: Download Experimental Results ###
 
@@ -197,6 +197,11 @@ experiments:
   depends_on:
     run:
     - Run experiment 1
+  requirements:
+    run:
+    - has_lock_file: "==Yes"
+    - has_marker_file: "==Yes"
+    - tmux_count: "<=0"
   commands:
     run:
     # Run scp on local to download STDOUT and STDERR files to the local example directory
@@ -205,11 +210,6 @@ experiments:
       local:scp $NOODLES_SERVER_AUTHORITY:"$STDOUT_PATH $STDERR_PATH" $LOCAL_DIR
     # Remove the lock file
     - "rm -f $LOCK_FILE_PATH"
-  requirements:
-    run:
-    - has_lock_file: "==Yes"
-    - has_marker_file: "==Yes"
-    - tmux_count: "<=0"
 
 - name: Download experimental results 2
   description: Download experimental results from server
@@ -224,6 +224,11 @@ experiments:
   depends_on:
     run:
     - Run experiment 2
+  requirements:
+    run:
+    - has_lock_file: "==Yes"
+    - has_marker_file: "==Yes"
+    - tmux_count: "<=0"
   commands:
     run:
     # Run scp on local to download STDOUT and STDERR files to the local example directory
@@ -232,11 +237,6 @@ experiments:
       local:scp $NOODLES_SERVER_AUTHORITY:"$STDOUT_PATH $STDERR_PATH" $LOCAL_DIR
     # Remove the lock file
     - "rm -f $LOCK_FILE_PATH"
-  requirements:
-    run:
-    - has_lock_file: "==Yes"
-    - has_marker_file: "==Yes"
-    - tmux_count: "<=0"
 
 - name: Download experimental results 3
   description: Download experimental results from server
@@ -251,6 +251,11 @@ experiments:
   depends_on:
     run:
     - Run experiment 3
+  requirements:
+    run:
+    - has_lock_file: "==Yes"
+    - has_marker_file: "==Yes"
+    - tmux_count: "<=0"
   commands:
     run:
     # Run scp on local to download STDOUT and STDERR files to the local example directory
@@ -259,11 +264,6 @@ experiments:
       local:scp $NOODLES_SERVER_AUTHORITY:"$STDOUT_PATH $STDERR_PATH" $LOCAL_DIR
     # Remove the lock file
     - "rm -f $LOCK_FILE_PATH"
-  requirements:
-    run:
-    - has_lock_file: "==Yes"
-    - has_marker_file: "==Yes"
-    - tmux_count: "<=0"
 
 ################################################################################
 # Servers

@@ -10,6 +10,11 @@ description: Clean everything done by "run" commands
 
 experiment_default:
   description: Clean everything done by "run" commands
+  requirements:
+    clean:
+    - has_lock_file: "==No"
+    - has_marker_file: "==Yes"
+    - tmux_count: "<=0"
   commands:
     clean:
       - "echo Removing conda environment"
@@ -25,11 +30,6 @@ experiment_default:
       - "rm -f $LOCK_FILE_PATH"
       - "local:echo Removing local experimental results"
       - "local:rm -f $LOCAL_DIR/*.log"
-  requirements:
-    clean:
-    - has_lock_file: "==No"
-    - has_marker_file: "==Yes"
-    - tmux_count: "<=0"
 
 experiments:
 - name: Clean stuff of experiment 1

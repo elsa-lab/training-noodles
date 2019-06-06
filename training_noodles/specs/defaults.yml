@@ -18,8 +18,8 @@ experiment_default:
   name: <default>
   envs: {}
   depends_on: {}
-  commands: {}
   requirements: {}
+  commands: {}
 
 # The main experiments
 experiments: []

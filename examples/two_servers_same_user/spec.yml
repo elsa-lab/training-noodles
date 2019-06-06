@@ -26,6 +26,11 @@ experiments:
 
 - name: Experiment 3
   description: Example experiment 3
+  requirements:
+    run:
+    # Requires CPU usage on the server to be >= 0 (The default requirement
+    # command is in training_noodles/specs/defaults.yml)
+    - cpu_usage: ">=0"
   commands:
     # Execute the commands in order
     run:
@@ -34,11 +39,6 @@ experiments:
     - "date > exp3.log"
     - "echo The hostname is $(hostname)"
     - "echo The time now is $(date)"
-  requirements:
-    run:
-    # Requires CPU usage on the server to be >= 0 (The default requirement
-    # command is in training_noodles/specs/defaults.yml)
-    - cpu_usage: ">=0"
 
 ################################################################################
 # Servers
