@@ -54,11 +54,13 @@ experiments:
 # Runs after the main experiments have finished
 after_all_experiments:
 - name: Clean local
-  description: Clean local experimental results
+  description: Clean Noodles status file and local experimental results
   # Override the default requirements
   requirements: {}
   commands:
     clean:
+    - "local:echo Removing Noodles status file"
+    - "local:rm -f $LOCAL_DIR/noodles_status.yml"
     - "local:echo Removing local experimental results"
     - "local:rm -f $LOCAL_DIR/*.log"
 

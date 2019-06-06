@@ -1,5 +1,15 @@
+import datetime
 import logging
 import re
+import time
+
+
+def convert_unix_time_to_iso(t):
+    # Convert to datetime
+    d = datetime.datetime.fromtimestamp(t)
+
+    # Return ISO format
+    return d.isoformat()
 
 
 def convert_values_to_strs(d):

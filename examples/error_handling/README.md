@@ -14,4 +14,14 @@ To run this example, use project root directory as working directory and execute
 noodles run examples/error_handling/spec.yml
 ```
 
-Noodles would try to deploy each experiment to a different server, but one deployment would fail because one of the server is nonexistent. Noodles would retry to deploy the failed experiment latter because we specify `retry` action in the error handler *Ignore SSH resolve hostname error*.
+Noodles would try to deploy each experiment to a different server, but one deployment would fail in each deployment round because one of the servers is nonexistent. Noodles would retry to deploy the failed experiment latter because we specify `retry` action in the error handler *Ignore SSH resolve hostname error*.
+
+A status file `noodles_status.yml` would also be created in the directory `examples/error_handling` before the first deployment round and updated after each deployment round. If Noodles has to be shut down due to some unexpected errors, the status file can be very helpful. `Undeployed Experiments (For command)` in the status file can be used as the filter string for another Noodles run.
+
+## Clean
+
+To remove the Noodles status file, execute the following:
+
+```bash
+noodles clean examples/error_handling/clean.yml
+```

@@ -18,6 +18,19 @@
             ]
         },
         {
+            "name": "error_handling (clean)",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/training_noodles/noodles.py",
+            "console": "integratedTerminal",
+            "args": [
+                "clean",
+                "examples/error_handling/clean.yml",
+                "--verbose",
+                "--debug"
+            ]
+        },
+        {
             "name": "file_transfer (run)",
             "type": "python",
             "request": "launch",

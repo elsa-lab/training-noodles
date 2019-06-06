@@ -20,6 +20,7 @@ keys_to_copy = [
     'server_default/*',
     'servers',
     'requirements/*',
+    'write_status_to/*',
     'round_interval',
     'deployment_interval',
     'check_any_errors',

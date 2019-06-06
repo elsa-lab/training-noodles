@@ -3,11 +3,13 @@ import json
 import logging
 import re
 import time
+import yaml
 
 from training_noodles.remote import (
     evaluate_expression_on_local, run_commands, get_error_message)
 from training_noodles.utils import (
-    match_full, split_by_scheme, update_dict_with_missing, wrap_with_list)
+    convert_unix_time_to_iso, match_full, split_by_scheme,
+    update_dict_with_missing, wrap_with_list)
 
 
 class Runner:
@@ -35,13 +37,13 @@ class Runner:
         start_time = time.time()
 
         # Deploy "before all" experiments
-        self._deploy_stage('before_all_experiments')
+        self._deploy_stage('before_all_experiments', start_time)
 
         # Deploy main experiments
-        num_success, total = self._deploy_stage('experiments')
+        num_success, total = self._deploy_stage('experiments', start_time)
 
         # Deploy "after all" experiments
-        self._deploy_stage('after_all_experiments')
+        self._deploy_stage('after_all_experiments', start_time)
 
         # Calculate total elapsed time
         elapsed = time.time() - start_time
@@ -57,7 +59,7 @@ class Runner:
             'Successfully deployed {:g}% ({}/{}) "{}" experiments'.format(
                 percentage, num_success, total, self.command_type))
 
-    def _deploy_stage(self, stage):
+    def _deploy_stage(self, stage, start_time):
        # Initialize total number of successful deployments
         total_num_success = 0
 
@@ -86,6 +88,10 @@ class Runner:
             filtered_exps = self._filter_undeployed_experiments(
                 stage, undeployed)
 
+            # Write the deployment status
+            self._write_deployment_status(
+                start_time, prev_round_time, stage, round_idx, undeployed)
+
             # Try to deploy each experiment to one of the satisfied servers
             filtered_deployed, num_success = self._deploy_experiment_specs(
                 filtered_exps)
@@ -109,11 +115,73 @@ class Runner:
             # Increment round index
             round_idx += 1
 
+        # Write the final deployment status
+        self._write_deployment_status(
+            start_time, prev_round_time, stage, round_idx, undeployed)
+
         # Log the finish
         self.logger.info('Finished stage "{}"'.format(stage))
 
         # Return the ratio of successful deployments
         return total_num_success, num_exps
+
+    def _write_deployment_status(self, start_time, prev_round_time, stage,
+                                 round_idx, undeployed):
+        # Check whether it's the main stage
+        if stage != 'experiments':
+            return
+
+        # Get the output path
+        write_path = self._get_write_status_to_spec()
+
+        # Check whether to write
+        if write_path is None:
+            return
+
+        # Calculate elapsed time
+        elapsed_time = prev_round_time - start_time
+
+        # Get default experiment spec
+        default_exp_spec = self._get_default_experiment_spec()
+
+        # Get default experiment environment variables
+        envs = self._get_experiment_details(default_exp_spec, 'envs')
+
+        # Evaluate the path
+        write_path = self._evaluate_expression(write_path, envs=envs)
+
+        # Get the experiments in the stage
+        exps_spec = self._get_experiment_specs('experiments')
+
+        # Get all experiment names
+        exp_names = self._get_experiment_names(exps_spec)
+
+        # Build undeployed experiment names
+        undeployed_names = list(map(lambda i: exp_names[i], undeployed))
+
+        # Build deployed experiment names
+        deployed_names = set(exp_names) - set(undeployed_names)
+
+        # Convert the sets to lists
+        deployed_names = list(deployed_names)
+
+        # Build the status
+        status = {
+            'Start Time': convert_unix_time_to_iso(start_time),
+            'Previous Round Time': convert_unix_time_to_iso(prev_round_time),
+            'Elapsed time (s)': elapsed_time,
+            'Stage': stage,
+            'Round #': round_idx + 1,
+            'Deployed Experiments': deployed_names,
+            'Undeployed Experiments': undeployed_names,
+            'Undeployed Experiments (For command)': ','.join(undeployed_names),
+        }
+
+        # Serialize the status into YAML string
+        status = yaml.dump(status)
+
+        # Write the status
+        self._write_to_file(status, write_path)
 
     def _deploy_experiment_specs(self, exps_spec):
         # Initialize set of deployed experiment indexes
@@ -854,22 +922,6 @@ class Runner:
         # Wrap the details and return
         return self._wrap_details(detail_name, details)
 
-    def _get_stage_experiment_details(self, stage, detail_name):
-        # Get the spec
-        stage_spec = self._get_experiment_specs(stage)
-
-        # Get default details
-        default_details = self._get_default_details(detail_name)
-
-        # Get the details
-        details = stage_spec.get(detail_name, default_details)
-
-        # Get the corresponding details
-        details = self._get_corresponding_details(detail_name, details)
-
-        # Wrap the details and return
-        return self._wrap_details(detail_name, details)
-
     def _get_default_details(self, detail_name):
         if detail_name == 'envs':
             return {}
@@ -978,6 +1030,9 @@ class Runner:
     # Getting Specs
     ############################################################################
 
+    def _get_default_experiment_spec(self):
+        return self.user_spec.get('experiment_default', {})
+
     def _get_stage_specs(self, stage):
         return self.user_spec.get(stage, {})
 
@@ -986,6 +1041,13 @@ class Runner:
 
     def _get_requirement_specs(self):
         return self.user_spec.get('requirements', {})
+
+    def _get_write_status_to_spec(self):
+        # Get the paths
+        write_status_to = self.user_spec.get('write_status_to', {})
+
+        # Return the path for the current command type
+        return write_status_to.get(self.command_type, None)
 
     def _get_round_interval_spec(self):
         return self.user_spec.get('round_interval', 0)

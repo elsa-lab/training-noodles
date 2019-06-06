@@ -12,11 +12,27 @@ description: |-
 
 # The default properties for each experiment
 experiment_default:
+  # Default name of the experiment
   name: <default>
+  # Default environment variables, would be added to each experiment no matter
+  # the command type, so that you don't need to type the same environment
+  # variable every time
   envs: {}
+  # Default experiment dependencies in each command type, as a list of
+  # experiment names, if one of the dependency hasn't been deployed, the current
+  # experiment won't be deployed either
   depends_on: {}
+  # Default requirements in each command type, as a list of requirement IDs and
+  # associative comparison operator and values (e.g., "==Yes", ">=10"), each
+  # command group would be run (see "requirements" in latter section) to check
+  # whether the metrics (results) are met
   requirements: {}
+  # Default commands in each command type, as a single command or list of
+  # commands to be run on either local or remote (default) (e.g.,
+  # "git clone...", "remote:git clone...", "local:scp...")
   commands: {}
+  # Default output paths in each command type, as a dict(stdout_to=<path1>,
+  # stderr_to=<path2>) to be the STDOUT and STDERR outputs produced by commands
   write_outputs: {}
 
 # Runs before the start of main experiments
@@ -72,6 +88,10 @@ requirements:
 ################################################################################
 # Deployment
 ################################################################################
+
+# Path in each command type, as a string for Noodles to write the current
+# deployment status to the file
+write_status_to: {}
 
 # The interval to run each deployment round
 round_interval: 10

@@ -286,6 +286,11 @@ requirements:
 # Deployment
 ################################################################################
 
+# Path in each command type, as a string for Noodles to write the current
+# deployment status to the file in each deployment round
+write_status_to:
+  run: $LOCAL_DIR/noodles_status.yml
+
 # The interval to run each deployment round
 round_interval: 10
 
