@@ -16,9 +16,10 @@ def parse_args():
     # Logging
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='Print out verbose messages')
-    # Debug
     parser.add_argument('-d', '--debug', action='store_true',
                         help='Print out debug messages')
+    parser.add_argument('-s', '--silent', action='store_true',
+                        help='Silence all logging messages')
 
     # Parse the arguments
     args = parser.parse_args()

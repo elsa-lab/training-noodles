@@ -11,10 +11,13 @@ def init_logging(args):
     logging_config = dict(format=logging_format, datefmt=date_format)
 
     # Set logging level
-    if args.debug:
-        logging_config['level'] = logging.DEBUG
+    if args.silent:
+        logging.disable(logging.CRITICAL)
     else:
-        logging_config['level'] = logging.INFO
+        if args.debug:
+            logging_config['level'] = logging.DEBUG
+        else:
+            logging_config['level'] = logging.INFO
 
     # Config logging
     logging.basicConfig(**logging_config)
