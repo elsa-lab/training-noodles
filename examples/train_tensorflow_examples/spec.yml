@@ -20,7 +20,7 @@ experiment_default:
     # "$" sign is escaped here to make sure "$HOME" is interpreted on server rather than on local
     ESCAPED_STDERR_PATH: \$HOME/tensorflow_results.$EXPERIMENT.stderr.log
     ESCAPED_STDOUT_PATH: \$HOME/tensorflow_results.$EXPERIMENT.stdout.log
-    LOCAL_DIR: examples/train_tensorflow_examples/
+    LOCAL_DIR: examples/train_tensorflow_examples
     LOCK_FILE_PATH: $HOME/noodles.lock
     MARKER_PATH: $HOME/marker_$EXPERIMENT.txt
     STDERR_PATH: $HOME/tensorflow_results.$EXPERIMENT.stderr.log
@@ -29,7 +29,7 @@ experiment_default:
     TMUX_SESSION_PREFIX: test
   write_outputs:
     run:
-      # $NOODLES_EXPERIMENT_NAME is the current experiment name
+      # $NOODLES_EXPERIMENT_NAME is the name of current experiment
       stdout_to: '$LOCAL_DIR/commands_results.$NOODLES_EXPERIMENT_NAME.stdout.log'
       stderr_to: '$LOCAL_DIR/commands_results.$NOODLES_EXPERIMENT_NAME.stderr.log'
 
@@ -38,7 +38,7 @@ experiments:
 
 ### 1st Phase: Initialize Experiments ###
 
-- name: Initialize server for Experiment 1
+- name: init_exp1
   description: Mark the server by a unique file name, download TensorFlow-Examples on the server, and create a new conda environment
   envs:
     EXPERIMENT: exp1
@@ -60,7 +60,7 @@ experiments:
     - "echo Creating conda environment $CONDA_ENV_NAME on $NOODLES_SERVER_NAME"
     - "$CONDA_DIR/bin/conda create -y -n $CONDA_ENV_NAME python=3.6"
 
-- name: Initialize server for Experiment 2
+- name: init_exp2
   description: Mark the server by a unique file name and download TensorFlow-Examples on the server
   envs:
     EXPERIMENT: exp2
@@ -82,7 +82,7 @@ experiments:
     - "echo Creating conda environment $CONDA_ENV_NAME on $NOODLES_SERVER_NAME"
     - "$CONDA_DIR/bin/conda create -y -n $CONDA_ENV_NAME python=3.6"
 
-- name: Initialize server for Experiment 3
+- name: init_exp3
   description: Mark the server by a unique file name and download TensorFlow-Examples on the server
   envs:
     EXPERIMENT: exp3
@@ -106,7 +106,7 @@ experiments:
 
 ### 2nd Phase: Run Experiments ###
 
-- name: Run experiment 1
+- name: run_exp1
   description: Run experiment on server
   envs:
     EXPERIMENT: exp1
@@ -130,7 +130,7 @@ experiments:
       - |-
         tmux new -d -s "$TMUX_SESSION_PREFIX/$EXPERIMENT" "python $EXPERIMENT_PATH > $STDOUT_PATH 2> $STDERR_PATH"
 
-- name: Run experiment 2
+- name: run_exp2
   description: Run experiment on server
   envs:
     EXPERIMENT: exp2
@@ -154,7 +154,7 @@ experiments:
       - |-
         tmux new -d -s "$TMUX_SESSION_PREFIX/$EXPERIMENT" "python $EXPERIMENT_PATH > $STDOUT_PATH 2> $STDERR_PATH"
 
-- name: Run experiment 3
+- name: run_exp3
   description: Run experiment on server
   envs:
     EXPERIMENT: exp3
@@ -180,7 +180,7 @@ experiments:
 
 ### 3rd Phase: Download Experimental Results ###
 
-- name: Download experimental results 1
+- name: download_exp1
   description: Download experimental results from server
   envs:
     EXPERIMENT: exp1
@@ -203,7 +203,7 @@ experiments:
     # Remove the lock file
     - "rm -f $LOCK_FILE_PATH"
 
-- name: Download experimental results 2
+- name: download_exp2
   description: Download experimental results from server
   envs:
     EXPERIMENT: exp2
@@ -226,7 +226,7 @@ experiments:
     # Remove the lock file
     - "rm -f $LOCK_FILE_PATH"
 
-- name: Download experimental results 3
+- name: download_exp3
   description: Download experimental results from server
   envs:
     EXPERIMENT: exp3

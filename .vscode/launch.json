@@ -96,6 +96,32 @@
             ]
         },
         {
+            "name": "long_process (run)",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/training_noodles/noodles.py",
+            "console": "integratedTerminal",
+            "args": [
+                "run",
+                "examples/long_process/spec.yml",
+                "--verbose",
+                "--debug"
+            ]
+        },
+        {
+            "name": "long_process (clean)",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/training_noodles/noodles.py",
+            "console": "integratedTerminal",
+            "args": [
+                "clean",
+                "examples/long_process/clean.yml",
+                "--verbose",
+                "--debug"
+            ]
+        },
+        {
             "name": "train_tensorflow_examples (run)",
             "type": "python",
             "request": "launch",

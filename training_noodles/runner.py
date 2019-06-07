@@ -6,7 +6,7 @@ import time
 import yaml
 
 from training_noodles.remote import (
-    evaluate_expression_on_local, run_commands, get_error_message)
+    evaluate_expression_on_local, run_commands, get_error_messages)
 from training_noodles.utils import (
     convert_unix_time_to_iso, match_full, split_by_scheme,
     update_dict_with_missing, wrap_with_list)
@@ -255,15 +255,15 @@ class Runner:
                 # Log the deployment
                 self._log_deployment_to_server(exp_name, server_spec)
 
-                # Build the enviornment variables
+                # Build the environment variables
                 envs = self._build_experiment_envs(exp_spec, server_spec)
 
                 # Deploy the experiment to the server
                 status, stdout, stderr = self._deploy_experiment_to_server(
                     exp_spec, server_spec, envs)
 
-                # Write outputs to either terminal or files
-                self._write_experiment_outputs(
+                # Log outputs to terminal
+                self._log_experiment_outputs(
                     exp_spec, status, stdout, stderr, envs)
 
                 # Update deployed indexes by status
@@ -291,14 +291,42 @@ class Runner:
         # Get experiment commands
         commands = self._get_experiment_details(exp_spec, 'commands')
 
+        # Build the user files
+        user_files = self._build_user_files(exp_spec)
+
         # Deploy the experiment to the server
         status, stdout, stderr = self._run_commands(
-            server_spec, commands, envs=envs)
+            server_spec, commands, user_files=user_files, envs=envs)
 
         # Return the status and outputs
         return status, stdout, stderr
 
-    def _write_experiment_outputs(
+    def _build_user_files(self, exp_spec):
+        # Initialize the user files
+        user_files = {}
+
+        # Set the output streams
+        streams = ['stdout', 'stderr']
+
+        # Get experiment outputs
+        write_outputs = self._get_experiment_details(exp_spec, 'write_outputs')
+
+        # Iterate each stream
+        for stream in streams:
+            # Set the spec key
+            spec_key = '{}_to'.format(stream)
+
+            # Get the path from the spec
+            path = write_outputs.get(spec_key, None)
+
+            # Check whether to add the path to the outputs
+            if path is not None:
+                user_files[stream] = path
+
+        # Return the user files
+        return user_files
+
+    def _log_experiment_outputs(
             self, exp_spec, status, stdout, stderr, envs):
         # Get experiment outputs
         write_outputs = self._get_experiment_details(exp_spec, 'write_outputs')
@@ -312,12 +340,6 @@ class Runner:
             self.logger.info(
                 'Commands output from STDOUT->\n{}'.format(stdout))
         else:
-            # Evaluate the path
-            stdout_path = self._evaluate_expression(stdout_path, envs=envs)
-
-            # Write the STDOUT to the file
-            self._write_to_file(stdout, stdout_path)
-
             # Log the write
             self.logger.info(
                 'STDOUT output is written to "{}"'.format(stdout_path))
@@ -328,12 +350,6 @@ class Runner:
                 self.logger.warning(
                     'Commands output from STDERR->\n{}'.format(stderr))
         else:
-            # Evaluate the path
-            stderr_path = self._evaluate_expression(stderr_path, envs=envs)
-
-            # Write the STDERR to the file
-            self._write_to_file(stderr, stderr_path)
-
             # Log the write
             self.logger.info(
                 'STDERR output is written to "{}"'.format(stderr_path))
@@ -757,10 +773,10 @@ class Runner:
     # Command Execution
     ############################################################################
 
-    def _run_commands(self, server_spec, commands, envs={}):
+    def _run_commands(self, server_spec, commands, user_files={}, envs={}):
         # Run the commands
         all_results, debug_infos = run_commands(
-            server_spec, commands, envs=envs)
+            server_spec, commands, user_files=user_files, envs=envs)
 
         # Check errors
         status = None
@@ -772,10 +788,10 @@ class Runner:
                 break
 
         # Combine STDOUTs produced by inner commands
-        combined_stdout = self._combine_outputs(all_results, 'inner_stdout')
+        combined_stdout = self._combine_outputs(all_results, 'stdout')
 
         # Combine STDERRs produced by inner commands
-        combined_stderr = self._combine_outputs(all_results, 'inner_stderr')
+        combined_stderr = self._combine_outputs(all_results, 'stderr')
 
         # Return the error status, combined STDOUT and combined STDERR
         return status, combined_stdout, combined_stderr
@@ -786,24 +802,24 @@ class Runner:
 
         # Determine whether to check any errors
         if check_any_errors:
-            # Get error message
-            message = get_error_message(results, debug_info)
+            # Get error messages
+            messages = get_error_messages(results, debug_info)
         else:
-            # Set empty error message
-            message = ''
+            # Set empty error messages
+            messages = []
 
-        # Check whether there is any error message
-        if len(message) > 0:
+        # Check whether there are any error messages
+        if len(messages) > 0:
             # Get error handling action
             action = self._check_error_handler_action(results)
 
             # Take action
             if action == 'continue':
-                self._log_verbose(message)
+                self._log_verbose(messages)
             elif action == 'retry':
-                self._log_verbose(message)
+                self._log_verbose(messages)
             elif action == 'abort':
-                self._raise_error(message)
+                self._raise_error(messages)
             else:
                 self._raise_error('Unknown error action "{}"'.format(action))
 
@@ -833,7 +849,7 @@ class Runner:
                 match_return_code = (results['return_code'] == return_code)
 
             # Check whether it's a full match
-            match_stderr = match_full(stderr_pattern, results['inner_stderr'])
+            match_stderr = match_full(stderr_pattern, results['stderr'])
 
             # Return code and STDERR must all be matched
             if match_return_code and match_stderr:
@@ -884,7 +900,7 @@ class Runner:
             # Take action according to the status
             if status == 'success':
                 # Return evaluated values
-                return results['inner_stdout']
+                return results['stdout']
 
             elif status == 'continue':
                 # Log the continue
@@ -1114,14 +1130,45 @@ class Runner:
         self.logger.info('Deploy experiment "{}" to server "{}"'.format(
             exp_name, server_name))
 
-    def _log_verbose(self, message):
-        if self.verbose:
-            self.logger.info(message)
+    def _log_verbose(self, messages):
+        # Check whether to log verbose messages
+        if not self.verbose:
+            return
+
+        # Check the messages type
+        if isinstance(messages, list):
+            # Log all messages
+            for message in messages:
+                self.logger.info(message)
+        elif isinstance(messages, str):
+            # Log the message
+            self.logger.info(messages)
+        else:
+            raise ValueError('Unknown messages type: {}'.format(
+                type(messages)))
 
     ############################################################################
     # Error Handling
     ############################################################################
 
-    def _raise_error(self, message):
-        self.logger.error(message)
-        raise ValueError(message)
+    def _raise_error(self, messages):
+        # Check the messages type
+        if isinstance(messages, list):
+            # Log all messages
+            for message in messages:
+                self.logger.error(message)
+
+            # Concatenate all messages
+            combined_messages = '\n'.join(messages)
+
+            # Raise the error
+            raise ValueError(combined_messages)
+        elif isinstance(message, str):
+            # Log the message
+            self.logger.error(messages)
+
+            # Raise the error
+            raise ValueError(messages)
+        else:
+            raise ValueError('Unknown messages type: {}'.format(
+                type(messages)))

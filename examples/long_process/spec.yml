@@ -1,0 +1,76 @@
+# Name of the spec
+name: Long process
+
+# Description of the spec
+description: Run commands which last a long time
+
+################################################################################
+# Experiments
+################################################################################
+
+# The default properties for each experiment
+experiment_default:
+  envs:
+    LOCAL_DIR: examples/long_process
+  write_outputs:
+    run:
+      stdout_to: $LOCAL_DIR/$EXPERIMENT.stdout.log
+
+# The main experiments
+experiments:
+- name: Experiment 1
+  description: Print number from 1 to 10 per second
+  envs:
+    EXPERIMENT: exp1
+    DURATION: 10
+  commands:
+    # By default, the commands run on remote servers
+    run:
+    - "echo Running experiment 1"
+    - "echo Printing numbers from 1 to $DURATION per second"
+    - "for i in `seq 1 $DURATION`; do echo $i; sleep 1; done"
+    - "echo Done experiment 1"
+
+- name: Experiment 2
+  description: Print number from 1 to 30 per second
+  envs:
+    EXPERIMENT: exp2
+    DURATION: 30
+  commands:
+    # The commands with the prefix "local:" would be run on local machine
+    # The commands with the prefix "remote:" would be run on remote servers
+    run:
+    - "local:echo Running experiment 2"
+    - "remote:echo Printing numbers from 1 to $DURATION per second"
+    - "remote:for i in `seq 1 $DURATION`; do echo $i; sleep 1; done"
+    - "local:echo Done experiment 2"
+
+################################################################################
+# Servers
+################################################################################
+
+# The default properties for each server
+server_default:
+  # Path to the private key on local
+  private_key_path: $HOME/.ssh/id_rsa
+  # Username on the server (e.g., 'user1')
+  username: $USER
+
+# All servers
+servers:
+- name: Server 1
+  # Hostname of the server (e.g., "server1.example.com", "123.123.123.123")
+  hostname: server1
+- name: Server 2
+  # Hostname of the server (e.g., "server1.example.com", "123.123.123.123")
+  hostname: server2
+
+################################################################################
+# Deployment
+################################################################################
+
+# The interval to run each deployment round
+round_interval: 10
+
+# The interval to deploy each experiment in each round
+deployment_interval: 0

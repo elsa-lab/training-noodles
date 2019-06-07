@@ -60,11 +60,11 @@ Note that you should only execute the above command after a successful *run*. Ot
 If something went wrong in the middle and you would like to redo everything done by an unsuccessful *run*, execute the following on each server:
 
 ```bash
-CONDA_DIR=$HOME/anaconda3; CONDA_ENV_NAME=noodles_test; $CONDA_DIR/bin/conda remove -y -n $CONDA_ENV_NAME --all; rm -rf ~/TensorFlow-Examples; rm -f ~/tensorflow_results.*.log; rm -f ~/marker_exp*.txt; rm -f ~/noodles.lock
+CONDA_DIR=$HOME/anaconda3; CONDA_ENV_NAME=noodles_test; TMUX_SESSION_PREFIX=test; tmux kill-ses -t $TMUX_SESSION_PREFIX/exp1; tmux kill-ses -t $TMUX_SESSION_PREFIX/exp2; tmux kill-ses -t $TMUX_SESSION_PREFIX/exp3; $CONDA_DIR/bin/conda remove -y -n $CONDA_ENV_NAME --all; rm -rf ~/TensorFlow-Examples; rm -f ~/tensorflow_results.*.log; rm -f ~/marker_exp*.txt; rm -f ~/noodles.lock
 ```
 
 and execute the following on local machine:
 
 ```bash
-rm -f examples/train_tensorflow_examples/*.log
+rm -f examples/train_tensorflow_examples/*.log; rm -f examples/train_tensorflow_examples/noodles_status.yml
 ```

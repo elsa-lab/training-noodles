@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import pathlib
@@ -16,11 +17,12 @@ def evaluate_expression_on_local(expr, envs={}):
     inner_command = _build_eval_command(expr)
 
     # Run commands on endpoint
-    return _run_commands_on_endpoint(endpoint_command, inner_command, envs=envs)
+    return _run_commands_on_endpoint(
+        endpoint_command, inner_command, envs=envs)
 
 
-def run_commands(server_spec, commands, envs={}):
-    """ Run commands on either local or remotem machine.
+def run_commands(server_spec, commands, user_files={}, envs={}):
+    """ Run commands on either local or remote machine.
 
     The "commands" will be written into the temporary file. The final command
     would use bash to execute these "commands" from the temporary file and write
@@ -30,6 +32,9 @@ def run_commands(server_spec, commands, envs={}):
     Arguments:
         server_spec (dict): The server spec.
         commands (str or list): A single command (str) or list of commands.
+        user_files (dict): Optional file paths for appending STDOUT and STDERR
+            for all command groups. It's a dict(stdout, stderr) where each value
+            is the corresponding path.
         envs (dict): Environment variables.
 
     Returns:
@@ -43,6 +48,9 @@ def run_commands(server_spec, commands, envs={}):
     # Group commands by endpoints
     group_results = _group_commands_by_endpoints(server_spec, commands)
 
+    # Clear user files at the first iteration
+    clear_user_files = True
+
     # Initialize the outputs
     all_results = []
     debug_infos = []
@@ -50,11 +58,15 @@ def run_commands(server_spec, commands, envs={}):
     # Iterate each endpoint group
     for endpoint_command, inner_commands in group_results:
         # Build remote commands
-        inner_commands = _build_remote_command(inner_commands, envs)
+        inner_commands = _build_remote_command(inner_commands, envs=envs)
 
         # Run commands on endpoint
         results, debug_info = _run_commands_on_endpoint(
-            endpoint_command, inner_commands, envs=envs)
+            endpoint_command, inner_commands, user_files=user_files,
+            clear_user_files=clear_user_files, envs=envs)
+
+        # Disable clearing user files in the latter command groups
+        clear_user_files = False
 
         # Add the results and debug info to the outputs
         all_results.append(results)
@@ -64,34 +76,36 @@ def run_commands(server_spec, commands, envs={}):
     return all_results, debug_infos
 
 
-def _run_commands_on_endpoint(endpoint_command, inner_commands, envs={}):
-    # Create temporary files
+def _run_commands_on_endpoint(endpoint_command, inner_commands,
+                              user_files={}, clear_user_files=True, envs={}):
+    # Create temporary files for each command group
     temp_files = _create_temp_files()
 
-    # Write command to temporary stdin file
+    # Write command to the stdin file
     _write_command_to_stdin(inner_commands, temp_files)
 
     # Build outer command
-    outer_command = _build_outer_command(endpoint_command, temp_files)
+    outer_command = _build_outer_command(
+        endpoint_command, temp_files, user_files, clear_user_files)
 
     # Execute the outer command
     p_obj = run_command(outer_command, extra_envs=envs)
 
-    # Read the command results
-    stdout, stderr, return_code = read_command_results(p_obj)
+    # Read return code from the outer command
+    outer_stdout, outer_stderr, return_code = read_command_results(p_obj)
 
-    # Read stdout and stderr from temporary files
-    temp_stdout, temp_stderr = _read_stdout_and_stderr(temp_files)
+    # Read stdout and stderr from the inner commands
+    inner_stdout, inner_stderr = _read_stdout_and_stderr(temp_files)
 
     # Delete temporary files
     _delete_temp_files(temp_files)
 
     # Build the decoded results
     results = {
-        'inner_stdout': decode_output(temp_stdout),
-        'inner_stderr': decode_output(temp_stderr),
-        'outer_stdout': decode_output(stdout),
-        'outer_stderr': decode_output(stderr),
+        'outer_stdout': decode_output(outer_stdout),
+        'outer_stderr': decode_output(outer_stderr),
+        'stdout': decode_output(inner_stdout),
+        'stderr': decode_output(inner_stderr),
         'return_code': return_code,
     }
 
@@ -99,6 +113,7 @@ def _run_commands_on_endpoint(endpoint_command, inner_commands, envs={}):
     debug_info = {
         'inner_commands': inner_commands,
         'outer_command': outer_command,
+        'envs': envs,
     }
 
     # Return the results
@@ -174,84 +189,112 @@ def _add_endpoint_results_to_outputs(server_spec, prev_scheme, cur_group,
 
 
 def _create_temp_files():
-    # Create temporary files
+    # Initialize the results
+    temp_files = {}
+
+    # Set all streams
+    streams = ['stdin', 'stdout', 'stderr']
+
+    # Set whether to close the file pointer
+    closes = [False, True, True]
+
+    # Iterate each stream
+    for stream, close in zip(streams, closes):
+        # Create the temporary file
+        fp, path = _create_temp_file(stream, close=close)
+
+        # Save the file pointer, path and temporary marker
+        temp_files[stream] = dict(fp=fp, path=path)
+
+    # Return the results
+    return temp_files
+
+
+def _create_temp_file(output_type, close=True):
+    # Create a temporary file
     try:
-        stdin_fp = tempfile.NamedTemporaryFile(
-            delete=False, prefix='training_noodles.', suffix='.stdin')
-        stdout_fp = tempfile.NamedTemporaryFile(
-            delete=False, prefix='training_noodles.', suffix='.stdout')
-        stderr_fp = tempfile.NamedTemporaryFile(
-            delete=False, prefix='training_noodles.', suffix='.stderr')
+        # Set the suffix
+        suffix = '.{}'.format(output_type)
+
+        # Create a named temporary file
+        fp = tempfile.NamedTemporaryFile(
+            delete=False, prefix='training_noodles.', suffix=suffix)
     except:
-        logging.exception('Failed to create temporary files')
+        logging.exception('Failed to create temporary file')
         raise
 
-    # Close stdout and stderr files
-    stdout_fp.close()
-    stderr_fp.close()
+    # Check whether to close the file
+    if close:
+        fp.close()
 
     # Convert the paths to POSIX-style paths
-    stdin_path = pathlib.Path(stdin_fp.name).as_posix()
-    stdout_path = pathlib.Path(stdout_fp.name).as_posix()
-    stderr_path = pathlib.Path(stderr_fp.name).as_posix()
+    path = pathlib.Path(fp.name).as_posix()
 
     # Log the temporary files
-    logging.debug('Created temporary file for stdin: {}'.format(stdin_path))
-    logging.debug('Created temporary file for stdout: {}'.format(stdout_path))
-    logging.debug('Created temporary file for stderr: {}'.format(stderr_path))
+    logging.debug('Created temporary file for {}: {}'.format(
+        output_type, path))
 
-    # Return the temporary files and paths
-    return {
-        'stdin_fp': stdin_fp,
-        'stdout_fp': stdout_fp,
-        'stderr_fp': stderr_fp,
-        'stdin_path': stdin_path,
-        'stdout_path': stdout_path,
-        'stderr_path': stderr_path,
-    }
+    # Return the temporary file pointer and path
+    return fp, path
 
 
-def _write_command_to_stdin(command, temp_files):
+def _write_command_to_stdin(command, files):
+    # Get the file pointer and path
+    stdin = files['stdin']
+    fp, path = stdin['fp'], stdin['path']
+
     # Log the command and temporary file
     logging.debug('Write command to temporary stdin file "{}"->\n{}'.format(
-        temp_files['stdin_path'], command))
+        path, command))
 
-    # Write the commands into the temporary stdin file
-    temp_files['stdin_fp'].write(command.encode('utf-8'))
+    # Write the commands into the stdin file
+    fp.write(command.encode('utf-8'))
 
-    # Close the temporary stdin file
-    temp_files['stdin_fp'].close()
+    # Close the stdin file
+    fp.close()
 
 
-def _read_stdout_and_stderr(temp_files):
-    try:
-        with open(temp_files['stdout_path'], 'rb') as stdout_fp:
-            stdout = stdout_fp.read()
-    except:
-        logging.exception('Failed to read file: {}'.format(
-            temp_files['stdout_path']))
-        raise
+def _read_stdout_and_stderr(files):
+    # Initialize all contents
+    all_contents = []
 
-    try:
-        with open(temp_files['stderr_path'], 'rb') as stderr_fp:
-            stderr = stderr_fp.read()
-    except:
-        logging.exception('Failed to read file: {}'.format(
-            temp_files['stderr_path']))
-        raise
+    # Set all streams
+    streams = ['stdout', 'stderr']
 
-    return stdout, stderr
+    # Iterate each stream
+    for stream in streams:
+        # Get the path
+        file_stream = files[stream]
+        path = file_stream['path']
+
+        try:
+            # Read the contents
+            with open(path, 'rb') as fp:
+                contents = fp.read()
+
+            # Add the contents to the outputs
+            all_contents.append(contents)
+        except:
+            logging.exception('Failed to read {} file: {}'.format(
+                stream, path))
+            raise
+
+    return all_contents[0], all_contents[1]
 
 
 def _delete_temp_files(temp_files):
-    try:
-        os.unlink(temp_files['stdin_path'])
-        os.unlink(temp_files['stdout_path'])
-        os.unlink(temp_files['stderr_path'])
-    except:
-        # Only log the exception, don't raise it
-        logging.exception(('Failed to delete temporary files,' +
-                           ' ignore now: {}').format(temp_files))
+    # Iterate each stream
+    for stream, temp_file in temp_files.items():
+        # Get the path
+        path = temp_file['path']
+
+        # Try to delete the temporary file
+        try:
+            os.unlink(path)
+        except:
+            # Only log the exception, don't raise it
+            logging.exception(('Failed to delete {} temporary file,' +
+                               ' ignore now: {}').format(stream, path))
 
 
 def _build_endpoint_command(server_spec):
@@ -338,39 +381,71 @@ def _build_eval_command(expr):
     return 'echo -n {}'.format(expr)
 
 
-def _build_outer_command(endpoint_command, temp_files):
-    # Get temporary file paths
-    stdin_path = temp_files['stdin_path']
-    stdout_path = temp_files['stdout_path']
-    stderr_path = temp_files['stderr_path']
+def _build_outer_command(endpoint_command, temp_files, user_files,
+                         clear_user_files):
+    # Get temporary file path for STDIN
+    stdin_path = temp_files['stdin']['path']
+
+    # Build the tee command part for STDOUT and STDERR
+    stdout_command = _build_tee_commnad_part(
+        'stdout', temp_files, user_files, clear_user_files)
+    stderr_command = _build_tee_commnad_part(
+        'stderr', temp_files, user_files, clear_user_files)
 
     # Build the command
-    outer_command = '{} \'bash -s\' < {} > {} 2> {}'.format(
-        endpoint_command, stdin_path, stdout_path, stderr_path)
+    outer_command = '{} \'bash -s\' < "{}" > {} 2> {}'.format(
+        endpoint_command, stdin_path, stdout_command, stderr_command)
 
     # Return the final command
     return outer_command
 
 
-def get_error_message(results, debug_info):
-    message = ''
+def _build_tee_commnad_part(stream, temp_files, user_files, clear_user_files):
+    # Get temporary file path
+    temp_path = temp_files[stream]['path']
 
-    # Check errors caused by outer command
-    if len(results['outer_stderr']) > 0 or results['return_code'] != 0:
-        message += ('Error occurred when running the outer' +
-                    ' command->\n{}').format(debug_info['outer_command'])
-        message += '\nSTDOUT->\n{}'.format(results['outer_stdout'])
-        message += '\nSTDERR->\n{}'.format(results['outer_stderr'])
-        message += '\nRETURN_CODE->\n{}'.format(results['return_code'])
+    # Get user file path
+    user_path = user_files.get(stream, None)
 
-    # Check errors caused by inner commands
-    if len(results['inner_stderr']) > 0:
-        if len(message) > 0:
-            message += '\n'
+    # Check whether to append to user file
+    if user_path is None:
+        # Suppress the output from tee
+        tee_to = '"{}" > {}'.format(temp_path, '/dev/null')
+    else:
+        # Check whether to clear user files
+        if clear_user_files:
+            redirection = '>'
+        else:
+            redirection = '>>'
 
-        message += ('Error occurred when running the inner' +
-                    ' commands->\n{}').format(debug_info['inner_commands'])
-        message += '\nSTDOUT->\n{}'.format(results['inner_stdout'])
-        message += '\nSTDERR->\n{}'.format(results['inner_stderr'])
+        # Redirect the output from tee to user file
+        tee_to = '"{}" {} "{}"'.format(temp_path, redirection, user_path)
 
-    return message
+    # Build the tee command part and return
+    return '>(tee {})'.format(tee_to)
+
+
+def get_error_messages(results, debug_info):
+    # Initialize empty messages
+    messages = []
+
+    # Check errors caused by either outer command or inner commands
+    return_code_error = (results['return_code'] != 0)
+    outer_error = (len(results['outer_stderr']) > 0)
+    inner_error = (len(results['stderr']) > 0)
+
+    if return_code_error or outer_error or inner_error:
+        messages.append('Error occurred when running the commands')
+        messages.append('Outer command->\n{}'.format(
+            debug_info['outer_command']))
+        messages.append('Inner commands->\n{}'.format(
+            debug_info['inner_commands']))
+        messages.append('Environment variables->\n{}'.format(
+            json.dumps(debug_info['envs'])))
+        messages.append('Return code: {}'.format(results['return_code']))
+        messages.append('Outer STDOUT->\n{}'.format(results['outer_stdout']))
+        messages.append('Outer STDERR->\n{}'.format(results['outer_stderr']))
+        messages.append('Inner STDOUT->\n{}'.format(results['stdout']))
+        messages.append('Inner STDERR->\n{}'.format(results['stderr']))
+
+    return messages
