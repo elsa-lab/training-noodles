@@ -30,7 +30,7 @@ You should prepare two servers to run this example. Please feel free to modify e
 Please make sure each server meets the following requirements:
 
 1. Have installed [Anaconda](https://www.anaconda.com/distribution/) at `$HOME/anaconda3`
-2. The conda environment `noodles_test` doesn't exist
+2. The conda environment `noodles_test` doesn't exist (Use `conda env list` to check)
 3. Can run TensorFlow with Python 3.6 properly in an Anaconda environment
 4. Can use `git` to clone repositories properly
 5. Have installed `tmux`

@@ -26,6 +26,13 @@ class Runner:
         # Create a logger
         self.logger = logging.getLogger(name='run')
 
+        # Initialize other attributes
+        self.start_time = None
+        self.stage = None
+        self.undeployed = None
+        self.round_idx = None
+        self.prev_round_time = None
+
     ############################################################################
     # Deployment
     ############################################################################
@@ -34,19 +41,19 @@ class Runner:
         """ Deploy all the experiments until finish.
         """
         # Save the first timestamp
-        start_time = time.time()
+        self.start_time = time.time()
 
         # Deploy "before all" experiments
-        self._deploy_stage('before_all_experiments', start_time)
+        self._deploy_stage('before_all_experiments')
 
         # Deploy main experiments
-        num_success, total = self._deploy_stage('experiments', start_time)
+        num_success, total = self._deploy_stage('experiments')
 
         # Deploy "after all" experiments
-        self._deploy_stage('after_all_experiments', start_time)
+        self._deploy_stage('after_all_experiments')
 
         # Calculate total elapsed time
-        elapsed = time.time() - start_time
+        elapsed = time.time() - self.start_time
 
         # Log the elapsed time
         self.logger.info('Total elapsed time: {:.3f}s'.format(elapsed))
@@ -59,38 +66,40 @@ class Runner:
             'Successfully deployed {:g}% ({}/{}) "{}" experiments'.format(
                 percentage, num_success, total, self.command_type))
 
-    def _deploy_stage(self, stage, start_time):
+    def _deploy_stage(self, stage):
        # Initialize total number of successful deployments
         total_num_success = 0
 
+        # Save the current stage
+        self.stage = stage
+
         # Get number of experiments in the stage
-        num_exps = self._count_experiments(stage)
+        num_exps = self._count_experiments(self.stage)
 
         # Initialize a set of indexes of undeployed experiments
-        undeployed = set(range(num_exps))
+        self.undeployed = set(range(num_exps))
 
         # Log the start
-        self.logger.info('Start stage "{}"'.format(stage))
+        self.logger.info('Start stage "{}"'.format(self.stage))
 
         # Deploy all remaining experiments until there are none
-        round_idx = 0
-        prev_round_time = time.time()
+        self.round_idx = 0
+        self.prev_round_time = time.time()
 
-        while len(undeployed) > 0:
+        # Write the initial deployment status
+        self._write_deployment_status()
+
+        while len(self.undeployed) > 0:
             # Log the deployment round
-            self._log_round(round_idx, stage, undeployed)
+            self._log_round()
 
             # Wait for next round
-            if round_idx > 0:
+            if self.round_idx > 0:
                 self._wait_for_next_round()
 
             # Create undeployed experiments
             filtered_exps = self._filter_undeployed_experiments(
-                stage, undeployed)
-
-            # Write the deployment status
-            self._write_deployment_status(
-                start_time, prev_round_time, stage, round_idx, undeployed)
+                stage, self.undeployed)
 
             # Try to deploy each experiment to one of the satisfied servers
             filtered_deployed, num_success = self._deploy_experiment_specs(
@@ -98,26 +107,22 @@ class Runner:
 
             # Restore unfiltered indexes
             deployed = self._restore_unfiltered_indexes(
-                undeployed, filtered_deployed)
+                self.undeployed, filtered_deployed)
 
             # Remove deployed indexes
-            undeployed -= deployed
+            self.undeployed -= deployed
 
             # Accumulate number of successful deployments
             total_num_success += num_success
 
             # Log the round time
-            self._log_round_time(prev_round_time)
+            self._log_round_time()
 
             # Update previous round time
-            prev_round_time = time.time()
+            self.prev_round_time = time.time()
 
             # Increment round index
-            round_idx += 1
-
-        # Write the final deployment status
-        self._write_deployment_status(
-            start_time, prev_round_time, stage, round_idx, undeployed)
+            self.round_idx += 1
 
         # Log the finish
         self.logger.info('Finished stage "{}"'.format(stage))
@@ -125,10 +130,9 @@ class Runner:
         # Return the ratio of successful deployments
         return total_num_success, num_exps
 
-    def _write_deployment_status(self, start_time, prev_round_time, stage,
-                                 round_idx, undeployed):
+    def _write_deployment_status(self, filtered_deployed=set()):
         # Check whether it's the main stage
-        if stage != 'experiments':
+        if self.stage != 'experiments':
             return
 
         # Get the output path
@@ -139,7 +143,7 @@ class Runner:
             return
 
         # Calculate elapsed time
-        elapsed_time = prev_round_time - start_time
+        elapsed_time = time.time() - self.start_time
 
         # Get default experiment spec
         default_exp_spec = self._get_default_experiment_spec()
@@ -156,8 +160,15 @@ class Runner:
         # Get all experiment names
         exp_names = self._get_experiment_names(exps_spec)
 
+        # Restore current deployed experiment indexes
+        cur_deployed = self._restore_unfiltered_indexes(
+            self.undeployed, filtered_deployed)
+
+        # Build current undeployed experiment indexes
+        cur_undeployed = self.undeployed - cur_deployed
+
         # Build undeployed experiment names
-        undeployed_names = list(map(lambda i: exp_names[i], undeployed))
+        undeployed_names = list(map(lambda i: exp_names[i], cur_undeployed))
 
         # Build deployed experiment names
         deployed_names = set(exp_names) - set(undeployed_names)
@@ -167,11 +178,12 @@ class Runner:
 
         # Build the status
         status = {
-            'Start Time': convert_unix_time_to_iso(start_time),
-            'Previous Round Time': convert_unix_time_to_iso(prev_round_time),
+            'Start Time': convert_unix_time_to_iso(self.start_time),
+            'Previous Round Time':
+                convert_unix_time_to_iso(self.prev_round_time),
             'Elapsed time (s)': elapsed_time,
-            'Stage': stage,
-            'Round #': round_idx + 1,
+            'Stage': self.stage,
+            'Round #': self.round_idx + 1,
             'Deployed Experiments': deployed_names,
             'Undeployed Experiments': undeployed_names,
             'Undeployed Experiments (For command)': ','.join(undeployed_names),
@@ -271,8 +283,13 @@ class Runner:
                     status, deployed_exps, deployed_servers, exp_idx,
                     server_idx, exp_name)
 
-                # Increment the number of successful deployments
+                # Check whether the deployment is successful
                 if status == 'success' or status == 'continue':
+                    # Write the deployment status
+                    self._write_deployment_status(
+                        filtered_deployed=deployed_exps)
+
+                    # Increment the number of successful deployments
                     num_success += 1
 
             # Check whether there are no available servers in this
@@ -1094,22 +1111,22 @@ class Runner:
     # Logging
     ############################################################################
 
-    def _log_round(self, round_idx, stage, undeployed):
+    def _log_round(self):
         if self.verbose:
             # Log the round number
-            self.logger.info('Round #{}'.format(round_idx + 1))
+            self.logger.info('Round #{}'.format(self.round_idx + 1))
 
             # Log the undeployed experiments
-            exps_spec = self._get_experiment_specs(stage)
+            exps_spec = self._get_experiment_specs(self.stage)
             undeployed_names = [exps_spec[i].get('name', '#{}'.format(i))
-                                for i in undeployed]
+                                for i in self.undeployed]
             self.logger.info('Undeployed experiments: {}'.format(
                 json.dumps(undeployed_names)))
 
-    def _log_round_time(self, prev_round_time):
+    def _log_round_time(self):
         if self.verbose:
             # Calculate round time
-            elapsed_time = time.time() - prev_round_time
+            elapsed_time = time.time() - self.prev_round_time
 
             # Log the elapsed time
             self.logger.info(
