@@ -4,6 +4,8 @@ This example runs a short Tmux session and a long Tmux session on local.
 
 The short Tmux session would delay for 10 seconds and write the current time into `examples/local_tmux/output.log`. The long Tmux session would wait for the short Tmux session to finish, wait for 30 seconds, and delete the previous output file.
 
+For remote Tmux sessions, please see the example [examples/train_tensorflow_examples](../../examples/train_tensorflow_examples).
+
 ## Prerequisites
 
 Please make sure `tmux` is installed on the local machine.
@@ -16,7 +18,7 @@ To run this example, use project root directory as working directory and execute
 noodles run examples/local_tmux/spec.yml
 ```
 
-You would notice that `examples/local_tmux/output.log` is created after 10 seconds delay and deleted after 30 seconds.
+You would notice that `examples/local_tmux/output.log` is created after 10 seconds delay and deleted after 30 seconds. You would also notice that Noodles would exit long before the the output file gets deleted.
 
 ## Stop
 

@@ -20,6 +20,7 @@ experiment_default:
     MARKER_PATH: $HOME/marker_$EXPERIMENT.txt
     STDERR_PATH: $HOME/tensorflow_results.$EXPERIMENT.stderr.log
     STDOUT_PATH: $HOME/tensorflow_results.$EXPERIMENT.stdout.log
+    TMUX_SESSION_PREFIX: test
   requirements:
     clean:
     - has_lock_file: "==No"
@@ -94,8 +95,8 @@ requirements:
   has_lock_file: "[ -f $LOCK_FILE_PATH ] && echo -n Yes || echo -n No"
   # Check whether the marker file "$MARKER_PATH" exists
   has_marker_file: "[ -f $MARKER_PATH ] && echo -n Yes || echo -n No"
-  # Count the Tmux session of the name "$TMUX_SESSION_NAME"
-  tmux_count: "tmux ls 2>/dev/null | grep $TMUX_SESSION_NAME | wc -l"
+  # Count the Tmux session of the name "$TMUX_SESSION_PREFIX/$EXPERIMENT"
+  tmux_count: "tmux ls 2>/dev/null | grep $TMUX_SESSION_PREFIX/$EXPERIMENT | wc -l"
 
 ################################################################################
 # Deployment

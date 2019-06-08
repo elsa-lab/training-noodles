@@ -309,7 +309,7 @@ class Runner:
         commands = self._get_experiment_details(exp_spec, 'commands')
 
         # Build the user files
-        user_files = self._build_user_files(exp_spec)
+        user_files = self._build_user_files(exp_spec, envs)
 
         # Deploy the experiment to the server
         status, stdout, stderr = self._run_commands(
@@ -318,7 +318,7 @@ class Runner:
         # Return the status and outputs
         return status, stdout, stderr
 
-    def _build_user_files(self, exp_spec):
+    def _build_user_files(self, exp_spec, envs):
         # Initialize the user files
         user_files = {}
 
@@ -338,7 +338,11 @@ class Runner:
 
             # Check whether to add the path to the outputs
             if path is not None:
-                user_files[stream] = path
+                # Evaluate the path
+                evaluated_path = self._evaluate_expression(path, envs=envs)
+
+                # Save the evaluated path
+                user_files[stream] = evaluated_path
 
         # Return the user files
         return user_files
@@ -804,14 +808,10 @@ class Runner:
         all_results, debug_infos = run_commands(
             server_spec, commands, user_files=user_files, envs=envs)
 
-        # Check errors
+        # Check errors from all results
         status = None
         for results, debug_info in zip(all_results, debug_infos):
             status = self._handle_errors(results, debug_info)
-
-            # Break when it has error status
-            if status != 'success':
-                break
 
         # Combine STDOUTs produced by inner commands
         combined_stdout = self._combine_outputs(all_results, 'stdout')
@@ -913,7 +913,7 @@ class Runner:
         if m is None:
             return expr
 
-        # Evaluate express until success
+        # Evaluate expression until success
         status = None
 
         while status != 'success':

@@ -76,10 +76,39 @@ def run_commands(server_spec, commands, user_files={}, envs={}):
     return all_results, debug_infos
 
 
+def get_error_messages(results, debug_info):
+    # Initialize empty messages
+    messages = []
+
+    # Check errors caused by either outer command or inner commands
+    return_code_error = (results['return_code'] != 0)
+    outer_error = (len(results['outer_stderr']) > 0)
+    inner_error = (len(results['stderr']) > 0)
+
+    if return_code_error or outer_error or inner_error:
+        messages.append('Error occurred when running the commands')
+        messages.append('Outer command->\n{}'.format(
+            debug_info['outer_command']))
+        messages.append('Inner commands->\n{}'.format(
+            debug_info['inner_commands']))
+        messages.append('Environment variables->\n{}'.format(
+            json.dumps(debug_info['envs'])))
+        messages.append('Return code: {}'.format(results['return_code']))
+        messages.append('Outer STDOUT->\n{}'.format(results['outer_stdout']))
+        messages.append('Outer STDERR->\n{}'.format(results['outer_stderr']))
+        messages.append('Inner STDOUT->\n{}'.format(results['stdout']))
+        messages.append('Inner STDERR->\n{}'.format(results['stderr']))
+
+    return messages
+
+
 def _run_commands_on_endpoint(endpoint_command, inner_commands,
                               user_files={}, clear_user_files=True, envs={}):
+    # Read the original user file sizes
+    user_file_sizes = _read_file_sizes(user_files, clear_user_files, envs)
+
     # Create temporary files for each command group
-    temp_files = _create_temp_files()
+    temp_files = _create_temp_files(user_files)
 
     # Write command to the stdin file
     _write_command_to_stdin(inner_commands, temp_files)
@@ -95,7 +124,8 @@ def _run_commands_on_endpoint(endpoint_command, inner_commands,
     outer_stdout, outer_stderr, return_code = read_command_results(p_obj)
 
     # Read stdout and stderr from the inner commands
-    inner_stdout, inner_stderr = _read_stdout_and_stderr(temp_files)
+    inner_stdout, inner_stderr = _read_stdout_and_stderr(
+        temp_files, user_files, user_file_sizes)
 
     # Delete temporary files
     _delete_temp_files(temp_files)
@@ -188,7 +218,33 @@ def _add_endpoint_results_to_outputs(server_spec, prev_scheme, cur_group,
     inner_commands.append(cur_group)
 
 
-def _create_temp_files():
+def _read_file_sizes(files, clear_user_files, envs):
+    # Initialize the file sizes
+    file_sizes = {}
+
+    # Iterate each file
+    for stream, path in files.items():
+        # Check whether to read the file size
+        if clear_user_files:
+            # The user file is about to be cleared, so the file size will be 0
+            file_size = 0
+        else:
+            # Read the file size
+            try:
+                file_size = os.path.getsize(path)
+            except:
+                logging.exception(
+                    'Could not read the file size from file "{}"'.format(path))
+                raise
+
+        # Save the file size to the results
+        file_sizes[stream] = file_size
+
+    # Return the file sizes
+    return file_sizes
+
+
+def _create_temp_files(user_files):
     # Initialize the results
     temp_files = {}
 
@@ -200,11 +256,16 @@ def _create_temp_files():
 
     # Iterate each stream
     for stream, close in zip(streams, closes):
-        # Create the temporary file
-        fp, path = _create_temp_file(stream, close=close)
+        # Check whether the user file exists
+        user_path = user_files.get(stream, None)
 
-        # Save the file pointer, path and temporary marker
-        temp_files[stream] = dict(fp=fp, path=path)
+        # Only create the temporary file when the user file doesn't exist
+        if user_path is None:
+            # Create the temporary file
+            fp, path = _create_temp_file(stream, close=close)
+
+            # Save the file pointer, path and temporary marker
+            temp_files[stream] = dict(fp=fp, path=path)
 
     # Return the results
     return temp_files
@@ -254,7 +315,7 @@ def _write_command_to_stdin(command, files):
     fp.close()
 
 
-def _read_stdout_and_stderr(files):
+def _read_stdout_and_stderr(temp_files, user_files, user_file_sizes):
     # Initialize all contents
     all_contents = []
 
@@ -263,23 +324,50 @@ def _read_stdout_and_stderr(files):
 
     # Iterate each stream
     for stream in streams:
-        # Get the path
-        file_stream = files[stream]
-        path = file_stream['path']
+        # Get the user file path
+        user_path = user_files.get(stream)
 
-        try:
-            # Read the contents
-            with open(path, 'rb') as fp:
-                contents = fp.read()
+        # Check whether to read from user file
+        if user_path is None:
+            # Get the temporary file path
+            temp_path = temp_files[stream]['path']
 
-            # Add the contents to the outputs
-            all_contents.append(contents)
-        except:
-            logging.exception('Failed to read {} file: {}'.format(
-                stream, path))
-            raise
+            # Set the file to read
+            read_path = temp_path
+
+            # There is no old file, set offset to the beginning
+            offset = 0
+        else:
+            # Set the file to read
+            read_path = user_path
+
+            # Get the old user file size as offset
+            offset = user_file_sizes.get(stream, None)
+
+        # Read the file contents
+        contents = _read_file_contents(stream, read_path, offset=offset)
+
+        # Add the contents to the list
+        all_contents.append(contents)
 
     return all_contents[0], all_contents[1]
+
+
+def _read_file_contents(stream, path, offset=0):
+    try:
+        # Open the file in binary mode
+        with open(path, 'rb') as fp:
+            # Offset the stream position
+            fp.seek(offset)
+
+            # Read the contents
+            contents = fp.read()
+
+        # Return the contents
+        return contents
+    except:
+        logging.exception('Failed to read {} file: {}'.format(stream, path))
+        raise
 
 
 def _delete_temp_files(temp_files):
@@ -386,66 +474,50 @@ def _build_outer_command(endpoint_command, temp_files, user_files,
     # Get temporary file path for STDIN
     stdin_path = temp_files['stdin']['path']
 
-    # Build the tee command part for STDOUT and STDERR
-    stdout_command = _build_tee_commnad_part(
+    # Build the command part for STDIN
+    stdin_command = '< "{}"'.format(stdin_path)
+
+    # Build the command part for STDOUT and STDERR
+    stdout_command = _build_output_command_part(
         'stdout', temp_files, user_files, clear_user_files)
-    stderr_command = _build_tee_commnad_part(
+    stderr_command = _build_output_command_part(
         'stderr', temp_files, user_files, clear_user_files)
 
     # Build the command
-    outer_command = '{} \'bash -s\' < "{}" > {} 2> {}'.format(
-        endpoint_command, stdin_path, stdout_command, stderr_command)
+    outer_command = '{} \'bash -s\' {} {} {}'.format(
+        endpoint_command, stdin_command, stdout_command, stderr_command)
 
     # Return the final command
     return outer_command
 
 
-def _build_tee_commnad_part(stream, temp_files, user_files, clear_user_files):
-    # Get temporary file path
-    temp_path = temp_files[stream]['path']
-
+def _build_output_command_part(stream, temp_files, user_files,
+                               clear_user_files):
     # Get user file path
     user_path = user_files.get(stream, None)
 
-    # Check whether to append to user file
-    if user_path is None:
-        # Suppress the output from tee
-        tee_to = '"{}" > {}'.format(temp_path, '/dev/null')
+    # Set the redirection operator
+    if stream == 'stdout':
+        redirection = '>'
+    elif stream == 'stderr':
+        redirection = '2>'
     else:
-        # Check whether to clear user files
-        if clear_user_files:
-            redirection = '>'
-        else:
-            redirection = '>>'
+        raise ValueError('Unsupported stream "{}"'.format(stream))
 
-        # Redirect the output from tee to user file
-        tee_to = '"{}" {} "{}"'.format(temp_path, redirection, user_path)
+    # Check whether to output to the user file
+    if user_path is None:
+        # Get the temporary file path
+        temp_path = temp_files[stream]['path']
 
-    # Build the tee command part and return
-    return '>(tee {})'.format(tee_to)
+        # Output to the temporary path
+        output_path = temp_path
+    else:
+        # Check whether to append to the file
+        if not clear_user_files:
+            redirection = '{}>'.format(redirection)
 
+        # Output to the user file
+        output_path = user_path
 
-def get_error_messages(results, debug_info):
-    # Initialize empty messages
-    messages = []
-
-    # Check errors caused by either outer command or inner commands
-    return_code_error = (results['return_code'] != 0)
-    outer_error = (len(results['outer_stderr']) > 0)
-    inner_error = (len(results['stderr']) > 0)
-
-    if return_code_error or outer_error or inner_error:
-        messages.append('Error occurred when running the commands')
-        messages.append('Outer command->\n{}'.format(
-            debug_info['outer_command']))
-        messages.append('Inner commands->\n{}'.format(
-            debug_info['inner_commands']))
-        messages.append('Environment variables->\n{}'.format(
-            json.dumps(debug_info['envs'])))
-        messages.append('Return code: {}'.format(results['return_code']))
-        messages.append('Outer STDOUT->\n{}'.format(results['outer_stdout']))
-        messages.append('Outer STDERR->\n{}'.format(results['outer_stderr']))
-        messages.append('Inner STDOUT->\n{}'.format(results['stdout']))
-        messages.append('Inner STDERR->\n{}'.format(results['stderr']))
-
-    return messages
+    # Build the command part and return
+    return '{} "{}"'.format(redirection, output_path)
