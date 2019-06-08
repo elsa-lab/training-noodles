@@ -512,7 +512,7 @@ class Runner:
                 group_idx + 1))
 
             # Update metrics lazily
-            self._update_metrics(metrics, req_group, envs)
+            self._update_metrics(metrics, req_group, deployed, envs)
 
             # Filter indexes of satisfied servers based on cached metrics
             satisfied = self._filter_satisfied_servers(
@@ -531,7 +531,7 @@ class Runner:
         # Return indexes of satisfied servers
         return satisfied
 
-    def _update_metrics(self, metrics, req_group, envs):
+    def _update_metrics(self, metrics, req_group, deployed, envs):
         # Iterate each requirement ID
         for req_id in req_group.keys():
             # Check whether we should update the metric
@@ -540,7 +540,8 @@ class Runner:
                 self._log_verbose(('Check requirement ID: {}').format(req_id))
 
                 # Check server metrics
-                server_metrics = self._check_server_metrics(req_id, envs)
+                server_metrics = self._check_server_metrics(
+                    req_id, deployed, envs)
 
                 # Update the metrics
                 metrics[req_id] = server_metrics
@@ -590,7 +591,7 @@ class Runner:
                 'Unknown scheme "{}" in requirement ID "{}"'.format(
                     scheme, req_id))
 
-    def _check_server_metrics(self, req_id, envs):
+    def _check_server_metrics(self, req_id, deployed, envs):
         # Initialize the metric outputs
         metrics = []
 
@@ -601,7 +602,15 @@ class Runner:
         servers_spec = self._get_server_specs()
 
         # Iterate each server spec
-        for server_spec in servers_spec:
+        for server_idx, server_spec in enumerate(servers_spec):
+            # Check whether the server has been deployed
+            if server_idx in deployed:
+                # Append null metric to the list
+                metrics.append(None)
+
+                # Continue to next server
+                continue
+
             # Run the command until success
             status = None
 
