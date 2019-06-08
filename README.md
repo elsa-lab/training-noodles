@@ -69,7 +69,7 @@ The implementation of Noodles complies with the following rules:
 Run the following command:
 
 ```bash
-pip install -e .
+pip install training-noodles
 ```
 
 ## Usage
