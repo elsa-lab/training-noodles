@@ -2,7 +2,7 @@
 
 This example runs three different TensorFlow examples on two different remote servers.
 
-[TensorFlow examples](https://github.com/aymericdamien/TensorFlow-Examples) will be downloaded on remote servers.
+[TensorFlow examples](https://github.com/aymericdamien/TensorFlow-Examples) will be downloaded on remote servers and run.
 
 The general procedure of the 1st phase *Initialize Experiments* goes like this:
 
