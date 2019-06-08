@@ -3,11 +3,13 @@ import logging
 
 import yaml
 
-from training_noodles.utils import update_dict_with_missing
+from training_noodles.utils import (
+    get_resource_path, update_dict_with_missing)
 
 
 # Set the path to default spec
-default_spec_path = 'training_noodles/specs/defaults.yml'
+default_spec_path = get_resource_path(
+    'training_noodles', 'training_noodles/specs/defaults.yml')
 
 # Set keys to copy from default spec
 keys_to_copy = [

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.3 (2019-06-08)
+
+* Fixed default spec path not found error
+
 ## 1.0.2 (2019-06-08)
 
 * Fixed Python module not found error

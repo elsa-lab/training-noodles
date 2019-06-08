@@ -3,6 +3,8 @@ import logging
 import re
 import time
 
+import pkg_resources
+
 
 def convert_unix_time_to_iso(t):
     # Convert to datetime
@@ -14,6 +16,14 @@ def convert_unix_time_to_iso(t):
 
 def convert_values_to_strs(d):
     return {k: str(v) for k, v in d.items()}
+
+
+def get_resource_path(package, resource_name):
+    # Build the requirement
+    requirement = pkg_resources.Requirement.parse(package)
+
+    # Get the resource filename and return
+    return pkg_resources.resource_filename(requirement, resource_name)
 
 
 def match_full(pattern, s):
