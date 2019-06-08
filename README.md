@@ -19,7 +19,7 @@ If we want to run 4 experiments on 3 servers, more specifically, we need to
 2. Run the code on the server
 3. Download experimental results when they're ready
 
-![round_1](images/round_1.png)
+![round_1](https://github.com/sc420/training-noodles/raw/master/images/round_1.png)
 
 In the first deployment round (See image above), Noodles will use the user-defined commands to check CPU usage on the servers.
 
@@ -27,13 +27,13 @@ The CPU usage is high on *Server 1*, so Noodles uses `scp` to upload the code an
 
 As for how to upload the code, it's just a list of commands written by us, Noodles just follows the commands.
 
-![round_2](images/round_2.png)
+![round_2](https://github.com/sc420/training-noodles/raw/master/images/round_2.png)
 
 In the second deployment round (See image above), we tell Noodles to check experimental results on all servers.
 
 Noodles finds that *Server 3* has just finished running *Code 2*, so it downloads the experimental results and process the data on local machine as we tell it to do so.
 
-![round_3](images/round_3.png)
+![round_3](https://github.com/sc420/training-noodles/raw/master/images/round_3.png)
 
 In the third deployment round (See image above), Noodles continues to check CPU usage, upload the code and run the code because *Code 3* and *Code 4* have the same CPU usage requirements and the same commands as *Code 1* and *Code 2* (but different code to upload).
 
