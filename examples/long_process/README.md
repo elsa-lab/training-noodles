@@ -4,7 +4,7 @@ This example shows the ability to see the intermediate results of any long proce
 
 We simply print the numbers in a range per second on the remote server. The log files will be updated often with new printed numbers.
 
-An alternative to this method is to use Tmux to run long processes. It has many [benefits](https://www.bugsnag.com/blog/benefits-of-using-tmux) over this method. See [examples/train_tensorflow_examples](../../examples/train_tensorflow_examples/README.md).
+An alternative to this method is to use Tmux to run long processes. It has many [benefits](https://www.bugsnag.com/blog/benefits-of-using-tmux) over this method. See [examples/train_tensorflow_examples](../../examples/train_tensorflow_examples).
 
 ## Run
 

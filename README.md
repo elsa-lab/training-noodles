@@ -95,7 +95,7 @@ You can also choose only some experiments:
 noodles run "my_training.yml:Experiment 1,Experiment 2"
 ```
 
-See the example [Two Locals](examples/two_locals/README.md) to get started. See [Train TensorFlow Examples](examples/train_tensorflow_examples/README.md) for a more complex example.
+See the example [Two Locals](examples/two_locals) to get started. See [Train TensorFlow Examples](examples/train_tensorflow_examples) for a more complex example.
 
 ## Default Spec
 
