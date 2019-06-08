@@ -5,5 +5,8 @@
 # Handle errors
 source scripts/dev/includes/error_handling.sh
 
+# Print the goal of this script
+echo "Install the package in development mode"
+
 # Install the package in development mode
 pip install -e .

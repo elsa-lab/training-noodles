@@ -8,6 +8,8 @@ source scripts/dev/includes/error_handling.sh
 # Include constants
 source scripts/dev/includes/constants.sh
 
+echo "Test the package $PACKAGE_NAME"
+
 ################################################################################
 # Clean Up Old Stuff
 ################################################################################

@@ -11,6 +11,9 @@ source scripts/dev/includes/constants.sh
 # Get arguments
 WHEEL_FILENAME=$1
 
+# Print the goal of this script
+echo "Test the wheel file $WHEEL_FILENAME"
+
 ################################################################################
 # Clean Up Old Stuff
 ################################################################################
@@ -76,7 +79,7 @@ source deactivate
 conda remove -y -n "$TEST_CONDA_ENV_NAME" --all
 
 ################################################################################
-# Print OK
+# Print Success Message
 ################################################################################
 
 echo "Successfully tested the wheel file $WHEEL_FILENAME"

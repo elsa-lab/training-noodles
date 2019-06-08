@@ -7,6 +7,9 @@
 # Handle errors
 source scripts/dev/includes/error_handling.sh
 
+# Print the goal of this script
+echo "Clean unnecessary files"
+
 # Uninstall the package
 source scripts/dev/uninstall.sh
 
