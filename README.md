@@ -59,6 +59,11 @@ The implementation of Noodles complies with the following rules:
 2. Easy to debug (Noodles can take different actions when different error occurs)
 3. Stateless (The only state Noodles cares about is whether the deployment is successful or not, the states of the experiments must be handled by the user)
 
+## Prerequisites
+
+1. Linux-based terminals (For Windows, I recommend using [git-sdk](https://github.com/git-for-windows/build-extra/releases))
+2. Python 3.5 or higher
+
 ## Installation
 
 Run the following command:

@@ -83,7 +83,7 @@ setup(
 
     # This should be a valid email address corresponding to the author listed
     # above.
-    author_email='ebola777@yahoo.com.tw',  # Optional
+    author_email='shawn420@gapp.nthu.edu.tw',  # Optional
 
     # Classifiers help users find your project by categorizing it.
     #
@@ -97,6 +97,11 @@ setup(
 
         # Indicate who your project is intended for
         'Intended Audience :: Developers',
+
+        'Topic :: Scientific/Engineering :: Artificial Intelligence',
+        'Topic :: System :: Distributed Computing',
+        'Topic :: System :: Installation/Setup',
+        'Topic :: System :: Monitoring',
         'Topic :: Utilities',
 
         # Pick your license as you wish
@@ -117,7 +122,7 @@ setup(
     # project page. What does your project relate to?
     #
     # Note that this is a string of words separated by whitespace, not a list.
-    keywords='ssh training tools noodles',  # Optional
+    keywords='training deployment tools noodles ssh',  # Optional
 
     # You can just specify package directories manually here if your project is
     # simple. Or you can use find_packages().
