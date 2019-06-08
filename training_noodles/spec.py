@@ -161,47 +161,56 @@ def _fill_missing_with_defaults(default_spec, user_spec, keys):
         # Split the key by '/' into parts (e.g., 'a/b' becomes ['a', 'b'])
         parts = key.split('/')
 
-        # Go inside the nested dict to assign the values
-        user_parent = None
+        # Initialize the parents
+        default_parent = default_spec
+        user_parent = user_spec
 
-        default_value = default_spec
-        user_value = user_spec
+        # Iterate each part except the last part
+        for part in parts[:-1]:
+            # e.g., part = 'a', parents = <root>
 
-        for part in parts:
+            # Check whether the part is not "*"
             if part == '*':
-                # e.g., key = 'a/*', part = '*',
-                # user_value = user_spec['a']
+                raise ValueError('"*" should only be used in the last part')
 
-                # Update missing values
-                updated_user_value = update_dict_with_missing(
-                    user_value, default_value)
+            # Get the nested spec from default parent
+            default_value = default_parent.get(part, None)
 
-                for k, v in updated_user_value.items():
-                    user_value[k] = v
-            else:
-                # e.g., part = 'b'
+            # Check whether the nested spec is missing
+            if default_value is None:
+                raise ValueError(
+                    'The value of part "{}" of key "{}" is missing'.format(
+                        part, key))
 
-                # Save the last user value as parent (e.g., user_spec['a'])
-                user_parent = user_value
+            # Get the values (e.g., <root>[part], <root>['a'][part])
+            user_value = user_parent.get(part, None)
 
-                # Get the values (e.g., default_spec['a'][part])
-                default_value = default_value.get(part, {})
-                user_value = user_value.get(part, {})
+            # Check whether to initialize the nested spec in user parent
+            if user_value is None:
+                # Add an empty dict to the user parent
+                user_parent[part] = {}
 
-                # Check whether to set missing user dict
-                if user_value == {}:
-                    # Set the children to empty dict
-                    user_parent[part] = {}
-
-                    # Set the user value to the created empty dict
-                    user_value = user_parent.get(part, {})
+            # Update the parents
+            default_parent = default_value
+            user_parent = user_parent.get(part, None)
 
         # Assign default value in last part
-        if part != '*':
-            # e.g., part = 'b', user_parent = user_spec['a'],
-            # default_value = 3.14
+        # e.g., <parents> = <root>, <values> = <root>['a']
+        part = parts[-1]
 
-            # Get user value
+        if part == '*':
+            # Add missing values in the user parent
+            updated_user_parent = update_dict_with_missing(
+                user_parent, default_parent)
+
+            # Update values in the user parent
+            for k, v in updated_user_parent.items():
+                user_parent[k] = v
+        else:
+            # e.g., part = 'b'
+
+            # Get the values
+            default_value = default_parent.get(part, None)
             user_value = user_parent.get(part, None)
 
             # Assign the default value if user value is not specified
