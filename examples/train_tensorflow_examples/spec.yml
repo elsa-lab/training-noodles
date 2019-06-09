@@ -196,9 +196,9 @@ experiments:
     run:
     # Run scp on local to download STDOUT and STDERR files to the local example directory
     - "echo Downloading experimental results from $NOODLES_SERVER_NAME"
-    - >
+    - |-
       local:scp $NOODLES_SERVER_AUTHORITY:$ESCAPED_STDOUT_PATH $LOCAL_DIR
-    - >
+    - |-
       local:scp $NOODLES_SERVER_AUTHORITY:$ESCAPED_STDERR_PATH $LOCAL_DIR
     # Remove the lock file
     - "rm -f $LOCK_FILE_PATH"
@@ -219,9 +219,9 @@ experiments:
     run:
     # Run scp on local to download STDOUT and STDERR files to the local example directory
     - "echo Downloading experimental results from $NOODLES_SERVER_NAME"
-    - >
+    - |-
       local:scp $NOODLES_SERVER_AUTHORITY:$ESCAPED_STDOUT_PATH $LOCAL_DIR
-    - >
+    - |-
       local:scp $NOODLES_SERVER_AUTHORITY:$ESCAPED_STDERR_PATH $LOCAL_DIR
     # Remove the lock file
     - "rm -f $LOCK_FILE_PATH"
@@ -242,9 +242,9 @@ experiments:
     run:
     # Run scp on local to download STDOUT and STDERR files to the local example directory
     - "echo Downloading experimental results from $NOODLES_SERVER_NAME"
-    - >
+    - |-
       local:scp $NOODLES_SERVER_AUTHORITY:$ESCAPED_STDOUT_PATH $LOCAL_DIR
-    - >
+    - |-
       local:scp $NOODLES_SERVER_AUTHORITY:$ESCAPED_STDERR_PATH $LOCAL_DIR
     # Remove the lock file
     - "rm -f $LOCK_FILE_PATH"
