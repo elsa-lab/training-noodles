@@ -1,0 +1,22 @@
+# Travis configuration file
+#
+# See: https://docs.travis-ci.com/
+
+dist: xenial # Required for Python >= 3.7
+
+# Selecting a programming language
+language: python
+
+# Specifying Python versions
+python:
+  - "3.5"
+  - "3.6"
+  - "3.7"
+
+# Commands to install dependencies
+install:
+  - pip3 install -e .
+
+# Commands to run tests
+script:
+  - python3 -m unittest
