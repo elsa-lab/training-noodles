@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.5 (2019-06-08)
+
+* Updated README
+
 ## 1.0.4 (2019-06-08)
 
 * Fixed images in README not showing in PyPI webpage
