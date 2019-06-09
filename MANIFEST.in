@@ -1,3 +1,7 @@
+# Configuration file for source distribution
+#
+# See: https://docs.python.org/3.7/distutils/sourcedist.html
+
 # Include the README
 include README.md
 
