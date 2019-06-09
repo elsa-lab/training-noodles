@@ -2,8 +2,14 @@
 #
 # Handle errors and exit
 #
-# Reference: https://stackoverflow.com/a/185900
+# References:
+# https://stackoverflow.com/a/185900
+# https://superuser.com/a/257591
 
+# Make ERR trap inherited in functions
+set -o errtrace
+
+# Error handler
 error() {
   local parent_lineno="$1"
   local message="$2"
@@ -16,4 +22,5 @@ error() {
   exit "${code}"
 }
 
+# Trap the errors
 trap 'error ${LINENO}' ERR
