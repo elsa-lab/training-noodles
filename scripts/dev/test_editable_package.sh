@@ -1,9 +1,6 @@
 #!/bin/bash
 #
-# Test the wheel file in a new Anaconda environment
-#
-# Arguments:
-# $1: Wheel filename
+# Test the package in a new Anaconda environment
 
 # Handle errors
 source scripts/dev/includes/error_handling.sh
@@ -14,11 +11,8 @@ source scripts/dev/includes/constants.sh
 # Include test functions
 source scripts/dev/includes/tests.sh
 
-# Get arguments
-WHEEL_FILENAME=$1
-
 # Print the goal of this script
-echo "Test the wheel file \"$WHEEL_FILENAME\""
+echo "Test the editable package \"$PACKAGE_NAME\""
 
 # Test each Python version
 for TEST_PYTHON_VERSION in "${TEST_PYTHON_VERSIONS[@]}"
@@ -32,8 +26,8 @@ do
     # Set up test test environment
     set_up_test_env
 
-    # Install the wheel file
-    pip install "$WHEEL_FILENAME"
+    # Install the package in development mode
+    source scripts/dev/install.sh
 
     # Run the tests
     run_tests
@@ -43,4 +37,4 @@ do
 done
 
 # Print success message
-echo "Successfully tested the wheel file \"$WHEEL_FILENAME\""
+echo "Successfully tested the editable package \"$PACKAGE_NAME\""

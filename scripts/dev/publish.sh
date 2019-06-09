@@ -33,3 +33,6 @@ source scripts/dev/test_wheel.sh "$WHEEL_FILENAME"
 
 # Upload the distributions
 twine upload dist/*
+
+# Print success message
+echo "Successfully published the project to PyPI"

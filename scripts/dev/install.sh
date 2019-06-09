@@ -10,3 +10,6 @@ echo "Install the package in development mode"
 
 # Install the package in development mode
 pip install -e .
+
+# Print success message
+echo "Successfully installed the package in development mode"

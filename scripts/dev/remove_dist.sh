@@ -11,3 +11,6 @@ echo "Remove the distribution files"
 # Remove directories created by PyPI
 rm -rf build/
 rm -rf dist/
+
+# Print success message
+echo "Successfully removed the distribution files"

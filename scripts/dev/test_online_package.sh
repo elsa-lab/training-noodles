@@ -8,74 +8,33 @@ source scripts/dev/includes/error_handling.sh
 # Include constants
 source scripts/dev/includes/constants.sh
 
-echo "Test the online package $PACKAGE_NAME"
+# Include test functions
+source scripts/dev/includes/tests.sh
 
-################################################################################
-# Clean Up Old Stuff
-################################################################################
+# Print the goal of this script
+echo "Test the online package \"$PACKAGE_NAME\""
 
-echo "Clean up old stuff"
+# Test each Python version
+for TEST_PYTHON_VERSION in "${TEST_PYTHON_VERSIONS[@]}"
+do
+    # Print the Python version
+    echo "Test with Python $TEST_PYTHON_VERSION"
 
-# Remove the old Conda environment
-conda remove -y -n "$TEST_CONDA_ENV_NAME" --all
+    # Clean old stuff
+    clean_old_stuff
 
-# Remove the test directory
-rm -rf "$TEST_DIR"
+    # Set up test test environment
+    set_up_test_env
 
-################################################################################
-# Set Up
-################################################################################
+    # Install the online package
+    pip install $PACKAGE_NAME
 
-echo "Set up"
+    # Run the tests
+    run_tests
 
-# Create a Conda environment
-conda create -y -n "$TEST_CONDA_ENV_NAME" python=$TEST_PYTHON_VERSION
+    # Tear down the test environment
+    tear_down_test_env
+done
 
-# Activate the Conda environment
-source activate "$TEST_CONDA_ENV_NAME"
-
-# Install the online package
-pip install $PACKAGE_NAME
-
-# Create a new temporary directory
-mkdir -p "$TEST_DIR"
-
-# Copy the examples to the test directory
-cp -r "examples/" "$TEST_DIR/examples/"
-
-# Change the working directory to the test directory
-cd "$TEST_DIR"
-
-################################################################################
-# Run Tests
-################################################################################
-
-echo "Run tests"
-
-# Run the examples
-noodles run examples/two_locals/spec.yml
-noodles clean examples/two_locals/clean.yml
-
-################################################################################
-# Tear Down
-################################################################################
-
-echo "Tear down"
-
-# Change the working directory back to the root directory
-cd -
-
-# Remove the test directory
-rm -rf "$TEST_DIR"
-
-# Deactivate the Conda environment
-source deactivate
-
-# Remove the Conda environment
-conda remove -y -n "$TEST_CONDA_ENV_NAME" --all
-
-################################################################################
-# Print OK
-################################################################################
-
-echo "Successfully tested the online package $PACKAGE_NAME"
+# Print success message
+echo "Successfully tested the online package \"$PACKAGE_NAME\""
