@@ -79,6 +79,9 @@ class Runner:
         # Get number of experiments in the stage
         num_exps = self._count_experiments(self.stage)
 
+        # Initialize a set of indexes of deployed experiments
+        self.deployed = set()
+
         # Initialize a set of indexes of undeployed experiments
         self.undeployed = set(range(num_exps))
 
@@ -109,11 +112,14 @@ class Runner:
                 filtered_exps)
 
             # Restore unfiltered indexes
-            deployed = self._restore_unfiltered_indexes(
+            round_deployed = self._restore_unfiltered_indexes(
                 self.undeployed, filtered_deployed)
 
+            # Add deployed indexes
+            self.deployed |= round_deployed
+
             # Remove deployed indexes
-            self.undeployed -= deployed
+            self.undeployed -= round_deployed
 
             # Accumulate number of successful deployments
             total_num_success += num_success
@@ -163,21 +169,25 @@ class Runner:
         # Get all experiment names
         exp_names = self._get_experiment_names(exps_spec)
 
-        # Restore current deployed experiment indexes
-        cur_deployed = self._restore_unfiltered_indexes(
+        # Restore deployed experiment indexes in current round
+        round_deployed = self._restore_unfiltered_indexes(
             self.undeployed, filtered_deployed)
 
-        # Build current undeployed experiment indexes
-        cur_undeployed = self.undeployed - cur_deployed
+        # Combine previously deployed indexes with current deployed indexes
+        # and sort the result
+        cur_deployed = sorted(self.deployed | round_deployed)
 
-        # Build undeployed experiment names
-        undeployed_names = list(map(lambda i: exp_names[i], cur_undeployed))
+        # Remove current deployed indexes from previously undeployed indexes
+        # and sort the result
+        cur_undeployed = sorted(self.undeployed - round_deployed)
 
         # Build deployed experiment names
-        deployed_names = set(exp_names) - set(undeployed_names)
+        deployed_names = list(
+            self._restore_experiment_names(exp_names, cur_deployed))
 
-        # Convert the sets to lists
-        deployed_names = list(deployed_names)
+        # Build undeployed experiment names
+        undeployed_names = list(
+            self._restore_experiment_names(exp_names, cur_undeployed))
 
         # Build the status
         status = {
@@ -467,6 +477,10 @@ class Runner:
 
         # Map the filtered deployed indexes to original undeployed indexes
         return set(map(lambda i: undeployed[i], filtered_deployed))
+
+    def _restore_experiment_names(self, exp_names, idxs):
+        # Map the indexes to experiment names and return
+        return map(lambda i: exp_names[i], idxs)
 
     ############################################################################
     # Experiment Deployment Management
