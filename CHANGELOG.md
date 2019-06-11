@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.9 (2019-06-11)
+
+* Fixed command execution error on Linux
+
 ## 1.0.8 (2019-06-11)
 
 * Fixed dependency checking

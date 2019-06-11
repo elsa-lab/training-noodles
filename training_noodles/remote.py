@@ -475,7 +475,7 @@ def _build_outer_command(endpoint_command, temp_files, user_files,
     stdin_path = temp_files['stdin']['path']
 
     # Build the command part for STDIN
-    stdin_command = '< "{}"'.format(stdin_path)
+    stdin_command = '< \'{}\''.format(stdin_path)
 
     # Build the command part for STDOUT and STDERR
     stdout_command = _build_output_command_part(
@@ -520,4 +520,4 @@ def _build_output_command_part(stream, temp_files, user_files,
         output_path = user_path
 
     # Build the command part and return
-    return '{} "{}"'.format(redirection, output_path)
+    return '{} \'{}\''.format(redirection, output_path)

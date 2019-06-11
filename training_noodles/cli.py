@@ -18,7 +18,7 @@ def run_command(command, stdin=None, extra_envs=None, wait=True):
     Returns:
         p_obj: A "Popen" object.
     """
-    # Wrap the command by bash
+    # Wrap the command by bash to ensure the command is executed by bash
     command = 'bash -c "{}"'.format(command)
 
     # Convert environment variable values to strings
@@ -41,7 +41,7 @@ def run_command(command, stdin=None, extra_envs=None, wait=True):
 
         # Run the program
         p_obj = subprocess.Popen(command, stdin=stdin, stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE, env=env)
+                                 stderr=subprocess.PIPE, shell=True, env=env)
 
         # Check whether to wait
         if wait:
