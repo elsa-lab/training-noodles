@@ -1,0 +1,14 @@
+name: Get server name
+
+description: Use the command "uname" to get the server name
+
+experiments:
+- name: Get server name
+  commands:
+    run: "uname -a"
+
+servers:
+- name: Server 1
+  private_key_path: $HOME/.ssh/id_rsa
+  username: $USER
+  hostname: server1

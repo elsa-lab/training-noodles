@@ -113,7 +113,7 @@ experiments:
     EXPERIMENT_PATH: $HOME/TensorFlow-Examples/examples/1_Introduction/basic_operations.py
   depends_on:
     run:
-    - Initialize server for Experiment 1
+    - init_exp1
   requirements:
     run:
     - has_lock_file: "==Yes"
@@ -137,7 +137,7 @@ experiments:
     EXPERIMENT_PATH: $HOME/TensorFlow-Examples/examples/2_BasicModels/logistic_regression.py
   depends_on:
     run:
-    - Initialize server for Experiment 2
+    - init_exp2
   requirements:
     run:
     - has_lock_file: "==Yes"
@@ -161,7 +161,7 @@ experiments:
     EXPERIMENT_PATH: $HOME/TensorFlow-Examples/examples/3_NeuralNetworks/neural_network.py
   depends_on:
     run:
-    - Initialize server for Experiment 3
+    - init_exp3
   requirements:
     run:
     - has_lock_file: "==Yes"
@@ -186,20 +186,19 @@ experiments:
     EXPERIMENT: exp1
   depends_on:
     run:
-    - Run experiment 1
+    - run_exp1
   requirements:
     run:
     - has_lock_file: "==Yes"
     - has_marker_file: "==Yes"
+    # Requires that Tmux session has ended
     - tmux_count: "<=0"
   commands:
     run:
     # Run scp on local to download STDOUT and STDERR files to the local example directory
     - "echo Downloading experimental results from $NOODLES_SERVER_NAME"
-    - |-
-      local:scp $NOODLES_SERVER_AUTHORITY:$ESCAPED_STDOUT_PATH $LOCAL_DIR
-    - |-
-      local:scp $NOODLES_SERVER_AUTHORITY:$ESCAPED_STDERR_PATH $LOCAL_DIR
+    - "local:scp $NOODLES_SERVER_AUTHORITY:$ESCAPED_STDOUT_PATH $LOCAL_DIR"
+    - "local:scp $NOODLES_SERVER_AUTHORITY:$ESCAPED_STDERR_PATH $LOCAL_DIR"
     # Remove the lock file
     - "rm -f $LOCK_FILE_PATH"
 
@@ -209,20 +208,19 @@ experiments:
     EXPERIMENT: exp2
   depends_on:
     run:
-    - Run experiment 2
+    - run_exp2
   requirements:
     run:
     - has_lock_file: "==Yes"
     - has_marker_file: "==Yes"
+    # Requires that Tmux session has ended
     - tmux_count: "<=0"
   commands:
     run:
     # Run scp on local to download STDOUT and STDERR files to the local example directory
     - "echo Downloading experimental results from $NOODLES_SERVER_NAME"
-    - |-
-      local:scp $NOODLES_SERVER_AUTHORITY:$ESCAPED_STDOUT_PATH $LOCAL_DIR
-    - |-
-      local:scp $NOODLES_SERVER_AUTHORITY:$ESCAPED_STDERR_PATH $LOCAL_DIR
+    - "local:scp $NOODLES_SERVER_AUTHORITY:$ESCAPED_STDOUT_PATH $LOCAL_DIR"
+    - "local:scp $NOODLES_SERVER_AUTHORITY:$ESCAPED_STDERR_PATH $LOCAL_DIR"
     # Remove the lock file
     - "rm -f $LOCK_FILE_PATH"
 
@@ -232,20 +230,19 @@ experiments:
     EXPERIMENT: exp3
   depends_on:
     run:
-    - Run experiment 3
+    - run_exp3
   requirements:
     run:
     - has_lock_file: "==Yes"
     - has_marker_file: "==Yes"
+    # Requires that Tmux session has ended
     - tmux_count: "<=0"
   commands:
     run:
     # Run scp on local to download STDOUT and STDERR files to the local example directory
     - "echo Downloading experimental results from $NOODLES_SERVER_NAME"
-    - |-
-      local:scp $NOODLES_SERVER_AUTHORITY:$ESCAPED_STDOUT_PATH $LOCAL_DIR
-    - |-
-      local:scp $NOODLES_SERVER_AUTHORITY:$ESCAPED_STDERR_PATH $LOCAL_DIR
+    - "local:scp $NOODLES_SERVER_AUTHORITY:$ESCAPED_STDOUT_PATH $LOCAL_DIR"
+    - "local:scp $NOODLES_SERVER_AUTHORITY:$ESCAPED_STDERR_PATH $LOCAL_DIR"
     # Remove the lock file
     - "rm -f $LOCK_FILE_PATH"
 

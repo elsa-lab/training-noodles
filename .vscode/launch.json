@@ -122,6 +122,19 @@
             ]
         },
         {
+            "name": "minimalist (run)",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/training_noodles/noodles.py",
+            "console": "integratedTerminal",
+            "args": [
+                "run",
+                "examples/minimalist/spec.yml",
+                "--verbose",
+                "--debug"
+            ]
+        },
+        {
             "name": "train_tensorflow_examples (run)",
             "type": "python",
             "request": "launch",
