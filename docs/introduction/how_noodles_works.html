@@ -1,0 +1,311 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>3. How Noodles Works &mdash; training-noodles  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="1. Installation" href="../guide/installation.html" />
+    <link rel="prev" title="2. Use Case" href="use_case.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> training-noodles
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">1. Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="use_case.html">2. Use Case</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">3. How Noodles Works</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#deploy-experiments-to-servers">3.1. Deploy Experiments to Servers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#check-requirements">3.2. Check Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#deploy-one-experiment">3.3. Deploy One Experiment</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/installation.html">1. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/linux_terminal_for_windows.html">2. Linux-based Terminal for Windows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/usage.html">3. Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/write_a_minimalist_spec_file.html">4. Write a Minimalist Spec File</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/see_other_examples.html">5. See Other Examples</a></li>
+</ul>
+<p class="caption"><span class="caption-text">References</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../references/spec_options.html">1. Spec Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references/environment_variables.html">2. Environment Variables</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">training-noodles</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>3. How Noodles Works</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/introduction/how_noodles_works.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="how-noodles-works">
+<h1>3. How Noodles Works<a class="headerlink" href="#how-noodles-works" title="Permalink to this headline">¶</a></h1>
+<p>Noodles deploys a number of experiments to the servers in each
+<em>deployment round</em>. Noodles checks the requirements on the servers and submit
+the commands only if the requirements are met. The general procedure is
+described in the section <a class="reference internal" href="#deploy-all-experiments"><span class="std std-ref">Deploy Experiments to Servers</span></a>.</p>
+<div class="section" id="deploy-experiments-to-servers">
+<span id="deploy-all-experiments"></span><h2>3.1. Deploy Experiments to Servers<a class="headerlink" href="#deploy-experiments-to-servers" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Initialize the list of experiments in <span class="math notranslate nohighlight">\(E\)</span></p></li>
+<li><p>For each deployment round:</p>
+<ol class="arabic simple">
+<li><p>Initialize the list of servers in <span class="math notranslate nohighlight">\(S\)</span></p></li>
+<li><p>Initialize the list of metrics in <span class="math notranslate nohighlight">\(M\)</span></p></li>
+<li><p>For each experiment <span class="math notranslate nohighlight">\(e\)</span> in <span class="math notranslate nohighlight">\(E\)</span>:</p>
+<ol class="arabic simple">
+<li><p>If any dependent experiment of <span class="math notranslate nohighlight">\(e\)</span> hasn’t been deployed,
+continue to next experiment (<code class="docutils literal notranslate"><span class="pre">depends_on</span></code>)</p></li>
+<li><p>Noodles checks requirements (See section <a class="reference internal" href="#check-requirements"><span class="std std-ref">Check Requirements</span></a>)</p></li>
+<li><p>Noodles compares the metrics (results from the above step) to the
+user-defined expression</p></li>
+<li><p>If the expression is satisfied, deploy the experiment <span class="math notranslate nohighlight">\(e\)</span> (See
+section <a class="reference internal" href="#deploy-one-experiment"><span class="std std-ref">Deploy One Experiment</span></a>.</p></li>
+</ol>
+</li>
+<li><p>If <span class="math notranslate nohighlight">\(E\)</span> is empty, break</p></li>
+<li><p>Wait for some time (<code class="docutils literal notranslate"><span class="pre">round_interval</span></code>)</p></li>
+</ol>
+</li>
+</ol>
+</div>
+<div class="section" id="check-requirements">
+<span id="id1"></span><h2>3.2. Check Requirements<a class="headerlink" href="#check-requirements" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li><p>For each requirement ID <span class="math notranslate nohighlight">\(r\)</span> and corresponding commands <span class="math notranslate nohighlight">\(C\)</span>:</p>
+<ol class="arabic simple">
+<li><p>Initialize the boolean <code class="docutils literal notranslate"><span class="pre">check</span> <span class="pre">:=</span> <span class="pre">false</span></code></p></li>
+<li><p>If the requirement is static:</p>
+<ul class="simple">
+<li><p>If requirement ID <span class="math notranslate nohighlight">\(r\)</span> is not in metrics <span class="math notranslate nohighlight">\(M\)</span>, set
+<code class="docutils literal notranslate"><span class="pre">check</span> <span class="pre">:=</span> <span class="pre">true</span></code></p></li>
+</ul>
+</li>
+<li><p>Else if the requirement is dynamic (default behavior):</p>
+<ul class="simple">
+<li><p>Set <code class="docutils literal notranslate"><span class="pre">check</span> <span class="pre">:=</span> <span class="pre">true</span></code></p></li>
+</ul>
+</li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">check</span> <span class="pre">=</span> <span class="pre">true</span></code>, Noodles runs commands <span class="math notranslate nohighlight">\(C\)</span> on each server in
+<span class="math notranslate nohighlight">\(S\)</span> and treat the results as metrics</p></li>
+</ol>
+</li>
+</ol>
+</div>
+<div class="section" id="deploy-one-experiment">
+<span id="id2"></span><h2>3.3. Deploy One Experiment<a class="headerlink" href="#deploy-one-experiment" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Noodles runs the user-defined commands on the satisfied server</p></li>
+<li><p>Initialize the boolean <code class="docutils literal notranslate"><span class="pre">success</span> <span class="pre">:=</span> <span class="pre">true</span></code></p></li>
+<li><p>If there are any errors and error checking is enabled
+(<code class="docutils literal notranslate"><span class="pre">check_any_errors</span></code>):</p>
+<ol class="arabic simple">
+<li><p>Check if there is any matching user-defined error handler
+(<code class="docutils literal notranslate"><span class="pre">error_handlers</span></code>)</p></li>
+<li><p>If there is a match:</p>
+<ol class="arabic simple">
+<li><p>If the action is <code class="docutils literal notranslate"><span class="pre">abort</span></code>, raise the error and exit</p></li>
+<li><p>If the action is <code class="docutils literal notranslate"><span class="pre">retry</span></code>, set <code class="docutils literal notranslate"><span class="pre">success</span> <span class="pre">:=</span> <span class="pre">false</span></code></p></li>
+<li><p>If the action is <code class="docutils literal notranslate"><span class="pre">continue</span></code>, set <code class="docutils literal notranslate"><span class="pre">success</span> <span class="pre">:=</span> <span class="pre">true</span></code></p></li>
+</ol>
+</li>
+<li><p>Else:</p>
+<ol class="arabic simple">
+<li><p>Raise the error and exit</p></li>
+</ol>
+</li>
+</ol>
+</li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">success</span> <span class="pre">=</span> <span class="pre">true</span></code>:</p>
+<ol class="arabic simple">
+<li><p>Remove the current experiment from <span class="math notranslate nohighlight">\(E\)</span></p></li>
+<li><p>Remove the satisfied server from <span class="math notranslate nohighlight">\(S\)</span></p></li>
+<li><p>If <span class="math notranslate nohighlight">\(S\)</span> is empty, break the inner loop in
+<a class="reference internal" href="#deploy-all-experiments"><span class="std std-ref">Deploy Experiments to Servers</span></a></p></li>
+<li><p>Wait for some time (<code class="docutils literal notranslate"><span class="pre">deployment_interval</span></code>)</p></li>
+</ol>
+</li>
+</ol>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../guide/installation.html" class="btn btn-neutral float-right" title="1. Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="use_case.html" class="btn btn-neutral float-left" title="2. Use Case" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Shawn Chang
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

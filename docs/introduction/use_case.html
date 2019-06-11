@@ -1,0 +1,262 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>2. Use Case &mdash; training-noodles  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="3. How Noodles Works" href="how_noodles_works.html" />
+    <link rel="prev" title="1. Introduction" href="introduction.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> training-noodles
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">1. Introduction</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">2. Use Case</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#train-4-experiments-on-3-servers">2.1. Train 4 Experiments on 3 Servers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="how_noodles_works.html">3. How Noodles Works</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/installation.html">1. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/linux_terminal_for_windows.html">2. Linux-based Terminal for Windows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/usage.html">3. Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/write_a_minimalist_spec_file.html">4. Write a Minimalist Spec File</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/see_other_examples.html">5. See Other Examples</a></li>
+</ul>
+<p class="caption"><span class="caption-text">References</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../references/spec_options.html">1. Spec Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references/environment_variables.html">2. Environment Variables</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">training-noodles</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>2. Use Case</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/introduction/use_case.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="use-case">
+<h1>2. Use Case<a class="headerlink" href="#use-case" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="train-4-experiments-on-3-servers">
+<h2>2.1. Train 4 Experiments on 3 Servers<a class="headerlink" href="#train-4-experiments-on-3-servers" title="Permalink to this headline">¶</a></h2>
+<p>If we want to run 4 experiments on 3 servers, more specifically, we need to</p>
+<ol class="arabic simple">
+<li><p>Upload the code to one of the servers which has low CPU usage</p></li>
+<li><p>Run the code on the server</p></li>
+<li><p>Download experimental results when they’re ready</p></li>
+</ol>
+<div class="figure align-center" id="deployment-round-1">
+<span id="fig-round-1"></span><img alt="../_images/round_1.png" src="../_images/round_1.png" />
+<p class="caption"><span class="caption-number">Fig. 2.1 </span><span class="caption-text">Deployment round 1.</span><a class="headerlink" href="#deployment-round-1" title="Permalink to this image">¶</a></p>
+</div>
+<p>In the first deployment round (See <a class="reference internal" href="#deployment-round-1"><span class="std std-numref">Fig. 2.1</span></a>), Noodles will
+use the user-defined commands to check CPU usage on the servers.</p>
+<p>The CPU usage is high on <em>Server 1</em> because there are some other programs
+running, so Noodles uses <cite>scp</cite> to upload the code <em>Code 1</em> and <em>Code 2</em>, and
+run them on <em>Server 2</em> and <em>Server 3</em> respectively.</p>
+<p>As for how to upload the code, it’s just a list of commands written by us,
+Noodles just follows the commands.</p>
+<div class="figure align-center" id="deployment-round-2">
+<img alt="../_images/round_2.png" src="../_images/round_2.png" />
+<p class="caption"><span class="caption-number">Fig. 2.2 </span><span class="caption-text">Deployment round 2.</span><a class="headerlink" href="#deployment-round-2" title="Permalink to this image">¶</a></p>
+</div>
+<p>In the second deployment round (See <a class="reference internal" href="#deployment-round-2"><span class="std std-numref">Fig. 2.2</span></a>), we tell
+Noodles to check experimental results on all servers.</p>
+<p>Noodles finds that <em>Server 3</em> has just finished running <em>Code 2</em>, so it
+downloads the experimental results and process the data on local machine as we
+tell it to do so.</p>
+<div class="figure align-center" id="deployment-round-3">
+<img alt="../_images/round_3.png" src="../_images/round_3.png" />
+<p class="caption"><span class="caption-number">Fig. 2.3 </span><span class="caption-text">Deployment round 3.</span><a class="headerlink" href="#deployment-round-3" title="Permalink to this image">¶</a></p>
+</div>
+<p>In the third deployment round (See <a class="reference internal" href="#deployment-round-3"><span class="std std-numref">Fig. 2.3</span></a>), <em>Code 3</em> and
+<em>Code 4</em> still need to be deployed. Noodles checks the CPU usage on all servers
+again. As <em>Server 1</em> has just become free now, Noodles can deploy <em>Code 3</em> and
+<em>Code 4</em> to <em>Server 1</em> and <em>Server 3</em> respectively.</p>
+<p>The deployment round would continue until all experiments are successfully
+deployed. As in this case, Noodles will try to download and process the
+experimental results of <em>Code 1</em>, <em>Code 3</em> and <em>Code 4</em> in later rounds.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="how_noodles_works.html" class="btn btn-neutral float-right" title="3. How Noodles Works" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="introduction.html" class="btn btn-neutral float-left" title="1. Introduction" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Shawn Chang
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

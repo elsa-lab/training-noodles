@@ -1,0 +1,336 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>4. Write a Minimalist Spec File &mdash; training-noodles  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="5. See Other Examples" href="see_other_examples.html" />
+    <link rel="prev" title="3. Usage" href="usage.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> training-noodles
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/introduction.html">1. Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/use_case.html">2. Use Case</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/how_noodles_works.html">3. How Noodles Works</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">1. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linux_terminal_for_windows.html">2. Linux-based Terminal for Windows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">3. Usage</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">4. Write a Minimalist Spec File</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#create-a-file">4.1. Create a File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#add-a-name">4.2. Add a Name</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#add-a-description">4.3. Add a Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#add-experiments">4.4. Add Experiments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#add-servers">4.5. Add Servers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#final-spec-file">4.6. Final Spec File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#run-the-spec-file">4.7. Run the Spec File</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="see_other_examples.html">5. See Other Examples</a></li>
+</ul>
+<p class="caption"><span class="caption-text">References</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../references/spec_options.html">1. Spec Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references/environment_variables.html">2. Environment Variables</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">training-noodles</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>4. Write a Minimalist Spec File</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/guide/write_a_minimalist_spec_file.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="write-a-minimalist-spec-file">
+<span id="id1"></span><h1>4. Write a Minimalist Spec File<a class="headerlink" href="#write-a-minimalist-spec-file" title="Permalink to this headline">¶</a></h1>
+<p>Writing a spec file should be easy, let’s build a minimalist spec file to print
+the system information of a server.</p>
+<div class="section" id="create-a-file">
+<h2>4.1. Create a File<a class="headerlink" href="#create-a-file" title="Permalink to this headline">¶</a></h2>
+<p>Let’s create an empty file <code class="docutils literal notranslate"><span class="pre">spec.yml</span></code> in any directory.</p>
+</div>
+<div class="section" id="add-a-name">
+<h2>4.2. Add a Name<a class="headerlink" href="#add-a-name" title="Permalink to this headline">¶</a></h2>
+<p>We should add the name of the spec for what it does by appending the following
+snippet to <code class="docutils literal notranslate"><span class="pre">spec.yml</span></code>.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Get server name</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="add-a-description">
+<h2>4.3. Add a Description<a class="headerlink" href="#add-a-description" title="Permalink to this headline">¶</a></h2>
+<p>We can optionally add a more verbose description. It’s a good practice to let
+people understand what the file is doing.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">description</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Use the command &quot;uname&quot; to get the server name</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="add-experiments">
+<h2>4.4. Add Experiments<a class="headerlink" href="#add-experiments" title="Permalink to this headline">¶</a></h2>
+<p>Now it’s time to add some experiments. In this example, we only want to check
+the system information once, so there is only one experiment.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">experiments</span><span class="p">:</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Get server name</span>
+  <span class="nt">commands</span><span class="p">:</span>
+    <span class="nt">run</span><span class="p">:</span> <span class="s">&quot;uname</span><span class="nv"> </span><span class="s">-a&quot;</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">run</span></code> is the <a class="reference internal" href="usage.html#command-types"><span class="std std-ref">command type</span></a> we’ll be using. It can be any
+other string (e.g., <code class="docutils literal notranslate"><span class="pre">get_info</span></code>, <code class="docutils literal notranslate"><span class="pre">get_info_on_the_server</span></code>)</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>The experiments can be anything as long as they can be done by any Linux
+commands.</p>
+</div>
+</div>
+<div class="section" id="add-servers">
+<h2>4.5. Add Servers<a class="headerlink" href="#add-servers" title="Permalink to this headline">¶</a></h2>
+<p>Then we should add some servers for the experiments to deploy. We should add at
+least one server. Feel free to modify the following text to specify your own
+server.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">servers</span><span class="p">:</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Server 1</span>
+  <span class="nt">private_key_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">$HOME/.ssh/id_rsa</span>
+  <span class="nt">username</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">$USER</span>
+  <span class="nt">hostname</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">server1</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">name</span></code> is only used for Noodles to print the information,
+<code class="docutils literal notranslate"><span class="pre">private_key_path</span></code> is the path to the private key on the local machine,
+<code class="docutils literal notranslate"><span class="pre">username</span></code> is the username on the remote server (We use <code class="docutils literal notranslate"><span class="pre">$USER</span></code> to set the
+same username as on the local machine), and <code class="docutils literal notranslate"><span class="pre">hostname</span></code> is usually a domain
+name (e.g., <code class="docutils literal notranslate"><span class="pre">example.com</span></code>) or an IP address (e.g., <code class="docutils literal notranslate"><span class="pre">123.123.123.123</span></code>) of
+the remote server.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Using password is not secure, so it’s not supported by Noodles. If you
+haven’t set up the SSH keys, please follow this <a class="reference external" href="https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys--2">tutorial</a>.</p>
+</div>
+</div>
+<div class="section" id="final-spec-file">
+<h2>4.6. Final Spec File<a class="headerlink" href="#final-spec-file" title="Permalink to this headline">¶</a></h2>
+<p>The final spec file can be seen here and also on <a class="reference external" href="https://github.com/sc420/training-noodles/blob/master/examples/minimalist/spec.yml">GitHub</a>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Get server name</span>
+
+<span class="nt">description</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Use the command &quot;uname&quot; to get the server name</span>
+
+<span class="nt">experiments</span><span class="p">:</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Get server name</span>
+  <span class="nt">commands</span><span class="p">:</span>
+    <span class="nt">run</span><span class="p">:</span> <span class="s">&quot;uname</span><span class="nv"> </span><span class="s">-a&quot;</span>
+
+<span class="nt">servers</span><span class="p">:</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Server 1</span>
+  <span class="nt">private_key_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">$HOME/.ssh/id_rsa</span>
+  <span class="nt">username</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">$USER</span>
+  <span class="nt">hostname</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">server1</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="run-the-spec-file">
+<h2>4.7. Run the Spec File<a class="headerlink" href="#run-the-spec-file" title="Permalink to this headline">¶</a></h2>
+<p>Execute the following command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>noodles run spec.yml
+</pre></div>
+</div>
+<p>and we should see something like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">2019</span><span class="o">-</span><span class="mi">06</span><span class="o">-</span><span class="mi">10</span> <span class="mi">16</span><span class="p">:</span><span class="mi">42</span><span class="p">:</span><span class="mi">23</span> <span class="n">run</span>   <span class="n">INFO</span>     <span class="n">Start</span> <span class="n">stage</span> <span class="s2">&quot;before_all_experiments&quot;</span>
+<span class="mi">2019</span><span class="o">-</span><span class="mi">06</span><span class="o">-</span><span class="mi">10</span> <span class="mi">16</span><span class="p">:</span><span class="mi">42</span><span class="p">:</span><span class="mi">23</span> <span class="n">run</span>   <span class="n">INFO</span>     <span class="n">Finished</span> <span class="n">stage</span> <span class="s2">&quot;before_all_experiments&quot;</span>
+<span class="mi">2019</span><span class="o">-</span><span class="mi">06</span><span class="o">-</span><span class="mi">10</span> <span class="mi">16</span><span class="p">:</span><span class="mi">42</span><span class="p">:</span><span class="mi">23</span> <span class="n">run</span>   <span class="n">INFO</span>     <span class="n">Start</span> <span class="n">stage</span> <span class="s2">&quot;experiments&quot;</span>
+<span class="mi">2019</span><span class="o">-</span><span class="mi">06</span><span class="o">-</span><span class="mi">10</span> <span class="mi">16</span><span class="p">:</span><span class="mi">42</span><span class="p">:</span><span class="mi">23</span> <span class="n">run</span>   <span class="n">INFO</span>     <span class="n">Deploy</span> <span class="n">experiment</span> <span class="s2">&quot;Get server name&quot;</span> <span class="n">to</span> <span class="n">server</span> <span class="s2">&quot;Server 1&quot;</span>
+<span class="mi">2019</span><span class="o">-</span><span class="mi">06</span><span class="o">-</span><span class="mi">10</span> <span class="mi">16</span><span class="p">:</span><span class="mi">42</span><span class="p">:</span><span class="mi">25</span> <span class="n">run</span>   <span class="n">INFO</span>     <span class="n">Commands</span> <span class="n">output</span> <span class="kn">from</span> <span class="nn">STDOUT</span><span class="o">-&gt;</span>
+<span class="hll"><span class="n">Linux</span> <span class="n">XXX</span> <span class="mf">4.4</span><span class="o">.</span><span class="mi">0</span><span class="o">-</span><span class="mi">131</span><span class="o">-</span><span class="n">generic</span> <span class="c1">#157-Ubuntu SMP Thu Jul 12 15:51:36 UTC 2018 x86_64 x86_64 x86_64 GNU/Linux</span>
+</span>
+<span class="mi">2019</span><span class="o">-</span><span class="mi">06</span><span class="o">-</span><span class="mi">10</span> <span class="mi">16</span><span class="p">:</span><span class="mi">42</span><span class="p">:</span><span class="mi">25</span> <span class="n">run</span>   <span class="n">INFO</span>     <span class="n">Finished</span> <span class="n">stage</span> <span class="s2">&quot;experiments&quot;</span>
+<span class="mi">2019</span><span class="o">-</span><span class="mi">06</span><span class="o">-</span><span class="mi">10</span> <span class="mi">16</span><span class="p">:</span><span class="mi">42</span><span class="p">:</span><span class="mi">25</span> <span class="n">run</span>   <span class="n">INFO</span>     <span class="n">Start</span> <span class="n">stage</span> <span class="s2">&quot;after_all_experiments&quot;</span>
+<span class="mi">2019</span><span class="o">-</span><span class="mi">06</span><span class="o">-</span><span class="mi">10</span> <span class="mi">16</span><span class="p">:</span><span class="mi">42</span><span class="p">:</span><span class="mi">25</span> <span class="n">run</span>   <span class="n">INFO</span>     <span class="n">Finished</span> <span class="n">stage</span> <span class="s2">&quot;after_all_experiments&quot;</span>
+<span class="mi">2019</span><span class="o">-</span><span class="mi">06</span><span class="o">-</span><span class="mi">10</span> <span class="mi">16</span><span class="p">:</span><span class="mi">42</span><span class="p">:</span><span class="mi">25</span> <span class="n">run</span>   <span class="n">INFO</span>     <span class="n">Total</span> <span class="n">elapsed</span> <span class="n">time</span><span class="p">:</span> <span class="mf">1.828</span><span class="n">s</span>
+<span class="mi">2019</span><span class="o">-</span><span class="mi">06</span><span class="o">-</span><span class="mi">10</span> <span class="mi">16</span><span class="p">:</span><span class="mi">42</span><span class="p">:</span><span class="mi">25</span> <span class="n">run</span>   <span class="n">INFO</span>     <span class="n">Successfully</span> <span class="n">deployed</span> <span class="mi">100</span><span class="o">%</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">1</span><span class="p">)</span> <span class="s2">&quot;run&quot;</span> <span class="n">experiments</span>
+</pre></div>
+</div>
+<p>See the highlighted line. If <code class="docutils literal notranslate"><span class="pre">XXX</span></code> is shown as the hostname of your server,
+the deployment is successful.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="see_other_examples.html" class="btn btn-neutral float-right" title="5. See Other Examples" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="usage.html" class="btn btn-neutral float-left" title="3. Usage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Shawn Chang
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

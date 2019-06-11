@@ -1,0 +1,957 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>1. Spec Options &mdash; training-noodles  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="2. Environment Variables" href="environment_variables.html" />
+    <link rel="prev" title="5. See Other Examples" href="../guide/see_other_examples.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> training-noodles
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/introduction.html">1. Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/use_case.html">2. Use Case</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/how_noodles_works.html">3. How Noodles Works</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/installation.html">1. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/linux_terminal_for_windows.html">2. Linux-based Terminal for Windows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/usage.html">3. Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/write_a_minimalist_spec_file.html">4. Write a Minimalist Spec File</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/see_other_examples.html">5. See Other Examples</a></li>
+</ul>
+<p class="caption"><span class="caption-text">References</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">1. Spec Options</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#general-options">1.1. General Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#experiments">1.2. Experiments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#servers">1.3. Servers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#requirements">1.4. Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#deployment">1.5. Deployment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#error-handling">1.6. Error Handling</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="environment_variables.html">2. Environment Variables</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">training-noodles</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>1. Spec Options</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/references/spec_options.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="spec-options">
+<span id="id1"></span><h1><a class="toc-backref" href="#id2">1. Spec Options</a><a class="headerlink" href="#spec-options" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#spec-options" id="id2">Spec Options</a></p>
+<ul>
+<li><p><a class="reference internal" href="#general-options" id="id3">General Options</a></p></li>
+<li><p><a class="reference internal" href="#experiments" id="id4">Experiments</a></p></li>
+<li><p><a class="reference internal" href="#servers" id="id5">Servers</a></p></li>
+<li><p><a class="reference internal" href="#requirements" id="id6">Requirements</a></p></li>
+<li><p><a class="reference internal" href="#deployment" id="id7">Deployment</a></p></li>
+<li><p><a class="reference internal" href="#error-handling" id="id8">Error Handling</a></p></li>
+</ul>
+</li>
+</ul>
+</div>
+<p>All the following keys are optional. If the user spec doesn’t specify them,
+the default options will be used from the <a class="reference external" href="https://github.com/sc420/training-noodles/blob/master/training_noodles/specs/defaults.yml">default specs</a>.</p>
+<div class="section" id="general-options">
+<h2><a class="toc-backref" href="#id3">1.1. General Options</a><a class="headerlink" href="#general-options" title="Permalink to this headline">¶</a></h2>
+<dl class="option">
+<dt id="cmdoption-arg-name">
+<code class="descname">name</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-arg-name" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>String</p>
+</dd>
+</dl>
+<p>Name of the spec.</p>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-arg-description">
+<code class="descname">description</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-arg-description" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>String</p>
+</dd>
+</dl>
+<p>Description of the spec.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="experiments">
+<h2><a class="toc-backref" href="#id4">1.2. Experiments</a><a class="headerlink" href="#experiments" title="Permalink to this headline">¶</a></h2>
+<dl class="option">
+<dt id="cmdoption-arg-experiment-default">
+<code class="descname">experiment_default</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-arg-experiment-default" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Mapping</p>
+</dd>
+</dl>
+<p>The default options for each experiment in <a class="reference internal" href="#cmdoption-arg-experiments"><code class="xref std std-option docutils literal notranslate"><span class="pre">experiments</span></code></a>. Available
+options are:</p>
+<dl class="option">
+<dt id="cmdoption-arg-experiment-default-name">
+<code class="descname">experiment_default.name</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-arg-experiment-default-name" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>String</p>
+</dd>
+<dt class="field-even">Default</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">&lt;default&gt;</span></code></p>
+</dd>
+</dl>
+<p>Name of the experiment.</p>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-arg-experiment-default-envs">
+<code class="descname">experiment_default.envs</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-arg-experiment-default-envs" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Mapping</p>
+</dd>
+<dt class="field-even">Format</dt>
+<dd class="field-even"><div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="s">&quot;&lt;Environment</span><span class="nv"> </span><span class="s">variable</span><span class="nv"> </span><span class="s">name</span><span class="nv"> </span><span class="s">1&gt;&quot;</span><span class="p p-Indicator">:</span> <span class="s">&quot;&lt;Value</span><span class="nv"> </span><span class="s">1&gt;&quot;</span>
+<span class="s">&quot;&lt;Environment</span><span class="nv"> </span><span class="s">variable</span><span class="nv"> </span><span class="s">name</span><span class="nv"> </span><span class="s">2&gt;&quot;</span><span class="p p-Indicator">:</span> <span class="s">&quot;&lt;Value</span><span class="nv"> </span><span class="s">2&gt;&quot;</span>
+<span class="nn">...</span>
+</pre></div>
+</div>
+</dd>
+<dt class="field-odd">Default</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">{}</span></code></p>
+</dd>
+<dt class="field-even">Example</dt>
+<dd class="field-even"><div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">experiment_default</span><span class="p">:</span>
+  <span class="nt">envs</span><span class="p">:</span>
+    <span class="nt">LOCAL_DIR</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">$HOME/test</span>
+    <span class="nt">REMOTE_FILE</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">$HOME/test.log</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>Default environment variables.</p>
+<p>These environment variables will be added to each experiment no matter
+what the command type is. It’s convenient to set commonly used
+environment variables here.</p>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-arg-experiment-default-depends-on">
+<code class="descname">experiment_default.depends_on</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-arg-experiment-default-depends-on" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Mapping</p>
+</dd>
+<dt class="field-even">Format</dt>
+<dd class="field-even"><div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="s">&quot;&lt;Command</span><span class="nv"> </span><span class="s">type</span><span class="nv"> </span><span class="s">1&gt;&quot;</span><span class="p p-Indicator">:</span>
+<span class="p p-Indicator">-</span> <span class="s">&quot;&lt;Name</span><span class="nv"> </span><span class="s">of</span><span class="nv"> </span><span class="s">other</span><span class="nv"> </span><span class="s">experiment</span><span class="nv"> </span><span class="s">1&gt;&quot;</span>
+<span class="p p-Indicator">-</span> <span class="s">&quot;&lt;Name</span><span class="nv"> </span><span class="s">of</span><span class="nv"> </span><span class="s">other</span><span class="nv"> </span><span class="s">experiment</span><span class="nv"> </span><span class="s">2&gt;&quot;</span>
+<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">...</span>
+<span class="s">&quot;&lt;Command</span><span class="nv"> </span><span class="s">type</span><span class="nv"> </span><span class="s">2&gt;&quot;</span><span class="p p-Indicator">:</span>
+<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">...</span>
+<span class="nn">...</span>
+</pre></div>
+</div>
+</dd>
+<dt class="field-odd">Default</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">{}</span></code></p>
+</dd>
+<dt class="field-even">Example</dt>
+<dd class="field-even"><div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">experiment_default</span><span class="p">:</span>
+  <span class="nt">depends_on</span><span class="p">:</span>
+    <span class="nt">run</span><span class="p">:</span>
+    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">Installation</span>
+    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">Configuration</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>A list of dependent experiments.</p>
+<p>Noodles will check whether all experiments in <code class="docutils literal notranslate"><span class="pre">depends_on</span></code> are already
+successfully deployed. If one of the experiments hasn’t been deployed,
+Noodles would skip it and retry this experiment in the next deployment
+round.</p>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-arg-experiment-default-requirements">
+<code class="descname">experiment_default.requirements</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-arg-experiment-default-requirements" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Mapping</p>
+</dd>
+<dt class="field-even">Format</dt>
+<dd class="field-even"><div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="s">&quot;&lt;Command</span><span class="nv"> </span><span class="s">type</span><span class="nv"> </span><span class="s">1&gt;&quot;</span><span class="p p-Indicator">:</span>
+<span class="p p-Indicator">-</span> <span class="s">&quot;&lt;Requirement</span><span class="nv"> </span><span class="s">ID</span><span class="nv"> </span><span class="s">1&gt;&quot;</span><span class="p p-Indicator">:</span> <span class="s">&quot;&lt;Expression</span><span class="nv"> </span><span class="s">1&gt;&quot;</span>
+<span class="p p-Indicator">-</span> <span class="s">&quot;&lt;Requirement</span><span class="nv"> </span><span class="s">ID</span><span class="nv"> </span><span class="s">2&gt;&quot;</span><span class="p p-Indicator">:</span> <span class="s">&quot;&lt;Expression</span><span class="nv"> </span><span class="s">2&gt;&quot;</span>
+<span class="p p-Indicator">-</span> <span class="s">&quot;static:&lt;Requirement</span><span class="nv"> </span><span class="s">ID</span><span class="nv"> </span><span class="s">3&gt;&quot;</span><span class="p p-Indicator">:</span> <span class="s">&quot;&lt;Expression</span><span class="nv"> </span><span class="s">3&gt;&quot;</span>
+<span class="p p-Indicator">-</span> <span class="s">&quot;dynamic:&lt;Requirement</span><span class="nv"> </span><span class="s">ID</span><span class="nv"> </span><span class="s">4&gt;&quot;</span><span class="p p-Indicator">:</span> <span class="s">&quot;&lt;Expression</span><span class="nv"> </span><span class="s">4&gt;&quot;</span>
+<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">...</span>
+<span class="s">&quot;&lt;Command</span><span class="nv"> </span><span class="s">type</span><span class="nv"> </span><span class="s">2&gt;&quot;</span><span class="p p-Indicator">:</span>
+<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">...</span>
+<span class="nn">...</span>
+</pre></div>
+</div>
+</dd>
+<dt class="field-odd">Default</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">{}</span></code></p>
+</dd>
+<dt class="field-even">Example</dt>
+<dd class="field-even"><div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">experiment_default</span><span class="p">:</span>
+  <span class="nt">requirements</span><span class="p">:</span>
+    <span class="nt">run</span><span class="p">:</span>
+    <span class="p p-Indicator">-</span> <span class="nt">cpu_usage</span><span class="p">:</span> <span class="s">&quot;&lt;=90&quot;</span>
+    <span class="p p-Indicator">-</span> <span class="nt">gpu_usage</span><span class="p">:</span> <span class="s">&quot;&lt;=50&quot;</span>
+    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">static:free_quota</span><span class="p p-Indicator">:</span> <span class="s">&quot;&gt;=0.2&quot;</span>
+    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">dynamic:has_lock_file</span><span class="p p-Indicator">:</span> <span class="s">&quot;==No&quot;</span>
+    <span class="nt">stop</span><span class="p">:</span>
+    <span class="p p-Indicator">-</span> <span class="nt">has_lock_file</span><span class="p">:</span> <span class="s">&quot;==Yes&quot;</span>
+    <span class="nt">download</span><span class="p">:</span>
+    <span class="p p-Indicator">-</span> <span class="nt">count_output_files</span><span class="p">:</span> <span class="s">&quot;!=0&quot;</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>A list of requirements.</p>
+<p>Each requirement ID (e.g., <code class="docutils literal notranslate"><span class="pre">cpu_usage</span></code>) is mapped to a group of
+commands specified in <a class="reference internal" href="#cmdoption-arg-requirements"><code class="xref std std-option docutils literal notranslate"><span class="pre">requirements</span></code></a>. The mapped commands would
+be run on each server in <span class="math notranslate nohighlight">\(S\)</span> (See <a class="reference internal" href="../introduction/how_noodles_works.html#deploy-all-experiments"><span class="std std-ref">Deploy Experiments to Servers</span></a>).
+The metric is then compared to the expression, which is composed of
+<code class="docutils literal notranslate"><span class="pre">&lt;Operator&gt;&lt;Value&gt;</span></code>.</p>
+<p>List of available operators are:</p>
+<ul class="simple">
+<li><p>==</p></li>
+<li><p>!=</p></li>
+<li><p>&lt;</p></li>
+<li><p>&gt;</p></li>
+<li><p>&lt;=</p></li>
+<li><p>&gt;=</p></li>
+</ul>
+<p>Noodles would try to convert the value following operator using Python
+builtin function <code class="xref py py-func docutils literal notranslate"><span class="pre">ast.literal_eval()</span></code>. It it fails, the original
+value would be used in its original string form.</p>
+<p>Each command can specify an extra prefix <code class="docutils literal notranslate"><span class="pre">static:</span></code> or <code class="docutils literal notranslate"><span class="pre">dynamic:</span></code>. If
+a prefix <code class="docutils literal notranslate"><span class="pre">static:</span></code> is used, Noodles will not check the requirement when
+some other experiment has checked it before in the same deployment round.</p>
+<p>On the other hand, if a prefix <code class="docutils literal notranslate"><span class="pre">dynamic:</span></code> is used, every requirement
+will be checked for each experiment. By default, <code class="docutils literal notranslate"><span class="pre">dynamic:</span></code> behavior is
+chosen when the prefix is omitted. See <a class="reference internal" href="../introduction/how_noodles_works.html#check-requirements"><span class="std std-ref">Check Requirements</span></a> for the
+procedure.</p>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-arg-experiment-default-commands">
+<code class="descname">experiment_default.commands</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-arg-experiment-default-commands" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Mapping</p>
+</dd>
+<dt class="field-even">Format</dt>
+<dd class="field-even"><div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="s">&quot;&lt;Command</span><span class="nv"> </span><span class="s">type</span><span class="nv"> </span><span class="s">1&gt;&quot;</span><span class="p p-Indicator">:</span> <span class="s">&quot;&lt;Command</span><span class="nv"> </span><span class="s">1&gt;&quot;</span>
+<span class="s">&quot;&lt;Command</span><span class="nv"> </span><span class="s">type</span><span class="nv"> </span><span class="s">2&gt;&quot;</span><span class="p p-Indicator">:</span>
+<span class="p p-Indicator">-</span> <span class="s">&quot;&lt;Command</span><span class="nv"> </span><span class="s">A&gt;&quot;</span>
+<span class="p p-Indicator">-</span> <span class="s">&quot;&lt;Command</span><span class="nv"> </span><span class="s">B&gt;&quot;</span>
+<span class="p p-Indicator">-</span> <span class="s">&quot;local:&lt;Command</span><span class="nv"> </span><span class="s">C&gt;&quot;</span>
+<span class="p p-Indicator">-</span> <span class="s">&quot;remote:&lt;Command</span><span class="nv"> </span><span class="s">D&gt;&quot;</span>
+<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">...</span>
+<span class="nn">...</span>
+</pre></div>
+</div>
+</dd>
+<dt class="field-odd">Default</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">{}</span></code></p>
+</dd>
+<dt class="field-even">Example</dt>
+<dd class="field-even"><div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">experiment_default</span><span class="p">:</span>
+  <span class="nt">commands</span><span class="p">:</span>
+    <span class="nt">run</span><span class="p">:</span> <span class="s">&quot;touch</span><span class="nv"> </span><span class="s">exp.lock</span><span class="nv"> </span><span class="s">&amp;&amp;</span><span class="nv"> </span><span class="s">./exp1.sh</span><span class="nv"> </span><span class="s">$PARAMETER&quot;</span>
+    <span class="nt">stop</span><span class="p">:</span>
+    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">pkill exp1</span>
+    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">rm exp.lock</span>
+    <span class="nt">download</span><span class="p">:</span>
+    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">local:scp $NOODLES_SERVER_AUTHORITY:$REMOTE_FILE $LOCAL_DIR</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>Commands to be run on a server.</p>
+<p>Commands will only be executed on servers when the above requirements are
+met.</p>
+<p>Each command can specify an extra prefix <code class="docutils literal notranslate"><span class="pre">local:</span></code> or <code class="docutils literal notranslate"><span class="pre">remote:</span></code> to
+specify whether to run the command on local or remote machine
+respectively. By default, all commands are deployed to remaining servers
+selected from <a class="reference internal" href="#cmdoption-arg-servers"><code class="xref std std-option docutils literal notranslate"><span class="pre">servers</span></code></a> if no prefix is specified.</p>
+<p>It’s useful to add <code class="docutils literal notranslate"><span class="pre">local:</span></code> to a command to check the problems on local
+machine if the command fails on a remote server.</p>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-arg-experiment-default-write-outputs">
+<code class="descname">experiment_default.write_outputs</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-arg-experiment-default-write-outputs" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Mapping</p>
+</dd>
+<dt class="field-even">Format</dt>
+<dd class="field-even"><div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="s">&quot;Command</span><span class="nv"> </span><span class="s">type</span><span class="nv"> </span><span class="s">1&gt;&quot;</span><span class="p p-Indicator">:</span>
+  <span class="nt">stdout_to</span><span class="p">:</span> <span class="s">&quot;&lt;Path</span><span class="nv"> </span><span class="s">to</span><span class="nv"> </span><span class="s">write</span><span class="nv"> </span><span class="s">STDOUT</span><span class="nv"> </span><span class="s">output&gt;&quot;</span>
+  <span class="nt">stderr_to</span><span class="p">:</span> <span class="s">&quot;&lt;Path</span><span class="nv"> </span><span class="s">to</span><span class="nv"> </span><span class="s">write</span><span class="nv"> </span><span class="s">STDERR</span><span class="nv"> </span><span class="s">output&gt;&quot;</span>
+<span class="s">&quot;Command</span><span class="nv"> </span><span class="s">type</span><span class="nv"> </span><span class="s">2&gt;&quot;</span><span class="p p-Indicator">:</span>
+  <span class="nt">stdout_to</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">...</span>
+  <span class="nt">stderr_to</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">...</span>
+<span class="nn">...</span>
+</pre></div>
+</div>
+</dd>
+<dt class="field-odd">Default</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">{}</span></code></p>
+</dd>
+<dt class="field-even">Example</dt>
+<dd class="field-even"><div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">experiment_default</span><span class="p">:</span>
+  <span class="nt">write_outputs</span><span class="p">:</span>
+    <span class="nt">run</span><span class="p">:</span>
+      <span class="nt">stdout_to</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">$LOCAL_DIR/exp1.stdout.log</span>
+      <span class="nt">stderr_to</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">$LOCAL_DIR/exp1.stderr.log</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>The paths to write STDOUT and STDERR outputs.</p>
+<p>By default, STDOUT is written to the terminal and STDERR is written to
+the terminal only when it’s nonempty.</p>
+<p>User can redirect the outputs to files by specifying paths in options
+<code class="docutils literal notranslate"><span class="pre">stdout_to</span></code> and/or <code class="docutils literal notranslate"><span class="pre">stderr_to</span></code> for STDOUT and STDERR respectively
+under the option <code class="docutils literal notranslate"><span class="pre">write_outputs</span></code>. If <code class="docutils literal notranslate"><span class="pre">stderr_to</span></code> is specified, STDERR
+will be written no matter it’s empty or not.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-arg-before-all-experiments">
+<code class="descname">before_all_experiments</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-arg-before-all-experiments" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List</p>
+</dd>
+<dt class="field-even">Format</dt>
+<dd class="field-even"><p>Same as <a class="reference internal" href="#cmdoption-arg-experiments"><code class="xref std std-option docutils literal notranslate"><span class="pre">experiments</span></code></a></p>
+</dd>
+<dt class="field-odd">Default</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">[]</span></code></p>
+</dd>
+<dt class="field-even">Example</dt>
+<dd class="field-even"><p>See example in <a class="reference internal" href="#cmdoption-arg-experiments"><code class="xref std std-option docutils literal notranslate"><span class="pre">experiments</span></code></a></p>
+</dd>
+</dl>
+<p>A list of experiments to runs before running <code class="docutils literal notranslate"><span class="pre">experiments</span></code>.</p>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-arg-experiments">
+<code class="descname">experiments</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-arg-experiments" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List</p>
+</dd>
+<dt class="field-even">Format</dt>
+<dd class="field-even"><div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span> <span class="s">&quot;&lt;Experiment</span><span class="nv"> </span><span class="s">1&gt;&quot;</span>
+<span class="p p-Indicator">-</span> <span class="s">&quot;&lt;Experiment</span><span class="nv"> </span><span class="s">2&gt;&quot;</span>
+<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">...</span>
+</pre></div>
+</div>
+</dd>
+<dt class="field-odd">Default</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">[]</span></code></p>
+</dd>
+<dt class="field-even">Example</dt>
+<dd class="field-even"><div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">experiments</span><span class="p">:</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Experiment 1</span>
+  <span class="nt">envs</span><span class="p">:</span>
+    <span class="nt">LOCAL_DIR</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">$HOME/exp1</span>
+    <span class="nt">REMOTE_FILE</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">$HOME/exp1.log</span>
+    <span class="nt">PARAMETER</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">3</span>
+  <span class="nt">depends_on</span><span class="p">:</span>
+    <span class="nt">run</span><span class="p">:</span>
+    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">Installation</span>
+    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">Configuration</span>
+  <span class="nt">requirements</span><span class="p">:</span>
+    <span class="nt">run</span><span class="p">:</span>
+    <span class="p p-Indicator">-</span> <span class="nt">cpu_usage</span><span class="p">:</span> <span class="s">&quot;&lt;=90&quot;</span>
+    <span class="p p-Indicator">-</span> <span class="nt">gpu_usage</span><span class="p">:</span> <span class="s">&quot;&lt;=50&quot;</span>
+    <span class="p p-Indicator">-</span> <span class="nt">free_quota</span><span class="p">:</span> <span class="s">&quot;&gt;=0.2&quot;</span>
+    <span class="p p-Indicator">-</span> <span class="nt">has_lock_file</span><span class="p">:</span> <span class="s">&quot;==No&quot;</span>
+    <span class="nt">stop</span><span class="p">:</span>
+    <span class="p p-Indicator">-</span> <span class="nt">has_lock_file</span><span class="p">:</span> <span class="s">&quot;==Yes&quot;</span>
+    <span class="nt">download</span><span class="p">:</span>
+    <span class="p p-Indicator">-</span> <span class="nt">count_output_files</span><span class="p">:</span> <span class="s">&quot;!=0&quot;</span>
+  <span class="nt">commands</span><span class="p">:</span>
+    <span class="nt">run</span><span class="p">:</span> <span class="s">&quot;touch</span><span class="nv"> </span><span class="s">exp.lock</span><span class="nv"> </span><span class="s">&amp;&amp;</span><span class="nv"> </span><span class="s">./exp1.sh</span><span class="nv"> </span><span class="s">$PARAMETER&quot;</span>
+    <span class="nt">stop</span><span class="p">:</span>
+    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">pkill exp1</span>
+    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">rm exp.lock</span>
+    <span class="nt">download</span><span class="p">:</span>
+    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">local:scp $NOODLES_SERVER_AUTHORITY:$REMOTE_FILE $LOCAL_DIR</span>
+  <span class="nt">write_outputs</span><span class="p">:</span>
+    <span class="nt">run</span><span class="p">:</span>
+      <span class="nt">stdout_to</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">$LOCAL_DIR/exp1.stdout.log</span>
+      <span class="nt">stderr_to</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">$LOCAL_DIR/exp1.stderr.log</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Experiment 2</span>
+  <span class="nt">envs</span><span class="p">:</span>
+    <span class="nt">LOCAL_DIR</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">$HOME/exp2</span>
+    <span class="nt">REMOTE_FILE</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">$HOME/exp2.log</span>
+    <span class="nt">PARAMETER</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">5</span>
+  <span class="l l-Scalar l-Scalar-Plain">...</span>
+<span class="nn">...</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>A list of main experiments.</p>
+<p>Each experiment would override the options in <a class="reference internal" href="#cmdoption-arg-experiment-default"><code class="xref std std-option docutils literal notranslate"><span class="pre">experiment_default</span></code></a>.
+See <a class="reference internal" href="#cmdoption-arg-experiment-default"><code class="xref std std-option docutils literal notranslate"><span class="pre">experiment_default</span></code></a>.</p>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-arg-after-all-experiments">
+<code class="descname">after_all_experiments</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-arg-after-all-experiments" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List</p>
+</dd>
+<dt class="field-even">Format</dt>
+<dd class="field-even"><p>Same as <a class="reference internal" href="#cmdoption-arg-experiments"><code class="xref std std-option docutils literal notranslate"><span class="pre">experiments</span></code></a></p>
+</dd>
+<dt class="field-odd">Default</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">[]</span></code></p>
+</dd>
+<dt class="field-even">Example</dt>
+<dd class="field-even"><p>See example in <a class="reference internal" href="#cmdoption-arg-experiments"><code class="xref std std-option docutils literal notranslate"><span class="pre">experiments</span></code></a></p>
+</dd>
+</dl>
+<p>A list of experiments to run after running <code class="docutils literal notranslate"><span class="pre">experiments</span></code>.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="servers">
+<h2><a class="toc-backref" href="#id5">1.3. Servers</a><a class="headerlink" href="#servers" title="Permalink to this headline">¶</a></h2>
+<dl class="option">
+<dt id="cmdoption-arg-server-default">
+<code class="descname">server_default</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-arg-server-default" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Mapping</p>
+</dd>
+<dt class="field-even">Example</dt>
+<dd class="field-even"><div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">server_default</span><span class="p">:</span>
+  <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;default&gt;</span>
+  <span class="nt">private_key_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">$HOME/.ssh/id_rsa</span>
+  <span class="nt">port</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">22</span>
+  <span class="nt">username</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">user1</span>
+  <span class="nt">hostname</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">server1.example.com</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>The default options for each server in <a class="reference internal" href="#cmdoption-arg-servers"><code class="xref std std-option docutils literal notranslate"><span class="pre">servers</span></code></a>. Available
+options are:</p>
+<dl class="option">
+<dt id="cmdoption-arg-server-default-name">
+<code class="descname">server_default.name</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-arg-server-default-name" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>String</p>
+</dd>
+<dt class="field-even">Default</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">&lt;default&gt;</span></code></p>
+</dd>
+</dl>
+<p>Default name of the server.</p>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-arg-server-default-private-key-path">
+<code class="descname">server_default.private_key_path</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-arg-server-default-private-key-path" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>String</p>
+</dd>
+<dt class="field-even">Default</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">HOME/.ssh/id_rsa</span></code></p>
+</dd>
+</dl>
+<p>Path to the private key on local machine.</p>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-arg-server-default-port">
+<code class="descname">server_default.port</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-arg-server-default-port" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Integer</p>
+</dd>
+<dt class="field-even">Default</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">22</span></code></p>
+</dd>
+</dl>
+<p>Port to connect.</p>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-arg-server-default-username">
+<code class="descname">server_default.username</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-arg-server-default-username" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>String</p>
+</dd>
+<dt class="field-even">Default</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">$USER</span></code></p>
+</dd>
+</dl>
+<p>Username on the server (e.g., <code class="docutils literal notranslate"><span class="pre">user1</span></code>).</p>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-arg-server-default-hostname">
+<code class="descname">server_default.hostname</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-arg-server-default-hostname" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>String</p>
+</dd>
+<dt class="field-even">Default</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">localhost</span></code></p>
+</dd>
+</dl>
+<p>Hostname of the server (e.g., <code class="docutils literal notranslate"><span class="pre">example.com</span></code>, <code class="docutils literal notranslate"><span class="pre">123.123.123.123</span></code>).</p>
+<p>If the hostname is a special value <code class="docutils literal notranslate"><span class="pre">localhost</span></code>, the commands will be
+run on local machine without <strong class="program">ssh</strong>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-arg-servers">
+<code class="descname">servers</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-arg-servers" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List</p>
+</dd>
+<dt class="field-even">Format</dt>
+<dd class="field-even"><div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span> <span class="s">&quot;&lt;Server</span><span class="nv"> </span><span class="s">1&gt;&quot;</span>
+<span class="p p-Indicator">-</span> <span class="s">&quot;&lt;Server</span><span class="nv"> </span><span class="s">2&gt;&quot;</span>
+<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">...</span>
+</pre></div>
+</div>
+</dd>
+<dt class="field-odd">Default</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">[]</span></code></p>
+</dd>
+<dt class="field-even">Example</dt>
+<dd class="field-even"><div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">servers</span><span class="p">:</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Server 1</span>
+  <span class="nt">username</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">user1</span>
+  <span class="nt">hostname</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">server1.example.com</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Server 2</span>
+  <span class="nt">private_key_path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">temp/id_rsa</span>
+  <span class="nt">port</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">64</span>
+  <span class="nt">username</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">user2</span>
+  <span class="nt">hostname</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">123.123.123.123</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Local server</span>
+  <span class="nt">username</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">$USER</span>
+  <span class="nt">hostname</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">localhost</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>A list of servers.</p>
+<p>Each server would override the options in <a class="reference internal" href="#cmdoption-arg-server-default"><code class="xref std std-option docutils literal notranslate"><span class="pre">server_default</span></code></a>. See
+<a class="reference internal" href="#cmdoption-arg-server-default"><code class="xref std std-option docutils literal notranslate"><span class="pre">server_default</span></code></a>.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="requirements">
+<h2><a class="toc-backref" href="#id6">1.4. Requirements</a><a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
+<dl class="option">
+<dt id="cmdoption-arg-requirements">
+<code class="descname">requirements</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-arg-requirements" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Mapping</p>
+</dd>
+<dt class="field-even">Default</dt>
+<dd class="field-even"><p>See <code class="docutils literal notranslate"><span class="pre">requirements</span></code> in <a class="reference external" href="https://github.com/sc420/training-noodles/blob/master/training_noodles/specs/defaults.yml">default specs</a>.</p>
+</dd>
+<dt class="field-odd">Format</dt>
+<dd class="field-odd"><div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="s">&quot;&lt;Requirement</span><span class="nv"> </span><span class="s">ID</span><span class="nv"> </span><span class="s">1&gt;&quot;</span><span class="p p-Indicator">:</span> <span class="s">&quot;&lt;Command</span><span class="nv"> </span><span class="s">1&gt;&quot;</span>
+<span class="s">&quot;&lt;Requirement</span><span class="nv"> </span><span class="s">ID</span><span class="nv"> </span><span class="s">2&gt;&quot;</span><span class="p p-Indicator">:</span>
+<span class="p p-Indicator">-</span> <span class="s">&quot;&lt;Command</span><span class="nv"> </span><span class="s">A&gt;&quot;</span>
+<span class="p p-Indicator">-</span> <span class="s">&quot;&lt;Command</span><span class="nv"> </span><span class="s">B&gt;&quot;</span>
+<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">...</span>
+<span class="nn">...</span>
+</pre></div>
+</div>
+</dd>
+<dt class="field-even">Example</dt>
+<dd class="field-even"><div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">requirements</span><span class="p">:</span>
+  <span class="c1"># Check whether the file exists</span>
+  <span class="nt">has_file</span><span class="p">:</span> <span class="s">&quot;[</span><span class="nv"> </span><span class="s">-f</span><span class="nv"> </span><span class="s">$PATH</span><span class="nv"> </span><span class="s">]</span><span class="nv"> </span><span class="s">&amp;&amp;</span><span class="nv"> </span><span class="s">echo</span><span class="nv"> </span><span class="s">-n</span><span class="nv"> </span><span class="s">Yes</span><span class="nv"> </span><span class="s">||</span><span class="nv"> </span><span class="s">echo</span><span class="nv"> </span><span class="s">-n</span><span class="nv"> </span><span class="s">No&quot;</span>
+  <span class="c1"># Get average CPU usage over 3 seconds (Output: Three floats between 0-100 (%)) (Reference: https://askubuntu.com/a/941997)</span>
+  <span class="nt">cpu_usage</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="s">&quot;(grep</span><span class="nv"> </span><span class="s">&#39;cpu</span><span class="nv"> </span><span class="s">&#39;</span><span class="nv"> </span><span class="s">/proc/stat;sleep</span><span class="nv"> </span><span class="s">0.1;grep</span><span class="nv"> </span><span class="s">&#39;cpu</span><span class="nv"> </span><span class="s">&#39;</span><span class="nv"> </span><span class="s">/proc/stat)</span><span class="nv"> </span><span class="s">|</span><span class="nv"> </span><span class="s">awk</span><span class="nv"> </span><span class="s">-v</span><span class="nv"> </span><span class="s">RS=&#39;&#39;</span><span class="nv"> </span><span class="s">&#39;{print</span><span class="nv"> </span><span class="s">($13-$2+$15-$4)*100/($13-$2+$15-$4+$16-$5)}&#39;&quot;</span>
+  <span class="p p-Indicator">-</span> <span class="s">&quot;sleep</span><span class="nv"> </span><span class="s">1.5&quot;</span>
+  <span class="p p-Indicator">-</span> <span class="s">&quot;(grep</span><span class="nv"> </span><span class="s">&#39;cpu</span><span class="nv"> </span><span class="s">&#39;</span><span class="nv"> </span><span class="s">/proc/stat;sleep</span><span class="nv"> </span><span class="s">0.1;grep</span><span class="nv"> </span><span class="s">&#39;cpu</span><span class="nv"> </span><span class="s">&#39;</span><span class="nv"> </span><span class="s">/proc/stat)</span><span class="nv"> </span><span class="s">|</span><span class="nv"> </span><span class="s">awk</span><span class="nv"> </span><span class="s">-v</span><span class="nv"> </span><span class="s">RS=&#39;&#39;</span><span class="nv"> </span><span class="s">&#39;{print</span><span class="nv"> </span><span class="s">($13-$2+$15-$4)*100/($13-$2+$15-$4+$16-$5)}&#39;&quot;</span>
+  <span class="p p-Indicator">-</span> <span class="s">&quot;sleep</span><span class="nv"> </span><span class="s">1.5&quot;</span>
+  <span class="p p-Indicator">-</span> <span class="s">&quot;(grep</span><span class="nv"> </span><span class="s">&#39;cpu</span><span class="nv"> </span><span class="s">&#39;</span><span class="nv"> </span><span class="s">/proc/stat;sleep</span><span class="nv"> </span><span class="s">0.1;grep</span><span class="nv"> </span><span class="s">&#39;cpu</span><span class="nv"> </span><span class="s">&#39;</span><span class="nv"> </span><span class="s">/proc/stat)</span><span class="nv"> </span><span class="s">|</span><span class="nv"> </span><span class="s">awk</span><span class="nv"> </span><span class="s">-v</span><span class="nv"> </span><span class="s">RS=&#39;&#39;</span><span class="nv"> </span><span class="s">&#39;{print</span><span class="nv"> </span><span class="s">($13-$2+$15-$4)*100/($13-$2+$15-$4+$16-$5)}&#39;&quot;</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>Commands to run to check requirements on servers.</p>
+<p>After executing the commands on server, Noodles would try to convert the
+text in each line in STDOUT output using Python builtin function
+<code class="xref py py-func docutils literal notranslate"><span class="pre">ast.literal_eval()</span></code> and calculate the mean as the metric. If it
+fails, the original STDOUT would be used as metric.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="deployment">
+<h2><a class="toc-backref" href="#id7">1.5. Deployment</a><a class="headerlink" href="#deployment" title="Permalink to this headline">¶</a></h2>
+<dl class="option">
+<dt id="cmdoption-arg-write-status-to">
+<code class="descname">write_status_to</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-arg-write-status-to" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Mapping</p>
+</dd>
+<dt class="field-even">Default</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">{}</span></code></p>
+</dd>
+<dt class="field-odd">Format</dt>
+<dd class="field-odd"><div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="s">&quot;&lt;Command</span><span class="nv"> </span><span class="s">type</span><span class="nv"> </span><span class="s">1&gt;&quot;</span><span class="p p-Indicator">:</span> <span class="s">&quot;&lt;Path</span><span class="nv"> </span><span class="s">1&gt;&quot;</span>
+<span class="s">&quot;&lt;Command</span><span class="nv"> </span><span class="s">type</span><span class="nv"> </span><span class="s">2&gt;&quot;</span><span class="p p-Indicator">:</span> <span class="s">&quot;&lt;Path</span><span class="nv"> </span><span class="s">2&gt;&quot;</span>
+<span class="nn">...</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>The path for Noodles to write deployment status.</p>
+<p>The list of status to be written are:</p>
+<ul class="simple">
+<li><p>Start time: &lt;Start time of current Noodles run&gt;</p></li>
+<li><p>Previous round time: &lt;Time of the end of previous deployment round&gt;</p></li>
+<li><p>Elapsed time: &lt;Elapsed time from start time&gt;</p></li>
+<li><p>Stage: &lt;Current stage (<a class="reference internal" href="#cmdoption-arg-before-all-experiments"><code class="xref std std-option docutils literal notranslate"><span class="pre">before_all_experiments</span></code></a>,
+<a class="reference internal" href="#cmdoption-arg-experiments"><code class="xref std std-option docutils literal notranslate"><span class="pre">experiments</span></code></a> or <a class="reference internal" href="#cmdoption-arg-after-all-experiments"><code class="xref std std-option docutils literal notranslate"><span class="pre">after_all_experiments</span></code></a>)&gt;</p></li>
+<li><p>Round #: &lt;Current deployment round number&gt;</p></li>
+<li><p>Deployed experiments: &lt;A list of deployed experiment names (Unordered)&gt;</p></li>
+<li><p>Undeployed experiments: &lt;A list of undeployed experiment names&gt;</p></li>
+<li><p>Undeployed experiments (For command): &lt;A
+<a class="reference internal" href="../guide/usage.html#choose-only-some-experiments"><span class="std std-ref">filter string</span></a> of comma-separated
+undeployed experiment names&gt;</p></li>
+</ul>
+<p>The file will be updated before the first deployment and after each
+successful deployment.</p>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-arg-round-interval">
+<code class="descname">round_interval</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-arg-round-interval" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Number</p>
+</dd>
+<dt class="field-even">Default</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">10</span></code></p>
+</dd>
+</dl>
+<p>The interval to run each deployment round.</p>
+<p>See how it’s used in <a class="reference internal" href="../introduction/how_noodles_works.html#deploy-all-experiments"><span class="std std-ref">Deploy Experiments to Servers</span></a>.</p>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-arg-deployment-interval">
+<code class="descname">deployment_interval</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-arg-deployment-interval" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Number</p>
+</dd>
+<dt class="field-even">Default</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p>
+</dd>
+</dl>
+<p>The interval to deploy each experiment in each round.</p>
+<p>See how it’s used in <a class="reference internal" href="../introduction/how_noodles_works.html#deploy-one-experiment"><span class="std std-ref">Deploy One Experiment</span></a>.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="error-handling">
+<h2><a class="toc-backref" href="#id8">1.6. Error Handling</a><a class="headerlink" href="#error-handling" title="Permalink to this headline">¶</a></h2>
+<dl class="option">
+<dt id="cmdoption-arg-check-any-errors">
+<code class="descname">check_any_errors</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-arg-check-any-errors" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Boolean</p>
+</dd>
+<dt class="field-even">Default</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p>
+</dd>
+</dl>
+<p>Whether to check any nonzero return code and nonempty stderr.</p>
+<p>When it’s turned on, any nonzero return code and/or nonempty STDERR will
+trigger Noodles to check a matching error handler in
+<a class="reference internal" href="#cmdoption-arg-error-handlers"><code class="xref std std-option docutils literal notranslate"><span class="pre">error_handlers</span></code></a>. Otherwise, any errors will be ignored.</p>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-arg-error-handlers">
+<code class="descname">error_handlers</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-arg-error-handlers" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List</p>
+</dd>
+<dt class="field-even">Default</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">[]</span></code></p>
+</dd>
+<dt class="field-odd">Format</dt>
+<dd class="field-odd"><div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;&lt;Name</span><span class="nv"> </span><span class="s">1&gt;&quot;</span>
+  <span class="nt">return_code</span><span class="p">:</span> <span class="s">&quot;&lt;return</span><span class="nv"> </span><span class="s">code</span><span class="nv"> </span><span class="s">pattern</span><span class="nv"> </span><span class="s">1&gt;&quot;</span>
+  <span class="nt">stderr_pattern</span><span class="p">:</span> <span class="s">&quot;&lt;STDERR</span><span class="nv"> </span><span class="s">pattern</span><span class="nv"> </span><span class="s">1&gt;&quot;</span>
+  <span class="nt">action</span><span class="p">:</span> <span class="s">&quot;&lt;Action</span><span class="nv"> </span><span class="s">to</span><span class="nv"> </span><span class="s">take</span><span class="nv"> </span><span class="s">1&gt;&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;&lt;Name</span><span class="nv"> </span><span class="s">2&gt;&quot;</span>
+  <span class="l l-Scalar l-Scalar-Plain">...</span>
+<span class="nn">...</span>
+</pre></div>
+</div>
+</dd>
+<dt class="field-even">Example</dt>
+<dd class="field-even"><div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">error_handlers</span><span class="p">:</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Abort when command not found</span>
+  <span class="nt">return_code</span><span class="p">:</span> <span class="s">&quot;\\d+&quot;</span>
+  <span class="nt">stderr_pattern</span><span class="p">:</span> <span class="s">&quot;^bash:</span><span class="nv"> </span><span class="s">line</span><span class="nv"> </span><span class="s">\\d+:</span><span class="nv"> </span><span class="s">.+:</span><span class="nv"> </span><span class="s">command</span><span class="nv"> </span><span class="s">not</span><span class="nv"> </span><span class="s">found\\s+$&quot;</span>
+  <span class="nt">action</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">abort</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Ignore SSH resolve hostname error</span>
+  <span class="nt">return_code</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">255</span>
+  <span class="nt">stderr_pattern</span><span class="p">:</span> <span class="s">&quot;^ssh:</span><span class="nv"> </span><span class="s">Could</span><span class="nv"> </span><span class="s">not</span><span class="nv"> </span><span class="s">resolve</span><span class="nv"> </span><span class="s">hostname</span><span class="nv"> </span><span class="s">.+:</span><span class="nv"> </span><span class="s">Name</span><span class="nv"> </span><span class="s">or</span><span class="nv"> </span><span class="s">service</span><span class="nv"> </span><span class="s">not</span><span class="nv"> </span><span class="s">known\\s+$&quot;</span>
+  <span class="nt">action</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">retry</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Ignore git clone already exists error</span>
+  <span class="nt">return_code</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
+  <span class="nt">stderr_pattern</span><span class="p">:</span> <span class="s">&quot;^fatal:</span><span class="nv"> </span><span class="s">destination</span><span class="nv"> </span><span class="s">path</span><span class="nv"> </span><span class="s">&#39;.+&#39;</span><span class="nv"> </span><span class="s">already</span><span class="nv"> </span><span class="s">exists</span><span class="nv"> </span><span class="s">and</span><span class="nv"> </span><span class="s">is</span><span class="nv"> </span><span class="s">not</span><span class="nv"> </span><span class="s">an</span><span class="nv"> </span><span class="s">empty</span><span class="nv"> </span><span class="s">directory.\\s+$&quot;</span>
+  <span class="nt">action</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">continue</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>List of error handlers.</p>
+<p>If the option <a class="reference internal" href="#cmdoption-arg-check-any-errors"><code class="xref std std-option docutils literal notranslate"><span class="pre">check_any_errors</span></code></a> is turned on and any nonzero return
+code and/or nonempty STDERR are generated after executing some commands,
+Noodles will check each error handler in this option and take the predefined
+action.</p>
+<p>Available actions are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">abort</span></code> (Noodles will abort the whole procedure, raise an error and
+exit)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">retry</span></code> (Noodles will skip the experiment and retry it in the next
+deployment round)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">continue</span></code> (Noodles will ignore the errors and treat the deployment
+as successful)</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">return_code</span></code> and <code class="docutils literal notranslate"><span class="pre">stderr_pattern</span></code> will be passed into the argument
+<code class="docutils literal notranslate"><span class="pre">pattern</span></code> in Python builtin function <code class="docutils literal notranslate"><span class="pre">re.match(pattern,</span> <span class="pre">string)</span></code>, the
+argument <code class="docutils literal notranslate"><span class="pre">string</span></code> will be the return code or STDERR string to be handled.</p>
+<p>A error handler is only matched when both <code class="docutils literal notranslate"><span class="pre">return_code</span></code> and
+<code class="docutils literal notranslate"><span class="pre">stderr_pattern</span></code> have full match (i.e., the match returned by
+<code class="xref py py-func docutils literal notranslate"><span class="pre">re.match()</span></code> is exactly the same as the argument <code class="docutils literal notranslate"><span class="pre">string</span></code>).</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="environment_variables.html" class="btn btn-neutral float-right" title="2. Environment Variables" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../guide/see_other_examples.html" class="btn btn-neutral float-left" title="5. See Other Examples" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Shawn Chang
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
