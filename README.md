@@ -43,16 +43,19 @@ The deployment round would continue until all experiments are successfully deplo
 
 ## How Noodles Works
 
+The general procedure is as follows:
+
 1. Initialize the list of experiments in **E**
-1. For each deployment round
+2. For each deployment round:
     1. Initialize the list of servers in **S**
-    2. For each experiment in **E**
+    2. For each experiment in **E**:
         1. Noodles runs user-defined requirements on each server in **S**
         2. Noodles compares the metrics (results from the above step) to the user-defined expression
-        3. If the expression is satisfied, Noodles runs the user-defined commands on the satisfied server
-        4. Remove the current experiment from **E**
-        5. Remove the satisfied server from **S**
-        6. If **S** is empty, break
+        3. If the expression is satisfied:
+            1. Noodles runs the user-defined commands on the satisfied server
+            2. Remove the current experiment from **E**
+            3. Remove the satisfied server from **S**
+            4. If **S** is empty, break
     3. If **E** is empty, break
 
 The implementation of Noodles complies with the following rules:

@@ -64,8 +64,12 @@ def read_user_spec(args):
 
 def _read_spec(path):
     try:
+        # Read the user spec
         with open(path, 'r') as stream:
             spec_data = yaml.safe_load(stream)
+
+        # If it's empty, set it do an empty dict
+        spec_data = spec_data or {}
     except yaml.YAMLError:
         logging.exception('Could not parse the spec file')
         raise

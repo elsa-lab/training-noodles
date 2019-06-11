@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.7 (2019-06-11)
+
+* Fixed division by zero error when there are no experiments
+* Fixed errors when the spec file is empty
+* Added default name for `server_default`
+* Changed Noodles status output format from Title Case to Sentence case
+* Removed extra environment variable `NOODLES_SERVER_PRIVATE_KEY_PATH`
+
 ## 1.0.6 (2019-06-09)
 
 * Updated README

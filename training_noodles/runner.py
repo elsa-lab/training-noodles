@@ -59,7 +59,10 @@ class Runner:
         self.logger.info('Total elapsed time: {:.3f}s'.format(elapsed))
 
         # Calculate ratio of successful deployments
-        percentage = float(num_success) / float(total) * 100.0
+        if total > 0:
+            percentage = float(num_success) / float(total) * 100.0
+        else:
+            percentage = 0
 
         # Log the ratio of successful deployments
         self.logger.info(
@@ -178,15 +181,15 @@ class Runner:
 
         # Build the status
         status = {
-            'Start Time': convert_unix_time_to_iso(self.start_time),
-            'Previous Round Time':
+            'Start time': convert_unix_time_to_iso(self.start_time),
+            'Previous round time':
                 convert_unix_time_to_iso(self.prev_round_time),
             'Elapsed time (s)': elapsed_time,
             'Stage': self.stage,
             'Round #': self.round_idx + 1,
-            'Deployed Experiments': deployed_names,
-            'Undeployed Experiments': undeployed_names,
-            'Undeployed Experiments (For command)': ','.join(undeployed_names),
+            'Deployed experiments': deployed_names,
+            'Undeployed experiments': undeployed_names,
+            'Undeployed experiments (For command)': ','.join(undeployed_names),
         }
 
         # Serialize the status into YAML string
@@ -769,8 +772,6 @@ class Runner:
             'NOODLES_EXPERIMENT_NAME': exp_spec.get('name', ''),
             # Server
             'NOODLES_SERVER_NAME': server_spec.get('name', ''),
-            'NOODLES_SERVER_PRIVATE_KEY_PATH':
-                server_spec.get('private_key_path', ''),
             'NOODLES_SERVER_PORT': server_spec.get('port', ''),
             'NOODLES_SERVER_USERNAME': server_spec.get('username', ''),
             'NOODLES_SERVER_HOSTNAME': server_spec.get('hostname', ''),
