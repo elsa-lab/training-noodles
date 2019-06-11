@@ -1,4 +1,0 @@
-/* Make the unordered list condensed */
-ul > li > p {
-    margin-bottom: 0 !important;
-}

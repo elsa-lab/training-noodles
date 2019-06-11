@@ -1,5 +1,0 @@
-Environment Variables
-=====================
-
-Environment variables can be used in values of ``envs``, lists of
-commands in ``commands`` and values of ``write_outputs``.

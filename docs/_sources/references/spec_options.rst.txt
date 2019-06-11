@@ -452,7 +452,7 @@ Deployment
    * Stage: <Current stage (:option:`before_all_experiments`,
      :option:`experiments` or :option:`after_all_experiments`)>
    * Round #: <Current deployment round number>
-   * Deployed experiments: <A list of deployed experiment names (Unordered)>
+   * Deployed experiments: <A list of deployed experiment names>
    * Undeployed experiments: <A list of undeployed experiment names>
    * Undeployed experiments (For command): <A
      :ref:`filter string <choose_only_some_experiments>` of comma-separated
