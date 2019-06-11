@@ -37,4 +37,4 @@ are the following:
 
 The fact that Noodles only uses SSH protocol means that Noodles doesn't assume
 the type of a server, it can be a local machine, self-hosted server, Amazon EC2
-instance or Google Computer Engine instance.
+instance or Google Compute Engine instance.
