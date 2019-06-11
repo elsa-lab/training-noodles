@@ -6,7 +6,7 @@
 source scripts/dev/includes/error_handling.sh
 
 # Package name
-PACKAGE_NAME=training_noodles
+PACKAGE_NAME=training-noodles
 
 # Conda environment name to create for testing
 TEST_CONDA_ENV_NAME=test_noodles
