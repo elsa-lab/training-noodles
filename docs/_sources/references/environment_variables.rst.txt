@@ -14,11 +14,11 @@ Environment variables can be used in the following
 * Commands in ``experiments[].commands``
 * Paths in ``experiments[].write_outputs``
 * Path in ``server_default.private_key_path``
-* Path in ``server_default.username``
-* Path in ``server_default.hostname``
+* Value in ``server_default.username``
+* Value in ``server_default.hostname``
 * Path in ``server[].private_key_path``
-* Path in ``server[].username``
-* Path in ``server[].hostname``
+* Value in ``server[].username``
+* Value in ``server[].hostname``
 * Commands in ``requirements.<requirement_id>``
 * Path in ``write_status_to``
 
