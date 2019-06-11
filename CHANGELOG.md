@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.8 (2019-06-11)
+
+* Fixed dependency checking
+* Fixed deployed server not being removed from **S** if the error handling action is `continue`
+* Make the experiment names ordered in Noodles status output
+
 ## 1.0.7 (2019-06-11)
 
 * Fixed division by zero error when there are no experiments

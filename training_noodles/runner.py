@@ -109,7 +109,7 @@ class Runner:
 
             # Try to deploy each experiment to one of the satisfied servers
             filtered_deployed, num_success = self._deploy_experiment_specs(
-                filtered_exps)
+                filtered_exps, self.undeployed)
 
             # Restore unfiltered indexes
             round_deployed = self._restore_unfiltered_indexes(
@@ -208,7 +208,7 @@ class Runner:
         # Write the status
         self._write_to_file(status, write_path)
 
-    def _deploy_experiment_specs(self, exps_spec):
+    def _deploy_experiment_specs(self, exps_spec, undeployed):
         # Initialize set of deployed experiment indexes
         deployed_exps = set()
 
@@ -249,7 +249,7 @@ class Runner:
 
             # Get the undeployed experiment dependencies
             undeployed_deps = self._get_undeployed_experiment_dependencies(
-                exp_names, exp_spec, deployed_exps)
+                undeployed, exp_names, exp_spec, deployed_exps)
 
             # Check whether there are still some undeployed dependencies
             if len(undeployed_deps) > 0:
@@ -409,6 +409,7 @@ class Runner:
             # Give up this experiment by treating it as if it has been
             # deployed
             deployed_exps.add(exp_idx)
+            deployed_servers.add(server_idx)
 
         elif status == 'retry':
             # Log the retry
@@ -486,22 +487,34 @@ class Runner:
     # Experiment Deployment Management
     ############################################################################
 
-    def _get_undeployed_experiment_dependencies(self, exp_names, exp_spec,
-                                                deployed):
+    def _get_undeployed_experiment_dependencies(
+            self, prev_undeployed, exp_names, exp_spec, filtered_deployed):
         # Get experiment dependencies
         depends_on = self._get_experiment_details(exp_spec, 'depends_on')
 
         # Convert the dependencies to set
         depends_on = set(depends_on)
 
-        # Build a set of deployed experiment names
-        deployed_names = set(map(lambda i: exp_names[i], deployed))
+        # Get all experiments in the stage
+        all_exps_spec = self._get_experiment_specs('experiments')
 
-        # Calculate undeployed experiment names
-        undeployed_names = set(exp_names) - deployed_names
+        # Get a list of all experiment names
+        all_names = self._get_experiment_names(all_exps_spec)
 
-        # Calculate the intersection of dependencies and undeployed names
-        undeployed_deps = depends_on.intersection(undeployed_names)
+        # Restore unfiltered indexes
+        round_deployed = self._restore_unfiltered_indexes(
+            prev_undeployed, filtered_deployed)
+
+        # Remove current deployed indexes from previously undeployed indexes
+        cur_undeployed = prev_undeployed - round_deployed
+
+        # Get a set of current undeployed experiment names
+        cur_undeployed_names = set(
+            self._restore_experiment_names(all_names, cur_undeployed))
+
+        # Calculate the intersection of dependencies and current undeployed
+        # names
+        undeployed_deps = depends_on.intersection(cur_undeployed_names)
 
         # Return the undeployed dependency names
         return list(undeployed_deps)

@@ -1,6 +1,6 @@
 # Training Noodles
 
-[![travis_build_status](https://travis-ci.com/sc420/training-noodles.svg?branch=master)](https://travis-ci.com/sc420/training-noodles)
+[![documentation_link](https://img.shields.io/badge/docs-online-brightgreen.svg)](https://sc420.github.io/training-noodles/) [![travis_build_status](https://travis-ci.com/sc420/training-noodles.svg?branch=master)](https://travis-ci.com/sc420/training-noodles)
 
 A simple and powerful tool to help training **multiple** programs on **multiple** servers with only one human.
 
@@ -63,6 +63,10 @@ The implementation of Noodles complies with the following rules:
 1. Simple (User can understand code and spec without looking documentation)
 2. Easy to debug (Noodles can take different actions when different error occurs)
 3. Stateless (The only state Noodles cares about is whether the deployment is successful or not, the states of the experiments must be handled by the user)
+
+## Documentation
+
+See full documentation [here](https://sc420.github.io/training-noodles/).
 
 ## Prerequisites
 
