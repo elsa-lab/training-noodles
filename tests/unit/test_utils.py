@@ -158,6 +158,33 @@ class TestUpdateDictWithMissing(unittest.TestCase):
         self.assertEqual(updated, self.expected)
 
 
+class TestUpdateDictWithMissingOrder(unittest.TestCase):
+    def test_empty(self):
+        self.ds = [
+            {'b': 2},
+            {'a': 1},
+        ]
+        self.expected = [('b', 2), ('a', 1)]
+
+    def test_mixed(self):
+        self.ds = [
+            {'a': 1, 'b': 2},
+            {},
+            {'a': -1, 'b': -1, 'c': -1},
+        ]
+        self.expected = [('a', 1), ('b', 2), ('c', -1)]
+
+    def tearDown(self):
+        # Update dict with missing properties
+        updated = update_dict_with_missing(*self.ds)
+
+        # Get the items as list
+        items = list(updated.items())
+
+        # Check the expected items
+        self.assertEqual(items, self.expected)
+
+
 class TestWrapWithList(unittest.TestCase):
     def test_str(self):
         self.x = 'abc'

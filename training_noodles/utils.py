@@ -1,3 +1,4 @@
+import collections
 import datetime
 import logging
 import re
@@ -85,8 +86,8 @@ def split_by_scheme(s, schemes):
 
 
 def update_dict_with_missing(*ds):
-    # Create empty dict
-    new_d = {}
+    # Create an empty ordered dict
+    new_d = collections.OrderedDict()
 
     # Iterate each dict
     for d in ds:

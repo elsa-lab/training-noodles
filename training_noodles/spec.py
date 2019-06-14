@@ -1,7 +1,7 @@
 import json
 import logging
 
-import yaml
+import oyaml as yaml
 
 from training_noodles.utils import (
     get_resource_path, update_dict_with_missing)

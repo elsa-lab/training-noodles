@@ -58,7 +58,7 @@ experiments:
     - "git clone $TF_EXAMPLE_URL"
     # Create a new conda environment
     - "echo Creating conda environment $CONDA_ENV_NAME on $NOODLES_SERVER_NAME"
-    - "$CONDA_DIR/bin/conda create -y -n $CONDA_ENV_NAME python=3.6"
+    - "$CONDA_DIR/bin/conda create -q -y -n $CONDA_ENV_NAME python=3.6"
 
 - name: init_exp2
   description: Mark the server by a unique file name and download TensorFlow-Examples on the server
@@ -80,7 +80,7 @@ experiments:
     - "git clone $TF_EXAMPLE_URL"
     # Create a new conda environment
     - "echo Creating conda environment $CONDA_ENV_NAME on $NOODLES_SERVER_NAME"
-    - "$CONDA_DIR/bin/conda create -y -n $CONDA_ENV_NAME python=3.6"
+    - "$CONDA_DIR/bin/conda create -q -y -n $CONDA_ENV_NAME python=3.6"
 
 - name: init_exp3
   description: Mark the server by a unique file name and download TensorFlow-Examples on the server
@@ -102,7 +102,7 @@ experiments:
     - "git clone $TF_EXAMPLE_URL"
     # Create a new conda environment
     - "echo Creating conda environment $CONDA_ENV_NAME on $NOODLES_SERVER_NAME"
-    - "$CONDA_DIR/bin/conda create -y -n $CONDA_ENV_NAME python=3.6"
+    - "$CONDA_DIR/bin/conda create -q -y -n $CONDA_ENV_NAME python=3.6"
 
 ### 2nd Phase: Run Experiments ###
 
@@ -309,5 +309,5 @@ error_handlers:
   action: continue
 - name: Ignore git clone already exists error
   return_code: 0
-  stderr_pattern: "^fatal: destination path 'TensorFlow-Examples' already exists and is not an empty directory.\\s+$"
+  stderr_pattern: "^fatal: destination path 'TensorFlow-Examples' already exists and is not an empty directory\\.\\s+$"
   action: continue

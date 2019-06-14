@@ -3,7 +3,8 @@ import json
 import logging
 import re
 import time
-import yaml
+
+import oyaml as yaml
 
 from training_noodles.remote import (
     evaluate_expression_on_local, run_commands, get_error_messages)

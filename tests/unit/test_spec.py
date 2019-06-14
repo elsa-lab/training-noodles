@@ -131,6 +131,75 @@ class TestFillMissingWithDefaults(unittest.TestCase):
         self.assertEqual(self.user_spec, self.expected_user_spec)
 
 
+class TestFillMissingWithDefaultsOrder(unittest.TestCase):
+    def setUp(self):
+        # Set the default spec
+        self.default_spec = {
+            'envs': {
+                'b': 2,
+                'a': 1,
+                'c': 3,
+            },
+        }
+
+        # Set the keys to copy
+        self.keys_to_copy = ['envs/*']
+
+        # Initialize the expected envs
+        self.expected_envs = [('b', 2), ('a', 1), ('c', 3)]
+
+    def test_empty(self):
+        self.user_spec = {}
+
+    def test_add(self):
+        # Set the user spec
+        self.user_spec = {
+            'envs': {
+                'd': 4,
+            }
+        }
+
+        # Insert the new expected item
+        self.expected_envs.insert(0, ('d', 4))
+
+    def test_mixed_1(self):
+        # Set the user spec
+        self.user_spec = {
+            'envs': {
+                'a': -1,
+                'd': 4,
+            }
+        }
+
+        # Set the expected envs
+        self.expected_envs = [('a', -1), ('d', 4), ('b', 2), ('c', 3)]
+
+    def test_mixed_2(self):
+        # Set the user spec
+        self.user_spec = {
+            'envs': {
+                'd': 4,
+                'a': -1,
+                'b': -2,
+            }
+        }
+
+        # Set the expected envs
+        self.expected_envs = [('d', 4), ('a', -1),
+                              ('b', -2), ('c', 3)]
+
+    def tearDown(self):
+        # Fill missing values from default spec
+        _fill_missing_with_defaults(
+            self.default_spec, self.user_spec, self.keys_to_copy)
+
+        # Get the envs from user spec
+        envs = list(self.user_spec['envs'].items())
+
+        # Check the order of expected envs
+        self.assertEqual(envs, self.expected_envs)
+
+
 class TestFillMissingInStageSpecs(unittest.TestCase):
     def setUp(self):
         # Set the initial user spec
