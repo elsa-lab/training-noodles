@@ -91,7 +91,11 @@ def update_dict_with_missing(*ds):
 
     # Iterate each dict
     for d in ds:
-        new_d.update({k: v for k, v in d.items() if k not in new_d})
+        # Iterate each item in the dict
+        for k, v in d.items():
+            # Add the item if the key doesn't exist in the new dict
+            if k not in new_d:
+                new_d[k] = v
 
     # Return the updated dict
     return new_d
