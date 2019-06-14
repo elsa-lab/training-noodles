@@ -6,9 +6,9 @@ import time
 import pkg_resources
 
 
-def convert_unix_time_to_iso(t):
+def convert_unix_time_to_iso(t, tz=None):
     # Convert to datetime
-    d = datetime.datetime.fromtimestamp(t)
+    d = datetime.datetime.fromtimestamp(t, tz=tz)
 
     # Return ISO format
     return d.isoformat()
@@ -50,6 +50,8 @@ def match_full(pattern, s):
 def split_by_scheme(s, schemes):
     """ Split the string by identifiable scheme.
 
+    Scheme is only valid if it contains only word characters.
+
     Arguments:
         s (str): Input string which may contain scheme (e.g., "abc:123")
         schemes (list): List of identifiable schemes (str).
@@ -69,10 +71,15 @@ def split_by_scheme(s, schemes):
 
     # Check whether the first part is a scheme
     if len(parts) >= 2:
-        if parts[0] in schemes:
-            return True, parts[0], parts[1]
+        # Check if the first part contains only word characters
+        if re.match('^\\w+$', parts[0]) is None:
+            return True, None, s
         else:
-            return False, None, parts[1]
+            # Check if the first part is in identifiable schemes
+            if parts[0] in schemes:
+                return True, parts[0], parts[1]
+            else:
+                return False, parts[0], parts[1]
     else:
         return True, None, s
 

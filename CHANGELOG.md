@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.10 (2019-06-14)
+
+* Fixed splitting scheme so that scheme can only contain word characters (e.g., "local:ls" has a scheme but "scp user@host:~/file" doesn't)
+
 ## 1.0.9 (2019-06-11)
 
 * Fixed command execution error on Linux
