@@ -1,3 +1,4 @@
+import ast
 import collections
 import datetime
 import logging
@@ -27,25 +28,45 @@ def get_resource_path(package, resource_name):
     return pkg_resources.resource_filename(requirement, resource_name)
 
 
-def match_full(pattern, s):
-    # Check whether the pattern is valid
-    if not isinstance(pattern, str):
-        return False
+def has_environment_variable(expr):
+    # Set the pattern
+    pattern = r'(\$.+)|(\${.+})'
 
-    # Convert the input to string
-    s = str(s)
+    # Find if there is any environment variable
+    m = re.search(pattern, expr)
 
-    # Find the matches
-    m = re.match(pattern, s)
+    # Return the result
+    return m is not None
 
-    # Check whether there are any matches
-    if m is not None:
-        # Check full match
-        if len(m.group()) == len(s):
-            return True
 
-    # otherwise, it's not a full match
-    return False
+def parse_requirement_expression(expr):
+    # Set the pattern
+    pattern = r'^(?P<operator>==|!=|<=|>=|<|>)(?P<value>.+)$'
+
+    # Find the match
+    m = re.fullmatch(pattern, expr)
+
+    # Check if there is a match
+    if m is None:
+        # Return none
+        return None
+    else:
+        # Get the operator and value
+        operator = m.group('operator')
+        value = m.group('value')
+
+        # Try to parse the value
+        try:
+            value = ast.literal_eval(value)
+        except:
+            # Ignore the exception
+            pass
+
+        # Return the operator and value
+        return {
+            'operator': operator,
+            'value': value,
+        }
 
 
 def split_by_scheme(s, schemes):

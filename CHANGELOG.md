@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.13 (2019-06-14)
+
+* Fixed some operators in requirement expression are not recognized
+* Fixed some environment variables are not evaluated correctly
+
 ## 1.0.12 (2019-06-14)
 
 * Fixed environment variables order may not be preserved (`experiment.envs` first, then `experiment_default.envs`)

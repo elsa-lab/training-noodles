@@ -9,8 +9,9 @@ import oyaml as yaml
 from training_noodles.remote import (
     evaluate_expression_on_local, run_commands, get_error_messages)
 from training_noodles.utils import (
-    convert_unix_time_to_iso, match_full, split_by_scheme,
-    update_dict_with_missing, wrap_with_list)
+    convert_unix_time_to_iso, has_environment_variable,
+    parse_requirement_expression, split_by_scheme, update_dict_with_missing,
+    wrap_with_list)
 
 
 class Runner:
@@ -739,23 +740,16 @@ class Runner:
         req_expr = req_expr.strip()
 
         # Parse the expression
-        m = re.match(r'^(?P<operator>[<>=]+)(?P<value>.+)$', req_expr)
+        result = parse_requirement_expression(req_expr)
 
         # Check whether the expression is valid
-        if m is None:
+        if result is None:
             self._raise_error(
                 'Could not parse the requirement expression: {}'.format(
                     req_expr))
         else:
-            operator = m.group('operator')
-            value = m.group('value')
-
-            # Try to parse the value
-            try:
-                value = ast.literal_eval(value)
-            except:
-                # Ignore the exception
-                pass
+            # Get operator and value
+            operator, value = result['operator'], result['value']
 
         # Return operator and value
         return operator, value
@@ -898,13 +892,13 @@ class Runner:
 
             # Check the return code
             if isinstance(return_code, str):
-                match_return_code = match_full(
+                match_return_code = re.fullmatch(
                     return_code, results['return_code'])
             else:
                 match_return_code = (results['return_code'] == return_code)
 
             # Check whether it's a full match
-            match_stderr = match_full(stderr_pattern, results['stderr'])
+            match_stderr = re.fullmatch(str(stderr_pattern), results['stderr'])
 
             # Return code and STDERR must all be matched
             if match_return_code and match_stderr:
@@ -935,11 +929,9 @@ class Runner:
         # Convert to string
         expr = str(expr)
 
-        # Check whether any environment variables exist
-        m = re.match(r'(\$.+)|(\${.+})', expr)
-
-        # Return the original expression
-        if m is None:
+        # Check whether there are any environment variables
+        if not has_environment_variable(expr):
+            # Return the original expression
             return expr
 
         # Evaluate expression until success

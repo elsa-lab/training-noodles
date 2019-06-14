@@ -5,7 +5,8 @@ import unittest
 # Testing targets
 from training_noodles.utils import (
     convert_unix_time_to_iso, convert_values_to_strs, get_resource_path,
-    match_full, split_by_scheme, update_dict_with_missing, wrap_with_list)
+    has_environment_variable, parse_requirement_expression, split_by_scheme,
+    update_dict_with_missing, wrap_with_list)
 
 
 class TestConvertUnixTimeToIso(unittest.TestCase):
@@ -66,38 +67,77 @@ class TestGetResourcePath(unittest.TestCase):
             pass
 
 
-class TestMatchFull(unittest.TestCase):
-    def test_empty(self):
-        self.pattern = ''
-        self.s = 'abc 123'
+class TestHasEnvironmentVariable(unittest.TestCase):
+    def test_no_env(self):
+        self.expr = 'abc-123_456'
         self.expected = False
 
-    def test_full_match(self):
-        self.pattern = '^\\w+\\s\\d+$'
-        self.s = 'abc 123'
+    def test_simple_env(self):
+        self.expr = 'abc-$ENV-123'
         self.expected = True
 
-    def test_partial_match(self):
-        self.pattern = '^\\w+'
-        self.s = 'abc 123'
-        self.expected = False
+    def test_curly_env(self):
+        self.expr = 'abc-${ENV}-123'
+        self.expected = True
 
-    def test_no_match(self):
-        self.pattern = '[a-z]'
-        self.s = '0'
-        self.expected = False
-
-    def test_invalid_type(self):
-        self.pattern = 0
-        self.s = '0'
-        self.expected = False
+    def test_array(self):
+        self.expr = 'abc-${ENV[1]}-123'
+        self.expected = True
 
     def tearDown(self):
-        # Check whether there is full match
-        is_full = match_full(self.pattern, self.s)
+        # Test if there are any environment variables
+        has_env = has_environment_variable(self.expr)
 
         # Check the expected result
-        self.assertEqual(is_full, self.expected)
+        self.assertEqual(has_env, self.expected)
+
+
+class TestParseRequirementExpression(unittest.TestCase):
+    def test_operator_equal(self):
+        self.expr = '==abc'
+        self.expected = {'operator': '==', 'value': 'abc'}
+
+    def test_operator_not_equal(self):
+        self.expr = '!=abc'
+        self.expected = {'operator': '!=', 'value': 'abc'}
+
+    def test_operator_less_than(self):
+        self.expr = '<abc'
+        self.expected = {'operator': '<', 'value': 'abc'}
+
+    def test_operator_greater_than(self):
+        self.expr = '>abc'
+        self.expected = {'operator': '>', 'value': 'abc'}
+
+    def test_operator_less_than_or_equal(self):
+        self.expr = '<=abc'
+        self.expected = {'operator': '<=', 'value': 'abc'}
+
+    def test_operator_greater_than_or_equal(self):
+        self.expr = '>=abc'
+        self.expected = {'operator': '>=', 'value': 'abc'}
+
+    def test_operator_integer_value(self):
+        self.expr = '==3'
+        self.expected = {'operator': '==', 'value': 3}
+
+    def test_operator_float_value(self):
+        self.expr = '==1.0'
+        self.expected = {'operator': '==', 'value': 1.0}
+
+    def tearDown(self):
+        # Parse the requirement expression
+        result = parse_requirement_expression(self.expr)
+
+        # Check the type of value
+        if result is not None and isinstance(result['value'], float):
+            # Check the expected operator
+            self.assertEqual(result['operator'], self.expected['operator'])
+            # Check the expected float
+            self.assertAlmostEqual(result['value'], self.expected['value'])
+        else:
+            # Check the expected result
+            self.assertEqual(result, self.expected)
 
 
 class TestSplitByScheme(unittest.TestCase):
