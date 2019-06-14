@@ -96,6 +96,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#choose-only-some-experiments">3.2. Choose Only Some Experiments</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#command-types">3.3. Command Types</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#spec-file">3.4. Spec File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#debug">3.5. Debug</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="write_a_minimalist_spec_file.html">4. Write a Minimalist Spec File</a></li>
@@ -209,6 +210,16 @@ noodles stop spec.yml
 <h2>3.4. Spec File<a class="headerlink" href="#spec-file" title="Permalink to this headline">¶</a></h2>
 <p>The spec file should be written in <a class="reference external" href="https://en.wikipedia.org/wiki/YAML">YAML</a>. We’ll introduce the how write a
 minimalist spec file in the next topic <a class="reference internal" href="write_a_minimalist_spec_file.html#write-a-minimalist-spec-file"><span class="std std-ref">Write a Minimalist Spec File</span></a>.</p>
+</div>
+<div class="section" id="debug">
+<h2>3.5. Debug<a class="headerlink" href="#debug" title="Permalink to this headline">¶</a></h2>
+<p>If something didn’t go as expected, Noodles provides extra arguments to provide
+verbose and debugging messages, including how the commands are executed and
+what environment variables are given.</p>
+<p>Add two extra arguments like this:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>noodles run spec.yml --verbose --debug
+</pre></div>
+</div>
 </div>
 </div>
 

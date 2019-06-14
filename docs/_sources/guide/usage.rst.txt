@@ -56,4 +56,17 @@ Spec File
 The spec file should be written in YAML_. We'll introduce the how write a
 minimalist spec file in the next topic :ref:`write_a_minimalist_spec_file`.
 
+Debug
+-----
+
+If something didn't go as expected, Noodles provides extra arguments to provide
+verbose and debugging messages, including how the commands are executed and
+what environment variables are given.
+
+Add two extra arguments like this:
+
+.. code-block:: bash
+
+   noodles run spec.yml --verbose --debug
+
 .. _YAML: https://en.wikipedia.org/wiki/YAML
