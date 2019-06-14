@@ -1,3 +1,4 @@
+import collections
 import json
 import logging
 
@@ -68,8 +69,8 @@ def _read_spec(path):
         with open(path, 'r') as stream:
             spec_data = yaml.safe_load(stream)
 
-        # If it's empty, set it do an empty dict
-        spec_data = spec_data or {}
+        # If it's empty, set it do an empty ordered dict
+        spec_data = spec_data or collections.OrderedDict()
     except yaml.YAMLError:
         logging.exception('Could not parse the spec file')
         raise
@@ -109,7 +110,8 @@ def _fill_missing_in_stage_specs(user_spec):
     ]
 
     # Get default experiment spec
-    default_exp_spec = user_spec.get('experiment_default', {})
+    default_exp_spec = user_spec.get(
+        'experiment_default', collections.OrderedDict())
 
     # Set keys to copy
     keys = [
@@ -130,7 +132,8 @@ def _fill_missing_in_stage_specs(user_spec):
 
 def _fill_missing_in_server_specs(user_spec):
     # Get default server spec
-    default_server_spec = user_spec.get('server_default', {})
+    default_server_spec = user_spec.get(
+        'server_default', collections.OrderedDict())
 
     # Get server specs
     servers_spec = user_spec.get('servers', [])
@@ -193,8 +196,8 @@ def _fill_missing_with_defaults(default_spec, user_spec, keys):
 
             # Check whether to initialize the nested spec in user parent
             if user_value is None:
-                # Add an empty dict to the user parent
-                user_parent[part] = {}
+                # Add an empty ordered dict to the user parent
+                user_parent[part] = collections.OrderedDict()
 
             # Update the parents
             default_parent = default_value
