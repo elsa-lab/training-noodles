@@ -1,3 +1,4 @@
+import collections
 import datetime
 import unittest
 
@@ -161,16 +162,16 @@ class TestUpdateDictWithMissing(unittest.TestCase):
 class TestUpdateDictWithMissingOrder(unittest.TestCase):
     def test_empty(self):
         self.ds = [
-            {'b': 2},
-            {'a': 1},
+            collections.OrderedDict([('b', 2)]),
+            collections.OrderedDict([('a', 1)]),
         ]
         self.expected = [('b', 2), ('a', 1)]
 
     def test_mixed(self):
         self.ds = [
-            {'a': 1, 'b': 2},
-            {},
-            {'a': -1, 'b': -1, 'c': -1},
+            collections.OrderedDict([('a', 1), ('b', 2)]),
+            collections.OrderedDict(),
+            collections.OrderedDict([('a', -1), ('b', -1), ('c', -1)]),
         ]
         self.expected = [('a', 1), ('b', 2), ('c', -1)]
 

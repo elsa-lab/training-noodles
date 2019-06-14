@@ -1,3 +1,4 @@
+import collections
 import copy
 import unittest
 
@@ -135,11 +136,7 @@ class TestFillMissingWithDefaultsOrder(unittest.TestCase):
     def setUp(self):
         # Set the default spec
         self.default_spec = {
-            'envs': {
-                'b': 2,
-                'a': 1,
-                'c': 3,
-            },
+            'envs': collections.OrderedDict([('b', 2), ('a', 1), ('c', 3)]),
         }
 
         # Set the keys to copy
@@ -154,9 +151,7 @@ class TestFillMissingWithDefaultsOrder(unittest.TestCase):
     def test_add(self):
         # Set the user spec
         self.user_spec = {
-            'envs': {
-                'd': 4,
-            }
+            'envs': collections.OrderedDict([('d', 4)]),
         }
 
         # Insert the new expected item
@@ -165,10 +160,7 @@ class TestFillMissingWithDefaultsOrder(unittest.TestCase):
     def test_mixed_1(self):
         # Set the user spec
         self.user_spec = {
-            'envs': {
-                'a': -1,
-                'd': 4,
-            }
+            'envs': collections.OrderedDict([('a', -1), ('d', 4)]),
         }
 
         # Set the expected envs
@@ -177,11 +169,7 @@ class TestFillMissingWithDefaultsOrder(unittest.TestCase):
     def test_mixed_2(self):
         # Set the user spec
         self.user_spec = {
-            'envs': {
-                'd': 4,
-                'a': -1,
-                'b': -2,
-            }
+            'envs': collections.OrderedDict([('d', 4), ('a', -1), ('b', -2)]),
         }
 
         # Set the expected envs
