@@ -40,8 +40,10 @@ run_tests() {
     # Change the working directory to the test directory
     cd "$TEST_DIR"
 
-    # Run the examples
+    # Run unit tests
+    python -m unittest
 
+    # Run the examples
     echo "Run examples/error_handling"
     noodles run examples/error_handling/spec.yml
     noodles clean examples/error_handling/clean.yml
