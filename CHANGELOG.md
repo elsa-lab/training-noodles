@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.12 (2019-06-14)
+
+* Fixed environment variables order may not be preserved (`experiment.envs` first, then `experiment_default.envs`)
+
 ## 1.0.11 (2019-06-14)
 
 * Fixed environment variables order may not be preserved (`experiment.envs` first, then `experiment_default.envs`)
