@@ -94,7 +94,11 @@
 <li class="toctree-l1"><a class="reference internal" href="usage.html">3. Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="write_a_minimalist_spec_file.html">4. Write a Minimalist Spec File</a></li>
 <li class="toctree-l1"><a class="reference internal" href="see_other_examples.html">5. See Other Examples</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">6. Caveats</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">6. Caveats</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#set-working-directory">6.1. Set Working Directory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#set-environment-variables">6.2. Set Environment Variables</a></li>
+</ul>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">References</span></p>
 <ul>
@@ -167,15 +171,29 @@
             
   <div class="section" id="caveats">
 <h1>6. Caveats<a class="headerlink" href="#caveats" title="Permalink to this headline">¶</a></h1>
-<p>All the commands written in the spec file will be executed by <code class="docutils literal notranslate"><span class="pre">bash</span></code> without
-any <a class="reference external" href="https://linux.die.net/man/1/bash">additional arguments</a> like <code class="docutils literal notranslate"><span class="pre">--login</span></code>. You should explicitly set the
-environment variables to avoid unexpected errors. For example, the two most
-commonly used environment variables are:</p>
+<div class="section" id="set-working-directory">
+<h2>6.1. Set Working Directory<a class="headerlink" href="#set-working-directory" title="Permalink to this headline">¶</a></h2>
+<p>The initial working directory on the local machine and remote machines may be
+different, so it’s better to explicitly set the working directory. Two
+recommended options are:</p>
+<ol class="arabic simple">
+<li><p>Use absolute paths all the time</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cd</span></code> to a directory first and use relative paths afterwards</p></li>
+</ol>
+</div>
+<div class="section" id="set-environment-variables">
+<h2>6.2. Set Environment Variables<a class="headerlink" href="#set-environment-variables" title="Permalink to this headline">¶</a></h2>
+<p>The commands executed on remote machines will use <em>non-interactive</em> <em>non-login</em>
+shell (This will be changed in latter version by allowing customizable shell
+commands and arguments). You should explicitly set environment variables to
+avoid unexpected errors. For example, the two most commonly used environment
+variables are:</p>
 <ol class="arabic simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">PATH</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">LD_LIBRARY_PATH</span></code></p></li>
 </ol>
 <p>You should set them before the start of each experiment.</p>
+</div>
 </div>
 
 
