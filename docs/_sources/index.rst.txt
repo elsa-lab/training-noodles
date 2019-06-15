@@ -34,12 +34,14 @@ Links
    guide/usage
    guide/write_a_minimalist_spec_file
    guide/see_other_examples
+   guide/caveats
 
 .. toctree::
    :caption: References
    :maxdepth: 2
    :numbered:
 
+   references/command_line_arguments
    references/spec_options
    references/environment_variables
 
