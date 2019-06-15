@@ -246,6 +246,9 @@ class Runner:
                 # Add the experiment index to the deployed experiment indexes
                 deployed_exps.add(exp_idx)
 
+                # Increment the number of successful deployments
+                num_success += 1
+
                 # Continue to next experiment
                 continue
 
@@ -528,6 +531,9 @@ class Runner:
         # Initialize all indexes of servers
         satisfied = set(range(len(servers_spec)))
 
+        # Remove indexes of deployed servers
+        satisfied = set(satisfied) - deployed
+
         # Get experiment environment variables
         envs = self._get_experiment_details(exp_spec, 'envs')
 
@@ -553,9 +559,6 @@ class Runner:
             # Filter indexes of satisfied servers based on cached metrics
             satisfied = self._filter_satisfied_servers(
                 satisfied, req_group, metrics)
-
-        # Remove indexes of deployed servers
-        satisfied = set(satisfied) - deployed
 
         # Log the satisfied servers
         if self.verbose:
@@ -639,8 +642,15 @@ class Runner:
 
         # Iterate each server spec
         for server_idx, server_spec in enumerate(servers_spec):
+            # Get name of the server
+            server_name = server_spec['name']
+
             # Check whether the server has been deployed
             if server_idx in deployed:
+                # Log the skip
+                self._log_verbose(
+                    'Server "{}" has been deployed, skip'.format(server_name))
+
                 # Append null metric to the list
                 metrics.append(None)
 
@@ -651,9 +661,6 @@ class Runner:
             status = None
 
             while status != 'success':
-                # Get name of the server
-                server_name = server_spec['name']
-
                 # Log the server and requirement ID
                 self._log_verbose(
                     'Check requirement "{}" on server "{}"'.format(
@@ -691,6 +698,9 @@ class Runner:
                         ('Unsuccessful commands execution on server "{}",' +
                          ' will continue->\n{}').format(
                             server_name, req_commands))
+
+                    # Append null metric to the list
+                    metrics.append(None)
 
                     # Continue to next server spec
                     break

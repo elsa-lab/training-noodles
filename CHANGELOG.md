@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.14 (2019-06-15)
+
+* Fixed null metric problem when the server has been deployed with some experiment
+* Fixed number of successful deployments not increased if there are no commands
+* Log the skipped server when the server has been deployed
+
 ## 1.0.13 (2019-06-14)
 
 * Fixed some operators in requirement expression are not recognized

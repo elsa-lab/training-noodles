@@ -156,8 +156,13 @@ class TestSplitByScheme(unittest.TestCase):
         self.schemes = ['local', 'remote']
         self.expected = (False, 'unknown', 'abc 123')
 
-    def test_invalid_scheme(self):
+    def test_invalid_scheme_1(self):
         self.s = 'scp user1@server1:~/file ~/file'
+        self.schemes = ['local', 'remote']
+        self.expected = (True, None, self.s)
+
+    def test_invalid_scheme_2(self):
+        self.s = 'export PATH=$HOME/program1:$HOME/program2'
         self.schemes = ['local', 'remote']
         self.expected = (True, None, self.s)
 
@@ -250,4 +255,4 @@ class TestWrapWithListExceptions(unittest.TestCase):
     def tearDown(self):
         with self.assertRaises(ValueError):
             # Wrap the object with list
-            wrapped = wrap_with_list(self.x)
+            wrap_with_list(self.x)
