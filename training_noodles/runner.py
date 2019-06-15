@@ -6,7 +6,7 @@ import time
 
 import oyaml as yaml
 
-from training_noodles.remote import (
+from training_noodles.commands import (
     evaluate_expression_on_local, run_commands, get_error_messages)
 from training_noodles.utils import (
     convert_unix_time_to_iso, has_environment_variable,

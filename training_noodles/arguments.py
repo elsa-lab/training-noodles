@@ -3,8 +3,7 @@ import argparse
 
 def parse_args():
     # Create an argument parser
-    parser = argparse.ArgumentParser(
-        description='Training with instant noodles')
+    parser = argparse.ArgumentParser(description='Run noodles spec')
 
     # Command type
     parser.add_argument('type', type=str,

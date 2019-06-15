@@ -23,13 +23,13 @@ def main():
     # Start the runner
     runner.run()
 
-    # Return success code
+    # Return the success code
     return 0
 
 
 if __name__ == '__main__':
-    # Run main method
+    # Run the main method
     status = main()
 
-    # Exit with status
+    # Exit with the status
     sys.exit(status)
