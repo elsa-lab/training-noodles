@@ -1,6 +1,6 @@
 # Training Noodles
 
-[![documentation_link](https://img.shields.io/badge/docs-online-brightgreen.svg)](https://elsa-lab.github.io/training-noodles/) [![travis_build_status](https://travis-ci.com/sc420/training-noodles.svg?branch=master)](https://travis-ci.com/sc420/training-noodles)
+[![documentation_link](https://img.shields.io/badge/docs-online-brightgreen.svg)](https://elsa-lab.github.io/training-noodles/) [![travis_build_status](https://travis-ci.org/elsa-lab/training-noodles.svg?branch=master)](https://travis-ci.org/elsa-lab/training-noodles)
 
 A simple and powerful tool to help training **multiple** programs on **multiple** servers with only one human.
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.0 (2019-06-20)
+
+* Added spec option `commands_interval` to add a delay between command executions
+* Added spec option `error_handlers[].commands` for executing response commands when errors occur
+* Added spec options `shell_string` and `shell_stdin` for customizing the shell commands to read from string and STDIN
+* Add command type and user spec path in the output file of `write_status_to`
+
 ## 1.0.16 (2019-06-20)
 
 * Transferred the repo to elsa-lab
