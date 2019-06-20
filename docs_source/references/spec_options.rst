@@ -116,7 +116,8 @@ Experiments
             experiment_default:
               requirements:
                 run:
-                - cpu_usage: "<=90"
+                - cpu_usage: "<=70"
+                - cpu_load: "<=32"
                 - gpu_usage: "<=50"
                 - static:free_quota: ">=0.2"
                 - dynamic:has_lock_file: "==No"
@@ -262,7 +263,8 @@ Experiments
              - Configuration
            requirements:
              run:
-             - cpu_usage: "<=90"
+             - cpu_usage: "<=70"
+             - cpu_load: "<=32"
              - gpu_usage: "<=50"
              - free_quota: ">=0.2"
              - has_lock_file: "==No"
@@ -420,6 +422,8 @@ Requirements
            - "(grep 'cpu ' /proc/stat;sleep 0.1;grep 'cpu ' /proc/stat) | awk -v RS='' '{print ($13-$2+$15-$4)*100/($13-$2+$15-$4+$16-$5)}'"
            - "sleep 1.5"
            - "(grep 'cpu ' /proc/stat;sleep 0.1;grep 'cpu ' /proc/stat) | awk -v RS='' '{print ($13-$2+$15-$4)*100/($13-$2+$15-$4+$16-$5)}'"
+           # Get average CPU load over last 1 minute (Output: CPU load greater or equal to 0.0) (Reference: https://stackoverflow.com/a/24839903)
+           cpu_load: awk '{print $1}' /proc/loadavg
 
    Commands to run to check requirements on servers.
 

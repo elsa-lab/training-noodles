@@ -340,7 +340,8 @@ round.</p>
 <dd class="field-even"><div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">experiment_default</span><span class="p">:</span>
   <span class="nt">requirements</span><span class="p">:</span>
     <span class="nt">run</span><span class="p">:</span>
-    <span class="p p-Indicator">-</span> <span class="nt">cpu_usage</span><span class="p">:</span> <span class="s">&quot;&lt;=90&quot;</span>
+    <span class="p p-Indicator">-</span> <span class="nt">cpu_usage</span><span class="p">:</span> <span class="s">&quot;&lt;=70&quot;</span>
+    <span class="p p-Indicator">-</span> <span class="nt">cpu_load</span><span class="p">:</span> <span class="s">&quot;&lt;=32&quot;</span>
     <span class="p p-Indicator">-</span> <span class="nt">gpu_usage</span><span class="p">:</span> <span class="s">&quot;&lt;=50&quot;</span>
     <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">static:free_quota</span><span class="p p-Indicator">:</span> <span class="s">&quot;&gt;=0.2&quot;</span>
     <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">dynamic:has_lock_file</span><span class="p p-Indicator">:</span> <span class="s">&quot;==No&quot;</span>
@@ -517,7 +518,8 @@ will be written no matter it’s empty or not.</p>
     <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">Configuration</span>
   <span class="nt">requirements</span><span class="p">:</span>
     <span class="nt">run</span><span class="p">:</span>
-    <span class="p p-Indicator">-</span> <span class="nt">cpu_usage</span><span class="p">:</span> <span class="s">&quot;&lt;=90&quot;</span>
+    <span class="p p-Indicator">-</span> <span class="nt">cpu_usage</span><span class="p">:</span> <span class="s">&quot;&lt;=70&quot;</span>
+    <span class="p p-Indicator">-</span> <span class="nt">cpu_load</span><span class="p">:</span> <span class="s">&quot;&lt;=32&quot;</span>
     <span class="p p-Indicator">-</span> <span class="nt">gpu_usage</span><span class="p">:</span> <span class="s">&quot;&lt;=50&quot;</span>
     <span class="p p-Indicator">-</span> <span class="nt">free_quota</span><span class="p">:</span> <span class="s">&quot;&gt;=0.2&quot;</span>
     <span class="p p-Indicator">-</span> <span class="nt">has_lock_file</span><span class="p">:</span> <span class="s">&quot;==No&quot;</span>
@@ -742,6 +744,8 @@ run on local machine without <strong class="program">ssh</strong>.</p>
   <span class="p p-Indicator">-</span> <span class="s">&quot;(grep</span><span class="nv"> </span><span class="s">&#39;cpu</span><span class="nv"> </span><span class="s">&#39;</span><span class="nv"> </span><span class="s">/proc/stat;sleep</span><span class="nv"> </span><span class="s">0.1;grep</span><span class="nv"> </span><span class="s">&#39;cpu</span><span class="nv"> </span><span class="s">&#39;</span><span class="nv"> </span><span class="s">/proc/stat)</span><span class="nv"> </span><span class="s">|</span><span class="nv"> </span><span class="s">awk</span><span class="nv"> </span><span class="s">-v</span><span class="nv"> </span><span class="s">RS=&#39;&#39;</span><span class="nv"> </span><span class="s">&#39;{print</span><span class="nv"> </span><span class="s">($13-$2+$15-$4)*100/($13-$2+$15-$4+$16-$5)}&#39;&quot;</span>
   <span class="p p-Indicator">-</span> <span class="s">&quot;sleep</span><span class="nv"> </span><span class="s">1.5&quot;</span>
   <span class="p p-Indicator">-</span> <span class="s">&quot;(grep</span><span class="nv"> </span><span class="s">&#39;cpu</span><span class="nv"> </span><span class="s">&#39;</span><span class="nv"> </span><span class="s">/proc/stat;sleep</span><span class="nv"> </span><span class="s">0.1;grep</span><span class="nv"> </span><span class="s">&#39;cpu</span><span class="nv"> </span><span class="s">&#39;</span><span class="nv"> </span><span class="s">/proc/stat)</span><span class="nv"> </span><span class="s">|</span><span class="nv"> </span><span class="s">awk</span><span class="nv"> </span><span class="s">-v</span><span class="nv"> </span><span class="s">RS=&#39;&#39;</span><span class="nv"> </span><span class="s">&#39;{print</span><span class="nv"> </span><span class="s">($13-$2+$15-$4)*100/($13-$2+$15-$4+$16-$5)}&#39;&quot;</span>
+  <span class="c1"># Get average CPU load over last 1 minute (Output: CPU load greater or equal to 0.0) (Reference: https://stackoverflow.com/a/24839903)</span>
+  <span class="nt">cpu_load</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">awk &#39;{print $1}&#39; /proc/loadavg</span>
 </pre></div>
 </div>
 </dd>
