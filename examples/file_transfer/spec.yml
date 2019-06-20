@@ -143,3 +143,6 @@ round_interval: 10
 
 # The interval to deploy each experiment in each round
 deployment_interval: 0
+
+# The interval to execute the commands
+commands_interval: 0

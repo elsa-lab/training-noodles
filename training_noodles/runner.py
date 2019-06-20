@@ -9,27 +9,31 @@ from training_noodles.commands_runner import CommandsRunner
 from training_noodles.logger import Logger
 from training_noodles.data_structure_utils import (
     update_dict_with_missing, wrap_with_list)
+from training_noodles.spec import read_user_spec
 from training_noodles.string_utils import (
     has_environment_variable, parse_requirement_expression, split_by_scheme)
 from training_noodles.time_utils import convert_unix_time_to_iso
 
 
 class Runner:
-    def __init__(self, command_type, user_spec, verbose=False):
+    def __init__(self, command_type, user_spec_path, verbose=False):
         # Save the command type
         self.command_type = command_type
 
-        # Save the user spec
-        self.user_spec = user_spec
+        # Save the user spec path
+        self.user_spec_path = user_spec_path
 
         # Save the logging variable
         self.verbose = verbose
 
+        # Read the spec
+        self.user_spec = read_user_spec(self.user_spec_path)
+
         # Create a commands runner
-        local_shell = self.user_spec.get('local_shell', None)
-        remote_shell = self.user_spec.get('remote_shell', None)
+        shell_string = self.user_spec.get('shell_string', None)
+        shell_stdin = self.user_spec.get('shell_stdin', None)
         self.commands_runner = CommandsRunner(
-            local_shell=local_shell, remote_shell=remote_shell)
+            shell_string=shell_string, shell_stdin=shell_stdin)
 
         # Initialize other attributes
         self.start_time = None
@@ -199,6 +203,8 @@ class Runner:
 
         # Build the status
         status = {
+            'Command type': self.command_type,
+            'User spec path': self.user_spec_path,
             'Start time': convert_unix_time_to_iso(self.start_time),
             'Previous round time':
                 convert_unix_time_to_iso(self.prev_round_time),
@@ -663,7 +669,7 @@ class Runner:
                 # Continue to next server
                 continue
 
-            # Run the command until success
+            # Evaluate until success
             status = None
 
             while status != 'success':
@@ -687,7 +693,7 @@ class Runner:
                 # Take action according to the status
                 if status == 'success':
                     # Log the results
-                    self.logger.debug('Metric results:->\n{}'.format(stdout))
+                    self.logger.debug('Metric results->\n{}'.format(stdout))
 
                     # Try to calculate mean metric of results
                     metric = self._try_calc_mean(stdout)
@@ -844,15 +850,20 @@ class Runner:
     ############################################################################
 
     def _run_commands(self, server_spec, commands, user_files={}, envs={}):
+        # Wait for next commands
+        self._wait_for_next_commands()
+
         # Run the commands
         all_results, debug_infos = self.commands_runner.run_commands(
-            server_spec, commands, user_files=user_files, envs=envs)
+            commands, server_spec=server_spec, user_files=user_files,
+            envs=envs)
 
         # Check errors from all results
-        status = None
+        status = 'success'
         for results, debug_info in zip(all_results, debug_infos):
             # Handle the errors
-            status = self._handle_errors(results, debug_info)
+            status = self._handle_errors(results, debug_info,
+                                         server_spec=server_spec, envs=envs)
 
             # Stop checking errors when the status is "retry"
             if status == 'retry':
@@ -867,7 +878,7 @@ class Runner:
         # Return the error status, combined STDOUT and combined STDERR
         return status, combined_stdout, combined_stderr
 
-    def _handle_errors(self, results, debug_info):
+    def _handle_errors(self, results, debug_info, server_spec=None, envs={}):
         # Get error handling spec
         check_any_errors = self._get_check_any_errors_spec()
 
@@ -882,8 +893,11 @@ class Runner:
 
         # Check whether there are any error messages
         if len(messages) > 0:
-            # Get error handling action
-            action = self._check_error_handler_action(results)
+            # Find error handling match
+            commands, action = self._find_error_handler_match(results)
+
+            # Run response commands
+            self._run_response_commands(commands, server_spec, envs)
 
             # Take action
             if action == 'continue':
@@ -896,13 +910,13 @@ class Runner:
                 self.logger.raise_error(
                     'Unknown error action "{}"'.format(action))
 
-            # Return error handling action
+            # Return error handling commands and action
             return action
         else:
             # Indicate no action should be taken
             return 'success'
 
-    def _check_error_handler_action(self, results):
+    def _find_error_handler_match(self, results):
         # Get error handler specs
         error_handlers = self._get_error_handler_specs()
 
@@ -916,8 +930,11 @@ class Runner:
 
             # Check the return code
             if isinstance(return_code, str):
-                match_return_code = re.fullmatch(
-                    return_code, results['return_code'])
+                # Convert the return code to string
+                return_code_str = str(results['return_code'])
+
+                # Check whether it's a full match
+                match_return_code = re.fullmatch(return_code, return_code_str)
             else:
                 match_return_code = (results['return_code'] == return_code)
 
@@ -929,18 +946,63 @@ class Runner:
                 # Get the name of the filter
                 name = error_handler.get('name', '')
 
+                # Get the response commands
+                commands = error_handler.get('commands', None)
+
                 # Get the action
                 action = error_handler.get('action', 'abort')
 
                 # Log the match
-                self._log_verbose(('Found error handler match with name "{}"' +
-                                   ' and action "{}"').format(name, action))
+                self._log_verbose([
+                    'Found error handler match',
+                    'Name: {}'.format(name),
+                    'Commands->\n{}'.format(commands),
+                    'Action: {}'.format(action),
+                ])
 
-                # Return the action
-                return action
+                # Return the commands and action
+                return commands, action
 
         # All filters do not apply, abort the runner
-        return 'abort'
+        return None, 'abort'
+
+    def _run_response_commands(self, commands, server_spec, envs):
+        # Check whether the commands are not empty
+        if commands is None:
+            return
+
+        # Log the response
+        self._log_verbose('Run response commands')
+
+        # Run commands until success
+        status = None
+
+        while status != 'success':
+            # Run the commands
+            status, stdout, _ = self._run_commands(
+                server_spec, commands, envs=envs)
+
+            # Take action according to the status
+            if status == 'success':
+                # Log the results
+                self.logger.debug('Commands results->\n{}'.format(stdout))
+
+            elif status == 'continue':
+                # Log the continue
+                self.logger.warning(
+                    'Unsuccessful commands execution, will continue')
+
+                # Give up
+                break
+
+            elif status == 'retry':
+                # Log the retry
+                self.logger.warning(
+                    'Unsuccessful commands execution, will retry')
+
+            else:
+                # Should not reach here
+                raise ValueError('Unknown status: {}'.format(status))
 
     def _combine_outputs(self, all_results, output_type):
         # Get outputs
@@ -968,7 +1030,7 @@ class Runner:
                     expr, envs=envs)
 
             # Handle errors
-            status = self._handle_errors(results, debug_info)
+            status = self._handle_errors(results, debug_info, envs=envs)
 
             # Take action according to the status
             if status == 'success':
@@ -1101,6 +1163,10 @@ class Runner:
         # Get round interval
         round_interval = self._get_round_interval_spec()
 
+        # Check whether the interval is zero
+        if round_interval <= 0:
+            return
+
         # Log the wait
         self._log_verbose('Wait for next round for {}s'.format(round_interval))
 
@@ -1111,12 +1177,31 @@ class Runner:
         # Get deployment interval
         deployment_interval = self._get_deployment_interval_spec()
 
+        # Check whether the interval is zero
+        if deployment_interval <= 0:
+            return
+
         # Log the wait
         self._log_verbose('Wait for next deployment for {}s'.format(
             deployment_interval))
 
         # Wait for some time
         time.sleep(deployment_interval)
+
+    def _wait_for_next_commands(self):
+        # Get commands interval
+        commands_interval = self._get_commands_interval_spec()
+
+        # Check whether the interval is zero
+        if commands_interval <= 0:
+            return
+
+        # Log the wait
+        self._log_verbose('Wait for next commands for {}s'.format(
+            commands_interval))
+
+        # Wait for some time
+        time.sleep(commands_interval)
 
     ############################################################################
     # Getting Specs
@@ -1146,6 +1231,9 @@ class Runner:
 
     def _get_deployment_interval_spec(self):
         return self.user_spec.get('deployment_interval', 0)
+
+    def _get_commands_interval_spec(self):
+        return self.user_spec.get('commands_interval', 0)
 
     def _get_check_any_errors_spec(self):
         return self.user_spec.get('check_any_errors', True)
@@ -1211,14 +1299,5 @@ class Runner:
         if not self.verbose:
             return
 
-        # Check the messages type
-        if isinstance(messages, list):
-            # Log all messages
-            for message in messages:
-                self.logger.info(message)
-        elif isinstance(messages, str):
-            # Log the message
-            self.logger.info(messages)
-        else:
-            raise ValueError('Unknown messages type: {}'.format(
-                type(messages)))
+        # Log the messages
+        self.logger.info(messages)

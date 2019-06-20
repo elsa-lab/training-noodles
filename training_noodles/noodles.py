@@ -3,7 +3,6 @@ import sys
 from training_noodles.arguments import parse_args
 from training_noodles.logging_utils import init_logging
 from training_noodles.runner import Runner
-from training_noodles.spec import read_user_spec
 
 
 def main():
@@ -13,11 +12,8 @@ def main():
     # Initialize logging
     init_logging(args)
 
-    # Read the spec
-    user_spec = read_user_spec(args)
-
     # Build the runner
-    runner = Runner(args.type, user_spec, verbose=args.verbose)
+    runner = Runner(args.type, args.spec, verbose=args.verbose)
 
     # Start the runner
     runner.run()

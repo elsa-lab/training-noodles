@@ -114,6 +114,9 @@ round_interval: 10
 # The interval to deploy each experiment in each round
 deployment_interval: 0
 
+# The interval to execute the commands
+commands_interval: 0
+
 ################################################################################
 # Error Handling
 ################################################################################
@@ -125,13 +128,13 @@ check_any_errors: True
 error_handlers: []
 
 ################################################################################
-# Shell
+# Shell Commands
 ################################################################################
 
-# Shell command and arguments to run the experiment commands on local machine
+# Shell command to execute the commands read from the string
 # See: https://linux.die.net/man/1/bash
-local_shell: "bash -c"
+shell_string: "bash -c"
 
-# Shell command and arguments to run the experiment commands on remote machine
+# Shell command to execute the commands read from the standard input (STDIN)
 # See: https://linux.die.net/man/1/bash
-remote_shell: "bash -s"
+shell_stdin: "bash -s"

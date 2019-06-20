@@ -12,15 +12,16 @@ class CLI:
     This class runs command on the local machine and reads the results.
     """
 
-    def __init__(self, local_shell='bash -c'):
+    def __init__(self, shell_string='bash -c'):
         """ Initialize the instance.
 
         Arguments:
-            local_shell (str): Local shell command (e.g., "bash -c").
+            shell_string (str): Shell command to read from string (e.g.,
+                "bash -c").
         """
 
-        # Save the local shell command
-        self.local_shell = local_shell
+        # Save the shell command to read from string
+        self.shell_string = shell_string
 
         # Create a logger
         self.logger = Logger('cli')
@@ -40,7 +41,7 @@ class CLI:
         """
         # Wrap the command by the shell command to ensure the command is
         # executed by the shell
-        command = '{} "{}"'.format(self.local_shell, command)
+        command = '{} "{}"'.format(self.shell_string, command)
 
         # Convert environment variable values to strings
         extra_envs = convert_values_to_strs(extra_envs)

@@ -31,18 +31,19 @@ keys_to_copy = [
     'write_status_to/*',
     'round_interval',
     'deployment_interval',
+    'commands_interval',
     # Error handling
     'check_any_errors',
     'error_handlers',
-    # Shell
-    'local_shell',
-    'remote_shell',
+    # Shell commands
+    'shell_string',
+    'shell_stdin',
 ]
 
 
-def read_user_spec(args):
+def read_user_spec(path):
     # Split the spec into spec path and experiments spec
-    user_spec_path, experiments = _split_path_and_experiments(args.spec)
+    user_spec_path, experiments = _split_path_and_experiments(path)
 
     # Read the default spec
     default_spec = _read_spec(default_spec_path)

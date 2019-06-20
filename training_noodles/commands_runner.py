@@ -50,22 +50,24 @@ class CommandsRunner:
     * Unmixed command: Command specified by the user.
     """
 
-    def __init__(self, local_shell='bash -c', remote_shell='bash -s'):
+    def __init__(self, shell_string='bash -c', shell_stdin='bash -s'):
         """ Initialize the instance.
 
         Arguments:
-            local_shell (str): Local shell command (e.g., "bash -c").
-            remote_shell (str): Remote shell command (e.g., "bash -s").
+            shell_string (str): Shell command to read from string (e.g.,
+                "bash -c").
+            shell_stdin (str): Shell command to read from STDIN (e.g.,
+                "bash -s").
         """
 
-        # Save the local shell command
-        self.local_shell = local_shell
+        # Save the shell command to read from string
+        self.shell_string = shell_string
 
-        # Save the remote shell command
-        self.remote_shell = remote_shell
+        # Save the shell command to read from STDIN
+        self.shell_stdin = shell_stdin
 
         # Create a CLI
-        self.cli = CLI(local_shell=self.local_shell)
+        self.cli = CLI(shell_string=self.shell_string)
 
         # Create a file helper
         self.file_helper = FileHelper()
@@ -77,7 +79,7 @@ class CommandsRunner:
         # Create a logger
         self.logger = Logger('command')
 
-    def run_commands(self, server_spec, commands, user_files={}, envs={}):
+    def run_commands(self, commands, server_spec=None, user_files={}, envs={}):
         """ Run commands on either local or remote machine.
 
         The "commands" will be written into the temporary file. The final
@@ -86,12 +88,13 @@ class CommandsRunner:
         (Temp STDOUT and Temp STDERR).
 
         Arguments:
-            server_spec (dict): The server spec.
             commands (str or list): A single command (str) or list of commands.
+            server_spec (dict): Optional server spec. If the server spec is
+                omitted, the endpoint will be local.
             user_files (dict): Optional file paths for appending STDOUT and
                 STDERR for all command groups. It's a dict(stdout, stderr)
                 where each value is the corresponding path.
-            envs (dict): Environment variables.
+            envs (dict): Optional environment variables.
 
         Returns:
             (all_results, debug_infos) where "all_results" is a list of
@@ -264,9 +267,10 @@ class CommandsRunner:
                         scheme, command))
 
         # Add final results to outputs
-        self._add_endpoint_results_to_outputs(
-            server_spec, prev_scheme, cur_group, endpoint_commands,
-            unmixed_commands)
+        if prev_scheme is not None:
+            self._add_endpoint_results_to_outputs(
+                server_spec, prev_scheme, cur_group, endpoint_commands,
+                unmixed_commands)
 
         # Return zipped results
         return zip(endpoint_commands, unmixed_commands)
@@ -293,7 +297,9 @@ class CommandsRunner:
         the server spec.
 
         Arguments:
-            server_spec (dict): Server spec.
+            server_spec (dict): Server spec. If the spec is None or
+                server_spec['hostname'] is "localhost", the endpoint will be
+                local, otherwise remote.
 
         References:
             https://linux.die.net/man/1/ssh
@@ -301,8 +307,15 @@ class CommandsRunner:
         Returns:
             str: Remote endpoint command.
         """
-        # Check whether the hostname is localhost
-        if server_spec.get('hostname', None) == 'localhost':
+        # Check whether the server spec is intended to run on local machine
+        if (server_spec is None
+                or server_spec.get('hostname', None) == 'localhost'):
+            is_local = True
+        else:
+            is_local = False
+
+        # Check whether the endpoint is local
+        if is_local:
             return self._build_local_endpoint_command()
         else:
             # Initialize the ssh options
@@ -337,7 +350,7 @@ class CommandsRunner:
             return ssh_command
 
     def _build_local_endpoint_command(self):
-        return self.local_shell
+        return self.shell_string
 
     def _build_inner_commands(self, unmixed_commands, envs={}):
         # Initialize the outputs
@@ -379,7 +392,7 @@ class CommandsRunner:
 
         # Build the command
         outer_command = '{} \'{}\' {} {} {}'.format(
-            endpoint_command, self.remote_shell, stdin_command, stdout_command,
+            endpoint_command, self.shell_stdin, stdin_command, stdout_command,
             stderr_command)
 
         # Return the final command
