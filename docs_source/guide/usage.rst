@@ -11,7 +11,7 @@ Run Noodles
    noodles <command_type> <path_to_spec>
 
 Noodles only uses one command type and one spec file at a time. The command
-type is simply a key in the spec file to server for different purposes.
+type is simply a key in the spec file to serve for different purposes.
 
 .. _choose_only_some_experiments:
 
