@@ -54,7 +54,7 @@ Check Requirements
 Deploy One Experiment
 ---------------------
 
-#. Noodles runs the user-defined commands on the satisfied server
+#. Noodles runs the user-defined commands on the first satisfied server
 #. Initialize the boolean ``success := true``
 #. If there are any errors and error checking is enabled
    (``check_any_errors``):
@@ -63,6 +63,7 @@ Deploy One Experiment
       (``error_handlers``)
    #. If there is a match:
 
+      #. Execute the response commands
       #. If the action is ``abort``, raise the error and exit
       #. If the action is ``retry``, set ``success := false``
       #. If the action is ``continue``, set ``success := true``

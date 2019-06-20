@@ -28,12 +28,12 @@ Extra Environment Variables
 ---------------------------
 
 Noodles also provides some extra environment variables when executing the
-command over SSH:
+commands:
 
 * ``NOODLES_EXPERIMENT_NAME`` (The current experiment name)
-* ``NOODLES_SERVER_NAME`` (The current server name of the target server)
-* ``NOODLES_SERVER_PORT`` (The port to connect to the target server)
-* ``NOODLES_SERVER_USERNAME`` (The username of the target server)
-* ``NOODLES_SERVER_HOSTNAME`` (The hostname of the target server)
-* ``NOODLES_SERVER_AUTHORITY`` (Username and hostname of the target server, in
-  the form of ``<username>@<hostname>``)
+* ``NOODLES_SERVER_NAME`` (The current server name of the satisfied server)
+* ``NOODLES_SERVER_PORT`` (The port to connect to the satisfied server)
+* ``NOODLES_SERVER_USERNAME`` (The username of the satisfied server)
+* ``NOODLES_SERVER_HOSTNAME`` (The hostname of the satisfied server)
+* ``NOODLES_SERVER_AUTHORITY`` (Username and hostname of the satisfied server,
+  in the form of ``<username>@<hostname>``)

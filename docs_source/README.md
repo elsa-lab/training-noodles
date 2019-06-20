@@ -26,6 +26,14 @@ To automatically build the HTML files, execute the following:
 make livehtml
 ```
 
+## Clean
+
+To clean the build files, execute the following:
+
+```bash
+make clean
+```
+
 ## Publish
 
 GitHub allows us to host the documentation in the `docs` directory in the `master` branch. We need to move the build files from `docs_source/_build/html/` to `docs/`. To do so, execute the following:

@@ -26,7 +26,7 @@ Error Handling
 
 `Example link on GitHub. <https://github.com/elsa-lab/training-noodles/tree/master/examples/error_handling>`__
 
-This example specifies an nonexistent server in the spec purposely to test
+This example specifies a nonexistent server in the spec purposely to test
 whether Noodles can handle errors properly.
 
 File Transfer

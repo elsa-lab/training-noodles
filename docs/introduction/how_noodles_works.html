@@ -227,7 +227,7 @@ section <a class="reference internal" href="#deploy-one-experiment"><span class=
 <div class="section" id="deploy-one-experiment">
 <span id="id2"></span><h2>3.3. Deploy One Experiment<a class="headerlink" href="#deploy-one-experiment" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
-<li><p>Noodles runs the user-defined commands on the satisfied server</p></li>
+<li><p>Noodles runs the user-defined commands on the first satisfied server</p></li>
 <li><p>Initialize the boolean <code class="docutils literal notranslate"><span class="pre">success</span> <span class="pre">:=</span> <span class="pre">true</span></code></p></li>
 <li><p>If there are any errors and error checking is enabled
 (<code class="docutils literal notranslate"><span class="pre">check_any_errors</span></code>):</p>
@@ -236,6 +236,7 @@ section <a class="reference internal" href="#deploy-one-experiment"><span class=
 (<code class="docutils literal notranslate"><span class="pre">error_handlers</span></code>)</p></li>
 <li><p>If there is a match:</p>
 <ol class="arabic simple">
+<li><p>Execute the response commands</p></li>
 <li><p>If the action is <code class="docutils literal notranslate"><span class="pre">abort</span></code>, raise the error and exit</p></li>
 <li><p>If the action is <code class="docutils literal notranslate"><span class="pre">retry</span></code>, set <code class="docutils literal notranslate"><span class="pre">success</span> <span class="pre">:=</span> <span class="pre">false</span></code></p></li>
 <li><p>If the action is <code class="docutils literal notranslate"><span class="pre">continue</span></code>, set <code class="docutils literal notranslate"><span class="pre">success</span> <span class="pre">:=</span> <span class="pre">true</span></code></p></li>

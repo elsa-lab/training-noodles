@@ -97,6 +97,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">6. Caveats</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#set-working-directory">6.1. Set Working Directory</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#set-environment-variables">6.2. Set Environment Variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#choose-the-type-of-shells">6.3. Choose the Type of Shells</a></li>
 </ul>
 </li>
 </ul>
@@ -183,16 +184,33 @@ recommended options are:</p>
 </div>
 <div class="section" id="set-environment-variables">
 <h2>6.2. Set Environment Variables<a class="headerlink" href="#set-environment-variables" title="Permalink to this headline">¶</a></h2>
-<p>The commands executed on remote machines will use <em>non-interactive</em> <em>non-login</em>
-shell (This will be changed in latter version by allowing customizable shell
-commands and arguments). You should explicitly set environment variables to
-avoid unexpected errors. For example, the two most commonly used environment
-variables are:</p>
+<p>You should explicitly set the environment variables to avoid unexpected
+errors. The two most commonly used environment variables are:</p>
 <ol class="arabic simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">PATH</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">LD_LIBRARY_PATH</span></code></p></li>
 </ol>
 <p>You should set them before the start of each experiment.</p>
+</div>
+<div class="section" id="choose-the-type-of-shells">
+<h2>6.3. Choose the Type of Shells<a class="headerlink" href="#choose-the-type-of-shells" title="Permalink to this headline">¶</a></h2>
+<p>The commands executed on remote machines will use <em>non-interactive</em> <em>non-login</em>
+shell by default. That means the following files <strong>won’t</strong> be used at all:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/etc/profile</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">/etc/bash.bash_logout</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">~/.bash_profile</span></code> or <code class="docutils literal notranslate"><span class="pre">~/.bash_login</span></code> or <code class="docutils literal notranslate"><span class="pre">~/.profile</span></code> (bash would
+choose the first one if the file exists for <em>login</em> shells)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">~/.bashrc</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">~/.bash_logout</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">~/.inputrc</span></code></p></li>
+</ol>
+<p>(For more information, see sections <em>Invocation</em> and <em>Files</em> in Linux man page
+<a class="reference external" href="https://linux.die.net/man/1/bash">bash</a>)</p>
+<p>If you want to use a <em>non-interactive</em> <em>login</em> shell, change the spec option
+<a class="reference internal" href="../references/spec_options.html#cmdoption-arg-shell-stdin"><code class="xref std std-option docutils literal notranslate"><span class="pre">shell_stdin</span></code></a> to <code class="docutils literal notranslate"><span class="pre">bash</span> <span class="pre">-s</span> <span class="pre">-l</span></code>.</p>
+<p>It’s not recommended to use interactive shells because interactive shells may
+require user inputs and get stuck if no user is present at the moment.</p>
 </div>
 </div>
 

@@ -450,6 +450,8 @@ Deployment
 
    The list of status to be written are:
 
+   * Command type: <The given command type>
+   * User spec path: <The given path of the user spec>
    * Start time: <Start time of current Noodles run>
    * Previous round time: <Time of the end of previous deployment round>
    * Elapsed time: <Elapsed time from start time>
@@ -483,6 +485,13 @@ Deployment
 
    See how it's used in :ref:`deploy_one_experiment`.
 
+.. option:: commands_interval
+
+   :Type: Number
+   :Default: ``0``
+
+   The interval to execute the commands.
+
 Error Handling
 --------------
 
@@ -494,7 +503,7 @@ Error Handling
    Whether to check any nonzero return code and nonempty stderr.
 
    When it's turned on, any nonzero return code and/or nonempty STDERR will
-   trigger Noodles to check a matching error handler in
+   trigger Noodles to check the first matching error handler in
    :option:`error_handlers`. Otherwise, any errors will be ignored.
 
 .. option:: error_handlers
@@ -507,9 +516,16 @@ Error Handling
          - name: "<Name 1>"
            return_code: "<return code pattern 1>"
            stderr_pattern: "<STDERR pattern 1>"
+           commands: "<Response command 1>"
            action: "<Action to take 1>"
          - name: "<Name 2>"
-           ...
+           return_code: "<return code pattern 2>"
+           stderr_pattern: "<STDERR pattern 2>"
+           commands:
+           - "<Response command A>"
+           - "<Response command B>"
+           - ...
+           action: "<Action to take 2>"
          ...
    :Example:
       .. code-block:: yaml
@@ -527,13 +543,18 @@ Error Handling
            return_code: 0
            stderr_pattern: "^fatal: destination path '.+' already exists and is not an empty directory.\\s+$"
            action: continue
+         - name: Send email when unknown error occurred (Catch all)
+           return_code: ".+"
+           stderr_pattern: "[\\S\\s]+"
+           commands: "echo Check unknown error | mail -s \"Error!\" user1@gmail.com"
+           action: abort
 
    List of error handlers.
 
    If the option :option:`check_any_errors` is turned on and any nonzero return
    code and/or nonempty STDERR are generated after executing some commands,
-   Noodles will check each error handler in this option and take the predefined
-   action.
+   Noodles will check each error handler in this option and find the first
+   match.
 
    Available actions are:
 
@@ -544,12 +565,56 @@ Error Handling
    * ``continue`` (Noodles will ignore the errors and treat the deployment
      as successful)
 
+   If there is a match, the response commands will be executed no matter what
+   the action is, then the predefined action will be taken, otherwise no
+   response commands will be executed and the *abort* action will be taken.
+
+   When the response commands are executed, the currently chosen server spec
+   and environment variables from the current experiment are used.
+
+   If ``return_code`` is an integer, it will be directly compared to nonzero
+   return code returned from the commands, otherwise it's treated as a regex
+   pattern and the following procedure is taken.
+
    ``return_code`` and ``stderr_pattern`` will be passed into the argument
-   ``pattern`` in Python builtin function ``re.match(pattern, string)``, the
+   ``pattern`` in Python builtin function ``re.fullmatch(pattern, string)``, the
    argument ``string`` will be the return code or STDERR string to be handled.
 
    A error handler is only matched when both ``return_code`` and
-   ``stderr_pattern`` have full match (i.e., the match returned by
-   :py:func:`re.match` is exactly the same as the argument ``string``).
+   ``stderr_pattern`` are matched.
 
+Shell Commands
+--------------
+
+.. option:: shell_string
+
+   :Type: String
+   :Default: ``bash -c``
+   :Examples:
+      * ``bash -c``
+      * ``bash -c -r``
+   :See: Linux man page bash_.
+
+   Shell command to read from the string.
+
+   The string has the following uses:
+
+   1. Execute the commands on either local or remote machines
+   2. Wrap all commands to ensure that the commands are executed by the shell
+
+.. option:: shell_stdin
+
+   :Type: String
+   :Default: ``bash -s``
+   :Examples:
+      * ``bash -s``
+      * ``bash -s -l``
+   :See: Linux man page bash_.
+
+   Shell command to read from the standard input (STDIN).
+
+   The string is used to execute the commands on either local or remote
+   machines.
+
+.. _bash: https://linux.die.net/man/1/bash
 .. _default specs: https://github.com/elsa-lab/training-noodles/blob/master/training_noodles/specs/defaults.yml
