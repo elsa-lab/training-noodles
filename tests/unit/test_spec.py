@@ -8,6 +8,143 @@ from training_noodles.spec import (
     _fill_missing_in_server_specs)
 
 
+class TestFillMissingInStageSpecs(unittest.TestCase):
+    def setUp(self):
+        # Set the initial user spec
+        self.user_spec = {
+            'experiment_default': {
+                'name': '<default>',
+                'envs': {
+                    'one': 1,
+                    'two': 2,
+                },
+            },
+        }
+
+        # Initialize the expected user spec
+        self.expected_user_spec = copy.deepcopy(self.user_spec)
+
+    def test_experiments(self):
+        # Add experiments
+        self.user_spec['experiments'] = self._get_stage_spec()
+
+        # Update the expected user spec
+        self.expected_user_spec['experiments'] = \
+            self._get_expected_stage_spec()
+
+    def test_stages(self):
+        # Set stages to be tested
+        stages = [
+            'before_all_experiments',
+            'experiments',
+            'after_all_experiments',
+        ]
+
+        # Iterate each stage
+        for stage in stages:
+            # Add experiments
+            self.user_spec[stage] = self._get_stage_spec()
+
+            # Update the expected user spec
+            self.expected_user_spec[stage] = self._get_expected_stage_spec()
+
+    def tearDown(self):
+        # Fill missing values from default spec
+        _fill_missing_in_stage_specs(self.user_spec)
+
+        # Check the expected user spec
+        self.assertEqual(self.user_spec, self.expected_user_spec)
+
+    def _get_stage_spec(self):
+        # Return a list of experiments
+        return [
+            {},
+            {
+                'name': 'my',
+            },
+            {
+                'envs': {
+                    'zero': 0,
+                    'one': -1,
+                },
+            },
+        ]
+
+    def _get_expected_stage_spec(self):
+        # Get the default spec
+        default_exp = self.user_spec['experiment_default']
+
+        # Return a list of expected experiments after filling
+        return [
+            default_exp,
+            {
+                'name': 'my',
+                'envs': {
+                    'one': 1,
+                    'two': 2,
+                },
+            },
+            {
+                'name': '<default>',
+                'envs': {
+                    'zero': 0,
+                    'one': -1,
+                    'two': 2,
+                },
+            },
+        ]
+
+
+class TestFillMissingInServerSpecs(unittest.TestCase):
+    def setUp(self):
+        # Set the initial user spec
+        self.user_spec = {
+            'server_default': {
+                'private_key_path': '<path>',
+                'port': 22,
+            }
+        }
+
+        # Initialize the expected user spec
+        self.expected_user_spec = copy.deepcopy(self.user_spec)
+
+    def test_server_spec(self):
+        # Add server specs
+        self.user_spec['servers'] = [
+            {},
+            {
+                'private_key_path': 'my/long/path/to/key',
+            },
+            {
+                'private_key_path': 'my/long/path/to/key',
+                'port': 64,
+            },
+        ]
+
+        # Update the expected user spec
+        self.expected_user_spec['servers'] = [
+            {
+                'private_key_path': '<path>',
+                'port': 22,
+            },
+            {
+                'private_key_path': 'my/long/path/to/key',
+                'port': 22,
+            },
+            {
+                'private_key_path': 'my/long/path/to/key',
+                'port': 64,
+            },
+        ]
+
+    def tearDown(self):
+        # Fill missing values from default spec
+        _fill_missing_in_server_specs(self.user_spec)
+
+        # Check the expected user spec
+        self.assertEqual(self.user_spec, self.expected_user_spec)
+
+
 class TestFillMissingWithDefaults(unittest.TestCase):
     def setUp(self):
         # Set the default spec
@@ -186,144 +323,3 @@ class TestFillMissingWithDefaultsOrder(unittest.TestCase):
 
         # Check the order of expected envs
         self.assertEqual(envs, self.expected_envs)
-
-
-class TestFillMissingInStageSpecs(unittest.TestCase):
-    def setUp(self):
-        # Set the initial user spec
-        self.user_spec = {
-            'experiment_default': {
-                'name': '<default>',
-                'envs': {
-                    'one': 1,
-                    'two': 2,
-                },
-            },
-        }
-
-        # Initialize the expected user spec
-        self.expected_user_spec = copy.deepcopy(self.user_spec)
-
-    def test_experiments(self):
-        # Add experiments
-        self.user_spec['experiments'] = self._get_stage_spec()
-
-        # Update the expected user spec
-        self.expected_user_spec['experiments'] = \
-            self._get_expected_stage_spec()
-
-    def test_stages(self):
-        # Set stages to be tested
-        stages = [
-            'before_all_experiments',
-            'experiments',
-            'after_all_experiments',
-        ]
-
-        # Iterate each stage
-        for stage in stages:
-            # Add experiments
-            self.user_spec[stage] = self._get_stage_spec()
-
-            # Update the expected user spec
-            self.expected_user_spec[stage] = self._get_expected_stage_spec()
-
-    def tearDown(self):
-        # Fill missing values from default spec
-        _fill_missing_in_stage_specs(self.user_spec)
-
-        # Check the expected user spec
-        self.assertEqual(self.user_spec, self.expected_user_spec)
-
-    def _get_stage_spec(self):
-        # Return a list of experiments
-        return [
-            {},
-            {
-                'name': 'my',
-            },
-            {
-                'envs': {
-                    'zero': 0,
-                    'one': -1,
-                },
-            },
-        ]
-
-    def _get_expected_stage_spec(self):
-        # Get the default spec
-        default_exp = self.user_spec['experiment_default']
-
-        # Return a list of expected experiments after filling
-        return [
-            default_exp,
-            {
-                'name': 'my',
-                'envs': {
-                    'one': 1,
-                    'two': 2,
-                },
-            },
-            {
-                'name': '<default>',
-                'envs': {
-                    'zero': 0,
-                    'one': -1,
-                    'two': 2,
-                },
-            },
-        ]
-
-
-class TestFillMissingInServerSpecs(unittest.TestCase):
-    def setUp(self):
-        # Set the initial user spec
-        self.user_spec = {
-            'server_default': {
-                'private_key_path': '<path>',
-                'port': 22,
-            }
-        }
-
-        # Initialize the expected user spec
-        self.expected_user_spec = copy.deepcopy(self.user_spec)
-
-    def test_server_spec(self):
-        # Add server specs
-        self.user_spec['servers'] = [
-            {},
-            {
-                'private_key_path': 'my/long/path/to/key',
-            },
-            {
-                'private_key_path': 'my/long/path/to/key',
-                'port': 64,
-            },
-        ]
-
-        # Update the expected user spec
-        self.expected_user_spec['servers'] = [
-            {
-                'private_key_path': '<path>',
-                'port': 22,
-            },
-            {
-                'private_key_path': 'my/long/path/to/key',
-                'port': 22,
-            },
-            {
-                'private_key_path': 'my/long/path/to/key',
-                'port': 64,
-            },
-        ]
-
-    def tearDown(self):
-        # Fill missing values from default spec
-        _fill_missing_in_server_specs(self.user_spec)
-
-        # Check the expected user spec
-        self.assertEqual(self.user_spec, self.expected_user_spec)
-
-
-if __name__ == '__main__':
-    unittest.main()

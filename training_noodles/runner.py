@@ -1,17 +1,17 @@
 import ast
 import json
-import logging
 import re
 import time
 
 import oyaml as yaml
 
-from training_noodles.commands import (
-    evaluate_expression_on_local, run_commands, get_error_messages)
-from training_noodles.utils import (
-    convert_unix_time_to_iso, has_environment_variable,
-    parse_requirement_expression, split_by_scheme, update_dict_with_missing,
-    wrap_with_list)
+from training_noodles.commands_runner import CommandsRunner
+from training_noodles.logger import Logger
+from training_noodles.data_structure_utils import (
+    update_dict_with_missing, wrap_with_list)
+from training_noodles.string_utils import (
+    has_environment_variable, parse_requirement_expression, split_by_scheme)
+from training_noodles.time_utils import convert_unix_time_to_iso
 
 
 class Runner:
@@ -25,8 +25,8 @@ class Runner:
         # Save the logging variable
         self.verbose = verbose
 
-        # Create a logger
-        self.logger = logging.getLogger(name='run')
+        # Create a commands runner
+        self.commands_runner = CommandsRunner()
 
         # Initialize other attributes
         self.start_time = None
@@ -34,6 +34,9 @@ class Runner:
         self.undeployed = None
         self.round_idx = None
         self.prev_round_time = None
+
+        # Create a logger
+        self.logger = Logger('run')
 
     ############################################################################
     # Deployment
@@ -466,8 +469,8 @@ class Runner:
             servers_metrics = metrics.get(req_id, None)
 
             if servers_metrics is None:
-                self._raise_error(('Requirement ID "{}" should' +
-                                   ' be in metrics').format(req_id))
+                self.logger.raise_error(
+                    'Requirement ID "{}" should be in metrics'.format(req_id))
 
             # Update the indexes of satisfied servers by comparing the
             # server metric to the requirement value
@@ -626,7 +629,7 @@ class Runner:
                 # Should not reach here
                 raise ValueError('Unknown scheme "{}"'.format(scheme))
         else:
-            self._raise_error(
+            self.logger.raise_error(
                 'Unknown scheme "{}" in requirement ID "{}"'.format(
                     scheme, req_id))
 
@@ -671,7 +674,7 @@ class Runner:
 
                 # Check whether the requirement command exists
                 if req_commands is None:
-                    self._raise_error(
+                    self.logger.raise_error(
                         'Requirement ID does not exist: {}'.format(req_id))
 
                 # Run the remote command on server
@@ -738,7 +741,8 @@ class Runner:
             elif operator == '>=':
                 return metric >= value
             else:
-                self._raise_error('Unknown operator: {}'.format(operator))
+                self.logger.raise_error(
+                    'Unknown operator: {}'.format(operator))
         except:
             self.logger.exception(
                 'Could not compare the values: "{}" "{}" "{}"'.format(
@@ -754,7 +758,7 @@ class Runner:
 
         # Check whether the expression is valid
         if result is None:
-            self._raise_error(
+            self.logger.raise_error(
                 'Could not parse the requirement expression: {}'.format(
                     req_expr))
         else:
@@ -838,13 +842,18 @@ class Runner:
 
     def _run_commands(self, server_spec, commands, user_files={}, envs={}):
         # Run the commands
-        all_results, debug_infos = run_commands(
+        all_results, debug_infos = self.commands_runner.run_commands(
             server_spec, commands, user_files=user_files, envs=envs)
 
         # Check errors from all results
         status = None
         for results, debug_info in zip(all_results, debug_infos):
+            # Handle the errors
             status = self._handle_errors(results, debug_info)
+
+            # Stop checking errors when the status is "retry"
+            if status == 'retry':
+                break
 
         # Combine STDOUTs produced by inner commands
         combined_stdout = self._combine_outputs(all_results, 'stdout')
@@ -862,7 +871,8 @@ class Runner:
         # Determine whether to check any errors
         if check_any_errors:
             # Get error messages
-            messages = get_error_messages(results, debug_info)
+            messages = self.commands_runner.get_error_messages(
+                results, debug_info)
         else:
             # Set empty error messages
             messages = []
@@ -878,9 +888,10 @@ class Runner:
             elif action == 'retry':
                 self._log_verbose(messages)
             elif action == 'abort':
-                self._raise_error(messages)
+                self.logger.raise_error(messages)
             else:
-                self._raise_error('Unknown error action "{}"'.format(action))
+                self.logger.raise_error(
+                    'Unknown error action "{}"'.format(action))
 
             # Return error handling action
             return action
@@ -949,7 +960,9 @@ class Runner:
 
         while status != 'success':
             # Evaluate expression on local
-            results, debug_info = evaluate_expression_on_local(expr, envs=envs)
+            results, debug_info = \
+                self.commands_runner.evaluate_expression_on_local(
+                    expr, envs=envs)
 
             # Handle errors
             status = self._handle_errors(results, debug_info)
@@ -1007,7 +1020,8 @@ class Runner:
         elif detail_name == 'write_outputs':
             return {}
         else:
-            self._raise_error('Unknown detail name: {}'.format(detail_name))
+            self.logger.raise_error(
+                'Unknown detail name: {}'.format(detail_name))
 
     def _get_corresponding_details(self, detail_name, details):
         if detail_name == 'envs':
@@ -1026,7 +1040,8 @@ class Runner:
             # Return the corresponding type
             return details.get(self.command_type, {})
         else:
-            self._raise_error('Unknown detail name: {}'.format(detail_name))
+            self.logger.raise_error(
+                'Unknown detail name: {}'.format(detail_name))
 
     def _wrap_details(self, detail_name, details):
         if detail_name == 'envs':
@@ -1045,7 +1060,8 @@ class Runner:
             # Return the dict
             return details
         else:
-            self._raise_error('Unknown detail name: {}'.format(detail_name))
+            self.logger.raise_error('Unknown detail name: {}'.format(
+                detail_name))
 
     def _count_experiments(self, stage):
         # Get experiment specs
@@ -1060,7 +1076,7 @@ class Runner:
                           'experiments', 'after_all_experiments']
 
         if stage not in allowed_stages:
-            self._raise_error('Unexpected stage: {}'.format(stage))
+            self.logger.raise_error('Unexpected stage: {}'.format(stage))
 
         return self._get_stage_specs(stage)
 
@@ -1200,32 +1216,6 @@ class Runner:
         elif isinstance(messages, str):
             # Log the message
             self.logger.info(messages)
-        else:
-            raise ValueError('Unknown messages type: {}'.format(
-                type(messages)))
-
-    ############################################################################
-    # Error Handling
-    ############################################################################
-
-    def _raise_error(self, messages):
-        # Check the messages type
-        if isinstance(messages, list):
-            # Log all messages
-            for message in messages:
-                self.logger.error(message)
-
-            # Concatenate all messages
-            combined_messages = '\n'.join(messages)
-
-            # Raise the error
-            raise ValueError(combined_messages)
-        elif isinstance(message, str):
-            # Log the message
-            self.logger.error(messages)
-
-            # Raise the error
-            raise ValueError(messages)
         else:
             raise ValueError('Unknown messages type: {}'.format(
                 type(messages)))

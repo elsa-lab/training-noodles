@@ -1,114 +1,121 @@
 import json
-import logging
 import os
 import subprocess
 
-from training_noodles.utils import convert_values_to_strs
+from training_noodles.data_structure_utils import convert_values_to_strs
+from training_noodles.logger import Logger
 
 
-def run_command(command, stdin=None, extra_envs=None, wait=True):
-    """ Run the command using bash.
+class CLI:
+    def __init__(self):
+        # Create a logger
+        self.logger = Logger('cli')
 
-    Arguments:
-        command (str): Command to run.
-        stdin (file object): Input stream. Set to "None" to use default stdin.
-        extra_envs (dict): Extra environment variables.
-        wait (bool): Whether to wait for the command to finish.
+    def run_command(self, command, stdin=None, extra_envs=None, wait=True):
+        """ Run the command using bash.
 
-    Returns:
-        p_obj: A "Popen" object.
-    """
-    # Wrap the command by bash to ensure the command is executed by bash
-    command = 'bash -c "{}"'.format(command)
+        Arguments:
+            command (str): Command to run.
+            stdin (file object): Input stream. Set to "None" to use default
+                stdin.
+            extra_envs (dict): Extra environment variables.
+            wait (bool): Whether to wait for the command to finish.
 
-    # Convert environment variable values to strings
-    extra_envs = convert_values_to_strs(extra_envs)
+        Returns:
+            p_obj: A "Popen" object.
+        """
+        # Wrap the command by bash to ensure the command is executed by bash
+        command = 'bash -c "{}"'.format(command)
 
-    # Print the command
-    logging.debug('Run command: {}'.format(command))
+        # Convert environment variable values to strings
+        extra_envs = convert_values_to_strs(extra_envs)
 
-    # Print the extra environment variables
-    logging.debug(
-        'Extra environment variables: {}'.format(json.dumps(extra_envs)))
+        # Log the command
+        self.logger.debug('Run command: {}'.format(command))
 
-    try:
-        # Get default environment variables
-        env = os.environ.copy()
+        # Log the extra environment variables
+        self.logger.debug(
+            'Extra environment variables: {}'.format(json.dumps(extra_envs)))
 
-        # Update with extra environment variables
-        if extra_envs:
-            env.update(extra_envs)
+        try:
+            # Get default environment variables
+            env = os.environ.copy()
 
-        # Run the program
-        p_obj = subprocess.Popen(command, stdin=stdin, stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE, shell=True, env=env)
+            # Update with extra environment variables
+            if extra_envs:
+                env.update(extra_envs)
 
-        # Check whether to wait
-        if wait:
-            p_obj.wait()
+            # Run the program
+            p_obj = subprocess.Popen(command, stdin=stdin,
+                                     stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE, shell=True,
+                                     env=env)
 
-        return p_obj
-    except subprocess.CalledProcessError as e:
-        logging.exception('Could not run the command: {}'.format(command))
-        logging.error('RETURN_CODE: {}'.format(e.returncode))
-        logging.error('STDOUT=>\n{}'.format(decode_output(e.stdout)))
-        logging.error('STDERR=>\n{}'.format(decode_output(e.stderr)))
-        raise
-    except:
-        logging.exception('Unknown error occurred')
-        raise
+            # Check whether to wait
+            if wait:
+                p_obj.wait()
 
+            return p_obj
+        except subprocess.CalledProcessError as e:
+            self.logger.raise_error([
+                'Could not run the command: {}'.format(command),
+                'RETURN_CODE: {}'.format(e.returncode),
+                'STDOUT=>\n{}'.format(self.decode_output(e.stdout)),
+                'STDERR=>\n{}'.format(self.decode_output(e.stderr)),
+            ])
+        except:
+            self.logger.raise_error('Unknown error occurred')
 
-def wait_command(p_obj):
-    """ Wait for the command to finish.
+    def wait_command(self, p_obj):
+        """ Wait for the command to finish.
 
-    Arguments:
-        p_obj (Popen): The object given by "run_command" function.
-    """
-    p_obj.wait()
+        Arguments:
+            p_obj (Popen): The object given by "run_command" function.
+        """
+        p_obj.wait()
 
+    def read_results(self, p_obj):
+        """ Read command results.
 
-def read_command_results(p_obj):
-    """ Read command results.
+        Read the raw stdout and stderr. Will raise error if "check_return_code"
+        is on and return code is non-zero.
 
-    Read the raw stdout and stderr. Will raise error if "check_return_code" is
-    on and return code is non-zero.
+        Arguments:
+            p_obj (Popen): The object given by "run_command" function.
 
-    Arguments:
-        p_obj (Popen): The object given by "run_command" function.
+        Returns:
+            (Raw stdout, Raw stderr, Return code (int))
+        """
+        # Read stdout and stderr
+        stdout, stderr = p_obj.communicate()
 
-    Returns:
-        (Raw stdout, Raw stderr, Return code (int))
-    """
-    # Read stdout and stderr
-    stdout, stderr = p_obj.communicate()
+        # Read return code
+        return_code = p_obj.returncode
 
-    # Read return code
-    return_code = p_obj.returncode
+        # Return the raw results and return code
+        return stdout, stderr, return_code
 
-    # Return the raw results and return code
-    return stdout, stderr, return_code
+    @staticmethod
+    def decode_output(output):
+        """ Decode the output.
 
+        Try to return the decoded output, if it fails, return the original
+        output.
 
-def decode_output(output):
-    """ Decode the output.
+        Arguments:
+            output: Raw output which can be stdout or stderr.
 
-    Try to return the decoded output, if it fails, return the original output.
+        Returns:
+            The decoded output.
+        """
+        try:
+            return output.decode('utf-8')
+        except UnicodeDecodeError:
+            return output
 
-    Arguments:
-        output: Raw output which can be stdout or stderr.
+    @staticmethod
+    def escape_command(command, quote='"'):
+        # Replace all quotes by a backslash and a quote
+        escaped_quote = '\\{}'.format(quote)
 
-    Returns:
-        The decoded output.
-    """
-    try:
-        return output.decode('utf-8')
-    except UnicodeDecodeError:
-        return output
-
-
-def escape_command(command, quote='"'):
-    # Replace all quotes by a backslash and a quote
-    escaped_quote = '\\{}'.format(quote)
-
-    return command.replace(quote, escaped_quote)
+        return command.replace(quote, escaped_quote)

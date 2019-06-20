@@ -4,12 +4,12 @@ import logging
 
 import oyaml as yaml
 
-from training_noodles.utils import (
-    get_resource_path, update_dict_with_missing)
+from training_noodles.data_structure_utils import update_dict_with_missing
+from training_noodles.file_helper import FileHelper
 
 
 # Set the path to default spec
-default_spec_path = get_resource_path(
+default_spec_path = FileHelper.get_resource_path(
     'training_noodles', 'training_noodles/specs/defaults.yml')
 
 # Set keys to copy from default spec

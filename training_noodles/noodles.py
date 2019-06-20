@@ -1,8 +1,7 @@
-import logging
 import sys
 
 from training_noodles.arguments import parse_args
-from training_noodles.logger import init_logging
+from training_noodles.logging_utils import init_logging
 from training_noodles.runner import Runner
 from training_noodles.spec import read_user_spec
 
