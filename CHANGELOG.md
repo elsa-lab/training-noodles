@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.15 (2019-06-20)
+
+* Fixed the runner might ignore "retry" action when the commands are separated into command groups for local and remote executions
+* Changed the logging formats
+* Added `cpu_load` requirement in the default spec
+
 ## 1.0.14 (2019-06-15)
 
 * Fixed null metric problem when the server has been deployed with some experiment
