@@ -118,4 +118,4 @@ See the highlighted line. If ``XXX`` is shown as the hostname of your server,
 the deployment is successful.
 
 .. _tutorial: https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys--2
-.. _GitHub: https://github.com/sc420/training-noodles/blob/master/examples/minimalist/spec.yml
+.. _GitHub: https://github.com/elsa-lab/training-noodles/blob/master/examples/minimalist/spec.yml

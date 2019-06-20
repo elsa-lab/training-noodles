@@ -552,4 +552,4 @@ Error Handling
    ``stderr_pattern`` have full match (i.e., the match returned by
    :py:func:`re.match` is exactly the same as the argument ``string``).
 
-.. _default specs: https://github.com/sc420/training-noodles/blob/master/training_noodles/specs/defaults.yml
+.. _default specs: https://github.com/elsa-lab/training-noodles/blob/master/training_noodles/specs/defaults.yml

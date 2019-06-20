@@ -51,5 +51,5 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`search`
 
-.. _GitHub repository: https://github.com/sc420/training-noodles
+.. _GitHub repository: https://github.com/elsa-lab/training-noodles
 .. _PyPI package page: https://pypi.org/project/training-noodles/
