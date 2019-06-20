@@ -211,6 +211,25 @@
                 "--verbose",
                 "--debug"
             ]
+        },
+        {
+            "name": "unittest",
+            "type": "python",
+            "request": "launch",
+            "module": "unittest"
+        },
+        {
+            "name": "coverage",
+            "type": "python",
+            "request": "launch",
+            "module": "coverage",
+            "args": [
+                "run",
+                "--source",
+                "training_noodles",
+                "-m",
+                "unittest"
+            ]
         }
     ]
 }
