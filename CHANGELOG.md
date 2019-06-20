@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.16 (2019-06-20)
+
+* Transferred the repo to elsa-lab
+
 ## 1.0.15 (2019-06-20)
 
 * Fixed the runner might ignore "retry" action when the commands are separated into command groups for local and remote executions
