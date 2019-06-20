@@ -35,8 +35,9 @@ class TestCreateTempFiles(unittest.TestCase):
         temp_files = self.temp_files_helper.create_temp_files(self.user_files)
 
         # Check whether the keys are the same as the expected streams
-        temp_files_keys = list(temp_files.keys())
-        self.assertEqual(temp_files_keys, self.expected_streams)
+        sorted_keys = sorted(temp_files.keys())
+        sorted_expected_streams = sorted(self.expected_streams)
+        self.assertEqual(sorted_keys, sorted_expected_streams)
 
         # Iterate each expected stream
         for stream in self.expected_streams:
