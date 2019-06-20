@@ -7,12 +7,26 @@ from training_noodles.logger import Logger
 
 
 class CLI:
-    def __init__(self):
+    """ Command line interface helper.
+
+    This class runs command on the local machine and reads the results.
+    """
+
+    def __init__(self, local_shell='bash -c'):
+        """ Initialize the instance.
+
+        Arguments:
+            local_shell (str): Local shell command (e.g., "bash -c").
+        """
+
+        # Save the local shell command
+        self.local_shell = local_shell
+
         # Create a logger
         self.logger = Logger('cli')
 
     def run_command(self, command, stdin=None, extra_envs=None, wait=True):
-        """ Run the command using bash.
+        """ Run the command using the shell command.
 
         Arguments:
             command (str): Command to run.
@@ -22,10 +36,11 @@ class CLI:
             wait (bool): Whether to wait for the command to finish.
 
         Returns:
-            p_obj: A "Popen" object.
+            Popen: A "Popen" object.
         """
-        # Wrap the command by bash to ensure the command is executed by bash
-        command = 'bash -c "{}"'.format(command)
+        # Wrap the command by the shell command to ensure the command is
+        # executed by the shell
+        command = '{} "{}"'.format(self.local_shell, command)
 
         # Convert environment variable values to strings
         extra_envs = convert_values_to_strs(extra_envs)
@@ -115,6 +130,16 @@ class CLI:
 
     @staticmethod
     def escape_command(command, quote='"'):
+        """ Escape the command.
+
+        The quotes X in the command will be replaced by "\\X".
+
+        Arguments:
+            quote (str): The quote to escape.
+
+        Returns:
+            str: Escaped command.
+        """
         # Replace all quotes by a backslash and a quote
         escaped_quote = '\\{}'.format(quote)
 

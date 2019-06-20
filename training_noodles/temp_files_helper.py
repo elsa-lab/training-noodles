@@ -6,7 +6,7 @@ from training_noodles.logger import Logger
 
 
 class TempFilesHelper:
-    """ Temporary files helper class.
+    """ Temporary files helper.
     """
 
     def __init__(self, closes):

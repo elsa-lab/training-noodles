@@ -26,7 +26,10 @@ class Runner:
         self.verbose = verbose
 
         # Create a commands runner
-        self.commands_runner = CommandsRunner()
+        local_shell = self.user_spec.get('local_shell', None)
+        remote_shell = self.user_spec.get('remote_shell', None)
+        self.commands_runner = CommandsRunner(
+            local_shell=local_shell, remote_shell=remote_shell)
 
         # Initialize other attributes
         self.start_time = None

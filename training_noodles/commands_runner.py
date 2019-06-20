@@ -50,9 +50,22 @@ class CommandsRunner:
     * Unmixed command: Command specified by the user.
     """
 
-    def __init__(self):
+    def __init__(self, local_shell='bash -c', remote_shell='bash -s'):
+        """ Initialize the instance.
+
+        Arguments:
+            local_shell (str): Local shell command (e.g., "bash -c").
+            remote_shell (str): Remote shell command (e.g., "bash -s").
+        """
+
+        # Save the local shell command
+        self.local_shell = local_shell
+
+        # Save the remote shell command
+        self.remote_shell = remote_shell
+
         # Create a CLI
-        self.cli = CLI()
+        self.cli = CLI(local_shell=self.local_shell)
 
         # Create a file helper
         self.file_helper = FileHelper()
@@ -324,7 +337,7 @@ class CommandsRunner:
             return ssh_command
 
     def _build_local_endpoint_command(self):
-        return 'bash -c'
+        return self.local_shell
 
     def _build_inner_commands(self, unmixed_commands, envs={}):
         # Initialize the outputs
@@ -365,8 +378,9 @@ class CommandsRunner:
             'stderr', temp_files, user_files, clear_user_files)
 
         # Build the command
-        outer_command = '{} \'bash -s\' {} {} {}'.format(
-            endpoint_command, stdin_command, stdout_command, stderr_command)
+        outer_command = '{} \'{}\' {} {} {}'.format(
+            endpoint_command, self.remote_shell, stdin_command, stdout_command,
+            stderr_command)
 
         # Return the final command
         return outer_command

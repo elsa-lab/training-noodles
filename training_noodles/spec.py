@@ -14,20 +14,29 @@ default_spec_path = FileHelper.get_resource_path(
 
 # Set keys to copy from default spec
 keys_to_copy = [
+    # General
     'name',
     'description',
-    'before_all_experiments',
+    # Experiments
     'experiment_default/*',
+    'before_all_experiments',
     'experiments',
     'after_all_experiments',
+    # Servers
     'server_default/*',
     'servers',
+    # requirements
     'requirements/*',
+    # Deployment
     'write_status_to/*',
     'round_interval',
     'deployment_interval',
+    # Error handling
     'check_any_errors',
     'error_handlers',
+    # Shell
+    'local_shell',
+    'remote_shell',
 ]
 
 
