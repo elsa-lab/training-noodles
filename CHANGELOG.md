@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.1 (2019-07-14)
+
+* Added requirement `cuda_memory_usage` in the default spec
+* Removed requirement `cuda_memory_utilization` in the default spec
+
 ## 1.1.0 (2019-06-20)
 
 * Added spec option `commands_interval` to add a delay between command executions
