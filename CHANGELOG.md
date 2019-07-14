@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.0 (2019-07-14)
+
+* Changed the default metric output from percentage to a range between 0.0-1.0
+
 ## 1.1.1 (2019-07-14)
 
 * Added requirement `cuda_memory_usage` in the default spec

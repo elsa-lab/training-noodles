@@ -70,33 +70,32 @@ servers: []
 
 # Commands to run to check requirements on servers
 requirements:
-  # Get average CPU usage over 3 seconds (Output: Three floats between 0-100
-  # (%))
+  # Get average CPU usage over 3 seconds (Output: Three floats between 0.0-1.0)
   # Reference: https://askubuntu.com/a/941997
   # (If there are multiple outputs in each line, Noodles would try to calculate
   # the average)
   cpu_usage:
-  - "(grep 'cpu ' /proc/stat;sleep 0.1;grep 'cpu ' /proc/stat) | awk -v RS='' '{print ($13-$2+$15-$4)*100/($13-$2+$15-$4+$16-$5)}'"
+  - "(grep 'cpu ' /proc/stat;sleep 0.1;grep 'cpu ' /proc/stat) | awk -v RS='' '{print ($13-$2+$15-$4)/($13-$2+$15-$4+$16-$5)}'"
   - "sleep 1.5"
-  - "(grep 'cpu ' /proc/stat;sleep 0.1;grep 'cpu ' /proc/stat) | awk -v RS='' '{print ($13-$2+$15-$4)*100/($13-$2+$15-$4+$16-$5)}'"
+  - "(grep 'cpu ' /proc/stat;sleep 0.1;grep 'cpu ' /proc/stat) | awk -v RS='' '{print ($13-$2+$15-$4)/($13-$2+$15-$4+$16-$5)}'"
   - "sleep 1.5"
-  - "(grep 'cpu ' /proc/stat;sleep 0.1;grep 'cpu ' /proc/stat) | awk -v RS='' '{print ($13-$2+$15-$4)*100/($13-$2+$15-$4+$16-$5)}'"
+  - "(grep 'cpu ' /proc/stat;sleep 0.1;grep 'cpu ' /proc/stat) | awk -v RS='' '{print ($13-$2+$15-$4)/($13-$2+$15-$4+$16-$5)}'"
   # Get average CPU load over last 1 minute (Output: CPU load greater or equal
   # to 0.0)
   # Reference: https://stackoverflow.com/a/24839903
   # (Please note that CPU usage and load are two different concepts, please
   # refer to https://estl.tech/cpu-usage-vs-load-ecca22287b21)
   cpu_load: "awk '{print $1}' /proc/loadavg"
-  # Get memory usage (Output: A float between 0-100 (%))
+  # Get memory usage (Output: A float between 0.0-1.0)
   # Reference: https://askubuntu.com/a/941997
-  memory_usage: "awk '/MemTotal/{t=$2}/MemAvailable/{a=$2}END{print 100-100*a/t}' /proc/meminfo"
-  # Get disk usage (Output: A float between 0-100 (%))
+  memory_usage: "awk '/MemTotal/{t=$2}/MemAvailable/{a=$2}END{print 1-a/t}' /proc/meminfo"
+  # Get disk usage (Output: A float between 0.0-1.0)
   # Reference: https://askubuntu.com/a/941997
-  disk_usage: "df | awk '/ \/$/{print substr($5, 1, length($5)-1)}'"
-  # Get CUDA GPU utilization (Output: A float between 0-100 (%))
+  disk_usage: "df | awk '/ \/$/{print substr($5, 1, length($5)-1)/100}'"
+  # Get CUDA GPU utilization (Output: A float between 0.0-1.0)
   # Reference: https://gist.github.com/jonatw/9322244
-  cuda_gpu_utilization: "nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits | awk '{s+=$1; n++} END {print s/n}'"
-  # Get CUDA memory usage (Output: A float between 0-100 (%))
+  cuda_gpu_utilization: "nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits | awk '{s+=$1; n++} END {print s/100/n}'"
+  # Get CUDA memory usage (Output: A float between 0.0-1.0)
   # Reference: https://nvidia.custhelp.com/app/answers/detail/a_id/3751/~/useful-nvidia-smi-queries
   cuda_memory_usage: "nvidia-smi --query-gpu=memory.used,memory.total --format=csv,noheader,nounits | awk '{p=$1/$2; s+=p; n++} END {print s/n}'"
 
