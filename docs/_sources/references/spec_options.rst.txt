@@ -116,9 +116,9 @@ Experiments
             experiment_default:
               requirements:
                 run:
-                - cpu_usage: "<=70"
+                - cpu_usage: "<=0.7"
                 - cpu_load: "<=32"
-                - gpu_usage: "<=50"
+                - gpu_usage: "<=0.5"
                 - static:free_quota: ">=0.2"
                 - dynamic:has_lock_file: "==No"
                 stop:
@@ -263,9 +263,9 @@ Experiments
              - Configuration
            requirements:
              run:
-             - cpu_usage: "<=70"
+             - cpu_usage: "<=0.7"
              - cpu_load: "<=32"
-             - gpu_usage: "<=50"
+             - gpu_usage: "<=0.5"
              - free_quota: ">=0.2"
              - has_lock_file: "==No"
              stop:
