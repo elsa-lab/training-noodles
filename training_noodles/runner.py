@@ -41,6 +41,7 @@ class Runner:
         self.undeployed = None
         self.round_idx = None
         self.prev_round_time = None
+        self.running_response_commands = False
 
         # Create a logger
         self.logger = Logger('run')
@@ -893,17 +894,19 @@ class Runner:
 
         # Check whether there are any error messages
         if len(messages) > 0:
+            # Log the messages
+            self._log_verbose('Error messages: {}'.format(messages))
+
             # Find error handling match
             commands, action = self._find_error_handler_match(results)
 
             # Run response commands
-            self._run_response_commands(commands, server_spec, envs)
+            if not self.running_response_commands:
+                self._run_response_commands(commands, server_spec, envs)
 
             # Take action
-            if action == 'continue':
-                self._log_verbose(messages)
-            elif action == 'retry':
-                self._log_verbose(messages)
+            if action == 'continue' or action == 'retry':
+                pass
             elif action == 'abort':
                 self.logger.raise_error(messages)
             else:
@@ -974,13 +977,16 @@ class Runner:
         # Log the response
         self._log_verbose('Run response commands')
 
+        # Mark the response commands are running
+        self.running_response_commands = True
+
         # Run commands until success
         status = None
 
         while status != 'success':
             # Run the commands
             status, stdout, _ = self._run_commands(
-                server_spec, commands, envs=envs)
+                server_spec, commands, envs=envs, handle_errors=False)
 
             # Take action according to the status
             if status == 'success':
@@ -1003,6 +1009,9 @@ class Runner:
             else:
                 # Should not reach here
                 raise ValueError('Unknown status: {}'.format(status))
+
+        # Mark the response commands are not running
+        self.running_response_commands = False
 
     def _combine_outputs(self, all_results, output_type):
         # Get outputs

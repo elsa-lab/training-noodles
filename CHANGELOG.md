@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.1 (2020-07-23)
+
+* Avoid running response commands recursively due to response commands errors
+* Log messages first before running response commands
+
 ## 1.2.0 (2019-07-14)
 
 * Changed the default metric output from percentage to a range between 0.0-1.0
