@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.2 (2020-07-26)
+
+* Fix missing argument error when calling response commands
+
 ## 1.2.1 (2020-07-23)
 
 * Avoid running response commands recursively due to response commands errors
