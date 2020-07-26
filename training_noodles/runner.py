@@ -850,7 +850,8 @@ class Runner:
     # Command Execution
     ############################################################################
 
-    def _run_commands(self, server_spec, commands, user_files={}, envs={}):
+    def _run_commands(self, server_spec, commands, user_files={}, envs={},
+                      handle_errors=True):
         # Wait for next commands
         self._wait_for_next_commands()
 
@@ -861,14 +862,15 @@ class Runner:
 
         # Check errors from all results
         status = 'success'
-        for results, debug_info in zip(all_results, debug_infos):
-            # Handle the errors
-            status = self._handle_errors(results, debug_info,
-                                         server_spec=server_spec, envs=envs)
+        if handle_errors:
+            for results, debug_info in zip(all_results, debug_infos):
+                # Handle the errors
+                status = self._handle_errors(
+                    results, debug_info, server_spec=server_spec, envs=envs)
 
-            # Stop checking errors when the status is "retry"
-            if status == 'retry':
-                break
+                # Stop checking errors when the status is "retry"
+                if status == 'retry':
+                    break
 
         # Combine STDOUTs produced by inner commands
         combined_stdout = self._combine_outputs(all_results, 'stdout')
